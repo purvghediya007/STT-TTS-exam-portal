@@ -2,6 +2,13 @@
 
 """
 Module for conversion of speech audio fetched by FastAPI to text format in given language format
+
+How to run? 
+stt = STT(lang="en",model="whisper",audio_file_name=audio_file_path)
+stt.transcribe()
+print(stt.transcription_list)
+
+
 """
 
 # Requirements
@@ -9,7 +16,6 @@ try:
   import warnings
   warnings.filterwarnings("ignore")
 
-  from pathlib import Path
   import whisper
   from transformers import pipeline
 
@@ -107,14 +113,4 @@ class STT:
     except Exception as e:
       print(e)
 
-current_folder_path = Path(__file__).parent
-main_folder = current_folder_path.parent
-audio_file_path = main_folder / "test_audios" / "audio_test_whisper.wav"
-
-
-stt = STT(lang="en",model="whisper",audio_file_name=audio_file_path)
-
-stt.transcribe()
-
-print(stt.transcription_list)
 
