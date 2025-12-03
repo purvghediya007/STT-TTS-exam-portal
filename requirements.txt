@@ -7,6 +7,7 @@ langchain
 langchain-community 
 langchain-core 
 langchain-huggingface 
+langchain-ollama
 huggingface-hub 
 langchain-cli 
 transformers 
@@ -15,3 +16,4 @@ ollama
 openai-whisper 
 pydantic 
 uvicorn
+pyngrok
