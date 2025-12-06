@@ -79,7 +79,7 @@ class EvaluationEngine(HFModelCreation):
     Then create an input dictionary having keys 'question', 'answer', and 'max_marks'.
     Example:
       input_features = {
-      "question": "Differentiate between supervised and unsupervised machine learning.",
+      "question_text": "Differentiate between supervised and unsupervised machine learning.",
       "answer": "Supervised ML is used when we supervise the model and unsupervised ML is used when it runs on its own",
       "max_marks": 10
     }
@@ -100,27 +100,39 @@ class EvaluationEngine(HFModelCreation):
           model_name (str): The name of the HuggingFace model to be used for evaluation.
         """
         # Call the parent class's method to create the model
-        self.model = super().hf_model_creator(model_name)
+        self.model_name = model_name
+
+        self.model = None
+
 
         # Store the model instance for later use in evaluation
+
+    def get_model(self):
+        # Lazy load model only when not available
+
+
+        if self.model is None:
+            self.model = super().hf_model_creator(self.model_name)
+        
+        return self.model
 
     def create_rubrics(self, input_features: dict) -> str:
         """
         Generates a simple marking rubric for a given question and maximum marks.
 
         Args:
-          input_features (dict): A dictionary containing 'question' (str) and 'max_marks' (int).
+          input_features (dict): A dictionary containing 'question_text' (str) and 'max_marks' (int).
 
         Returns:
           str: The generated rubric as a plain text string.
 
         Raises:
-          KeyError: If 'question' or 'max_marks' are missing from input_features.
+          KeyError: If 'question_text' or 'max_marks' are missing from input_features.
         """
         try:
-            if "question" not in input_features:
+            if "question_text" not in input_features:
                 raise KeyError(
-                    "Input features must have an attribute of question")
+                    "Input features must have an attribute of question_text")
             elif "max_marks" not in input_features:
                 raise KeyError(
                     "Input features must have an attribute of maximum marks")
@@ -140,23 +152,23 @@ Total Marks: {max_marks}
 
 Now generate the rubric.
 
-Question: {question}
+Question: {question_text}
 Maximum Marks: {max_marks}
 """
 
             # Create a PromptTemplate object
             prompt = PromptTemplate(
                 template=template,
-                input_variables=["question", "max_marks"],
+                input_variables=["question_text", "max_marks"],
             )
 
             # Create a LangChain expression language (LCEL) chain
             # Prompt -> Model -> String Output Parser
-            chain = prompt | self.model | StrOutputParser()
+            chain = prompt | self.get_model() | StrOutputParser()
 
             # Invoke the chain to generate the rubric
             rubric = chain.invoke({
-                "question": input_features["question"],
+                "question_text": input_features["question_text"],
                 "max_marks": input_features["max_marks"],
             })
 
@@ -187,11 +199,11 @@ Do not add any conversational text, Markdown formatting, or code blocks.
 <|im_start|>user
 Refrence Material:
 Rubric: {rubric}
-Question: {question}
+Question: {question_text}
 Maximum Marks: {max_marks}
 
 Student Answer:
-{answer}
+{student_answer}
 
 Evaluate the student answer.
 {format_instructions}
@@ -202,14 +214,14 @@ Evaluate the student answer.
             # Create a PromptTemplate with input variables and partial variables for format instructions
             prompt = PromptTemplate(
                 template=template,
-                input_variables=["question", "rubric", "answer", "max_marks"],
+                input_variables=["question_text", "rubric", "student_answer", "max_marks"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()},
             )
 
             # Construct the LangChain expression language (LCEL) chain
             # Prompt -> Model -> JSON Output Parser
-            chain = prompt | self.model | parser
+            chain = prompt | self.get_model() | parser
 
             return chain, parser
 

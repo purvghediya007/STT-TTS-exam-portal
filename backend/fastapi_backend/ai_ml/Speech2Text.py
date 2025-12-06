@@ -14,7 +14,7 @@ print(stt.transcription_list)
 
 from __future__ import annotations
 
-# ----------------- Imports -----------------
+#  Imports 
 try:
     import warnings
     warnings.filterwarnings("ignore")
@@ -35,7 +35,7 @@ except Exception as e:
     print("Could not find certain modules! Details:", e)
 
 
-# ----------------- Model Generator -----------------
+#  Model Generator 
 class ModelGenerator:
     """
     Creates and caches models so that they are loaded only once per process.
@@ -61,7 +61,7 @@ class ModelGenerator:
         Load and cache OpenAI Whisper (local) model.
         """
         if cls._whisper_model is None:
-            # You can change "base" -> "small", "medium", etc.
+            # can change "base" -> "small", "medium", etc.
             cls._whisper_model = whisper.load_model("base")
         return cls._whisper_model
 
@@ -80,7 +80,7 @@ class ModelGenerator:
         return cls._hf_model
 
 
-# ----------------- STT main class -----------------
+#  STT main class 
 class STT:
     def __init__(self, lang: str, model: str, audio_file_name: str):
         self.lang: str = lang.lower()
@@ -89,7 +89,7 @@ class STT:
         self.transcription_list: list[str] = []
         self.new_student: bool = True
 
-    # ---------- Preprocess ----------
+    #  Preprocess 
     def audio_preprocess(self) -> str:
         """
         Run audio preprocessing and return path to processed audio file.
@@ -99,7 +99,7 @@ class STT:
         audio_preprocessed = preprocessor.process()
         return audio_preprocessed
 
-    # ---------- Local Whisper ----------
+    #  Local Whisper 
     def whisper_transcribe(self) -> str:
         try:
             whisper_model = ModelGenerator.whisper_model_generator()
@@ -122,7 +122,7 @@ class STT:
             print("Details:", e)
             return ""
 
-    # ---------- HF Whisper pipeline ----------
+    #  HF Whisper pipeline 
     def hf_transcribe(self) -> str:
         """
         Use HuggingFace pipeline for ASR. Handles dict, list, and generator outputs.
@@ -156,7 +156,7 @@ class STT:
             print("Details:", e)
             return ""
 
-    # ---------- Selector ----------
+    #  Selector 
     def model_selector(self) -> str:
         """
         Choose which backend to use based on self.model.
@@ -171,7 +171,7 @@ class STT:
                     f"Model type {self.model!r} not found. Try a different model type."
                 )
 
-    # ---------- Public API ----------
+    #  Public API 
     def transcribe(self) -> None:
         """
         Run transcription with selected model and store in transcription_list.
