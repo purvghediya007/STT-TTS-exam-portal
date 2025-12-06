@@ -1,6 +1,6 @@
 import os
 from tempfile import NamedTemporaryFile
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 
 from ai_ml.Speech2Text import STT
 from app.config import settings
@@ -16,9 +16,17 @@ async def transcribe(audio: UploadFile, lang="en", model=None):
     stt = STT(lang=lang, model=model, audio_file_name=tmp_path)
     stt.transcribe()
 
-    text = stt.transcription_list[0] if stt.transcription_list else ""
+    if not stt.transcription_list:
+        raise HTTPException(
+            status_code=400,
+            detail="STT failed. No transcription returned. Check audio or model."
+        )
 
-    try: os.remove(tmp_path)
-    except: pass
+    text = stt.transcription_list[0]
+
+    try: 
+        os.remove(tmp_path)
+    except: 
+        pass
 
     return text
