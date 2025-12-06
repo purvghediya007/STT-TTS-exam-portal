@@ -11,7 +11,7 @@ class EvaluationService:
 
         result = evaluator.model_evaluator(data)
 
-        # FIX: add question_id to output
+        
         result["question_id"] = payload.question_id
 
         return result
