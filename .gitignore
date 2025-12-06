@@ -2,7 +2,7 @@
 venv/
 __pycache__/
 *.pyc
-/.env
+backend/fastapi_backend/.env
 
 # HuggingFace / Transformers models
 ~/.cache/
