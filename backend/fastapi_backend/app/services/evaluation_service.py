@@ -8,7 +8,14 @@ class EvaluationService:
 
     def evaluate(self, payload: EvaluateAnswer):
         data = payload.dict()
-        return evaluator.model_evaluator(data)
+
+        result = evaluator.model_evaluator(data)
+
+        # FIX: add question_id to output
+        result["question_id"] = payload.question_id
+
+        return result
+
 
 # Export single shared service instance
 evaluator_service = EvaluationService()
