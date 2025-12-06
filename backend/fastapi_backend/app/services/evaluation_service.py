@@ -1,26 +1,14 @@
 from ai_ml.Evaluation import EvaluationEngine
-from app.config import settings
-from app.schemas.evaluation import (
-    EvaluateAnswer,
-    EvaluateAnswerResponse
-)
+from app.schemas.evaluation import EvaluateAnswer
 
-engine = EvaluationEngine(model_name=settings.HF_EVAL_MODEL_NAME)
+# Singleton evaluator (lazy model loading inside it)
+evaluator = EvaluationEngine(model_name="Qwen/Qwen3-4B-Instruct-2507")
 
-def evaluate(payload: EvaluateAnswer) -> EvaluateAnswerResponse:
-    features = {
-        "question": payload.question_text,
-        "answer": payload.student_answer,
-        "max_marks": payload.max_marks,
-    }
+class EvaluationService:
 
-    result = engine.model_evaluator(features)
+    def evaluate(self, payload: EvaluateAnswer):
+        data = payload.dict()
+        return evaluator.model_evaluator(data)
 
-    return EvaluateAnswerResponse(
-        question_id=payload.question_id,
-        score=result["score"],
-        strengths=result["strengths"],
-        weakness=result["weakness"],
-        justification=result["justification"],
-        suggested_improvement=result["suggested_improvement"],
-    )
+# Export single shared service instance
+evaluator_service = EvaluationService()
