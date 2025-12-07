@@ -1,0 +1,62 @@
+// src/models/StudentAnswer.js
+const mongoose = require("mongoose");
+
+const studentAnswerSchema = new mongoose.Schema(
+  {
+    attemptId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentExamAttempt",
+      required: true,
+    },
+    examId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Exam",
+      required: true,
+    },
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      required: true,
+    },
+    questionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Question",
+      required: true,
+    },
+
+    // Student's (text) answer – later this can be transcript from audio
+    answerText: {
+      type: String,
+      trim: true,
+    },
+
+    // 🔹 AI evaluation fields
+    score: {
+      type: Number,
+      min: 0,
+    },
+    maxMarks: {
+      type: Number,
+      min: 0,
+    },
+    evaluationFeedback: {
+      type: String,
+      trim: true,
+    },
+    evaluationModel: {
+      type: String,
+      trim: true,
+    },
+    evaluatedAt: {
+      type: Date,
+    },
+  },
+  { timestamps: true }
+);
+
+// Ensure one answer per question per attempt
+studentAnswerSchema.index({ attemptId: 1, questionId: 1 }, { unique: true });
+
+const StudentAnswer = mongoose.model("StudentAnswer", studentAnswerSchema);
+
+module.exports = StudentAnswer;

@@ -1,0 +1,26 @@
+{
+  "name": "oral-exam-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "create-admin": "node scripts/createAdmin.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.7.0",
+    "multer": "^2.0.2",
+    "openai": "^6.10.0",
+    "svg-captcha": "^1.4.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
