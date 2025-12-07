@@ -1,0 +1,25 @@
+{
+  "questions": [
+    {
+      "text": "Explain the concept of encapsulation in OOP.",
+      "marks": 10,
+      "expectedAnswer": "Encapsulation means bundling data and methods and hiding internal state using access modifiers.",
+      "instruction": "Answer in about 3–4 sentences.",
+      "media": {
+        "imageUrl": "",
+        "fileUrl": ""
+      },
+      "perQuestionSettings": {
+        "thinkTimeSeconds": 10,
+        "answerTimeSeconds": 60,
+        "reRecordAllowed": 1
+      }
+    },
+    {
+      "text": "What is polymorphism in Java? Give a simple example.",
+      "marks": 10,
+      "instruction": "First define, then give one example."
+      
+    }
+  ]
+}

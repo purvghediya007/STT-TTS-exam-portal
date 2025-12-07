@@ -1,0 +1,10 @@
+# Backend ignored files
+backend/node_modules/
+backend/.env
+
+# Backend backup (do not commit)
+backend_old/
+
+# Logs
+*.log
+backend/logs/
