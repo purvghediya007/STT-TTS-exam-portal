@@ -136,7 +136,7 @@ Router exists; full implementation coming soon.
 
 ---
 
-# 🎨 **Frontend (Minimal Section as Requested)**
+# 🎨 **Frontend**
 
 The project includes a basic frontend directory.
 
@@ -205,7 +205,7 @@ docker build --no-cache -t examecho-backend .
 ---
 
 # 📜 **License**
-MIT License (or update as preferred)
+MIT License 
 
 ---
 
