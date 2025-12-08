@@ -115,7 +115,7 @@ router.post("/register", async (req, res, next) => {
         message: "Admin accounts cannot be created via this API",
       });
     }
-
+  
     // Check if user exists (across all collections)
     const existing = await findUserByUsernameOrEmail(username, email);
     if (existing) {
@@ -185,7 +185,7 @@ router.post("/login", async (req, res, next) => {
     const userDoc = teacher || student || admin;
 
     if (!userDoc) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid username" });
     }
 
     const passwordMatch = await bcrypt.compare(
@@ -194,7 +194,7 @@ router.post("/login", async (req, res, next) => {
     );
 
     if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     const token = generateToken(userDoc._id, userDoc.role);

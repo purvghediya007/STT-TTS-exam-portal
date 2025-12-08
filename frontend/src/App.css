@@ -1,0 +1,363 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #eef2ff;
+  --bg-secondary: #f7fbff;
+  --surface: #ffffff;
+  --surface-glow: rgba(255, 255, 255, 0.65);
+  --border: #e0e7ff;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-strong: #7c3aed;
+  --accent-light: rgba(37, 99, 235, 0.12);
+}
+
+html {
+  font-size: clamp(14px, 0.9vw + 12px, 16px);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.responsive-text {
+  font-size: clamp(0.95rem, 1vw + 0.5rem, 1.05rem);
+}
+
+h1 {
+  font-size: clamp(1.9rem, 2vw + 1rem, 2.4rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 1.6vw + 0.9rem, 2rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 1.2vw + 0.8rem, 1.6rem);
+}
+
+#root {
+  width: 100%;
+}
+
+.portal-shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  background: radial-gradient(circle at top left, #c7d2fe, transparent 45%),
+    radial-gradient(circle at bottom right, #fde68a, transparent 50%),
+    var(--bg);
+  overflow: hidden;
+}
+
+.gradient-beam {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  opacity: 0.55;
+  filter: blur(40px);
+  animation: float 12s ease-in-out infinite;
+  z-index: 0;
+}
+
+.beam-1 {
+  top: -120px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.45), transparent);
+}
+
+.beam-2 {
+  bottom: -140px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.45), transparent);
+  animation-delay: 3s;
+}
+
+.login-card {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border-radius: 32px;
+  padding: 3rem 2.75rem;
+  box-shadow: 0 40px 80px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(8px);
+}
+
+.login-card.max-w-7xl {
+  width: min(1280px, 100%);
+  text-align: left;
+}
+
+.college-logo {
+  width: 120px;
+  height: auto;
+  margin: 0 auto 1.5rem;
+  display: block;
+  animation: pulse 5s ease-in-out infinite;
+}
+
+.role-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  gap: 0.35rem;
+}
+
+.role-toggle button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--muted);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+
+.role-toggle button.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+.card-copy .eyebrow {
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+
+.card-copy h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.card-copy p:last-of-type {
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.login-form {
+  margin-top: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.input-field input,
+.input-field .input {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.95rem 1.1rem;
+  font-size: 1rem;
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  background: var(--surface-glow);
+}
+
+.input-field input:focus,
+.input-field .input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 10px 34px rgba(37, 99, 235, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.primary {
+  border: none;
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 35px rgba(124, 58, 237, 0.35);
+}
+
+.form-footer {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.linkish {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .login-card {
+    padding: 2.25rem 1.75rem;
+  }
+
+  .role-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Responsive enhancements for small screens ---------- */
+@media (max-width: 900px) {
+  .portal-shell {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem 2rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-shell {
+    padding: 2rem 1rem;
+  }
+
+  .login-card {
+    padding: 2.25rem 1.75rem;
+    border-radius: 24px;
+  }
+
+  .card-copy h1 {
+    font-size: 1.6rem;
+  }
+
+  .card-copy p {
+    font-size: 0.95rem;
+  }
+
+  .role-toggle {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.4rem;
+  }
+
+  .role-toggle button {
+    flex: 1 1 160px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .login-card {
+    padding: 2rem 1.35rem;
+  }
+
+  .input-field input,
+  .input-field .input {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .form-footer {
+    align-items: flex-start;
+  }
+}
+
+/* Make tables and wider blocks scroll on very small screens */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* History table vertical scrolling with sticky header */
+.history-table-wrapper {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.history-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  table {
+    min-width: 520px;
+  }
+}
+
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) scale(1.05);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
