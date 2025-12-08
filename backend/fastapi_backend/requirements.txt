@@ -1,6 +1,6 @@
-transformers==4.44.2
-tokenizers==0.19.1
-huggingface-hub==0.23.4       
+transformers==4.48.0
+tokenizers==0.21.0
+huggingface-hub==0.24.0
 
 fastapi==0.110.0
 uvicorn==0.29.0
@@ -17,19 +17,16 @@ pydub==0.25.1
 noisereduce==3.0.0
 
 openai-whisper==20231117
-torch==2.2.2   
 
 datasets==2.18.0
 accelerate==0.27.2
 sentencepiece==0.2.0
 tqdm==4.66.2
+protobuf==4.25.3
 
-
-langchain==0.3.11
-langchain-core==0.3.12
-langchain-community==0.3.11
-langchain-huggingface==0.1.0
-langchain-text-splitters==0.3.11
-
+langchain==0.3.15
+langchain-community==0.3.15
+langchain-huggingface==0.1.2
+langchain-text-splitters==0.3.6
 
 sentence-transformers==3.0.1
