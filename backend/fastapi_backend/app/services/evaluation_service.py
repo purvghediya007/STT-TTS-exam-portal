@@ -1,6 +1,7 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
-from app.core.models import qwen_model
+from app.core import models   # changed — load module, not variable
+
 
 class EvaluationService:
 
@@ -8,10 +9,10 @@ class EvaluationService:
         data = payload.dict()
 
         try:
-            result = qwen_model.model_evaluator(data)
+            # use models.qwen_model loaded during lifespan
+            result = models.qwen_model.model_evaluator(data)
 
-            # Validate structure
-            required_keys = ["score", "strengths", "weakness", 
+            required_keys = ["score", "strengths", "weakness",
                              "justification", "suggested_improvement"]
 
             if (
@@ -20,11 +21,10 @@ class EvaluationService:
                 or any(k not in result for k in required_keys)
             ):
                 raise ValueError("Model returned invalid output.")
-            
+
         except Exception as e:
             print("Evaluation error:", e)
 
-            # Always return a valid response structure
             return {
                 "question_id": payload.question_id,
                 "score": 0,
@@ -34,7 +34,6 @@ class EvaluationService:
                 "suggested_improvement": "Retry after the evaluator model loads successfully."
             }
 
-        # Add question id to correct model response
         result["question_id"] = payload.question_id
         return result
 

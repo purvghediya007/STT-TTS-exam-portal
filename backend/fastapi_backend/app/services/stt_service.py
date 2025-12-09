@@ -4,7 +4,8 @@ from fastapi import UploadFile, HTTPException
 
 from ai_ml.Speech2Text import STT
 from app.config import settings
-from app.core.models import whisper_model
+from app.core import models   
+
 
 async def transcribe(audio: UploadFile, lang="en", model=None):
     model = model or settings.STT_DEFAULT_MODEL  # usually "whisper"
@@ -18,8 +19,9 @@ async def transcribe(audio: UploadFile, lang="en", model=None):
 
     if model.lower() == "whisper":
         try:
+            # fetch model from global module (updated by lifespan)
             text = stt.transcribe_with_existing_model(
-                whisper_model,
+                models.whisper_model,
                 audio_file_path=tmp_path,
                 lang=lang
             )
