@@ -1,5 +1,3 @@
-# !apt-get install ffmpeg -y  # RUN THIS COMMAND IN DOCKER/IMAGE
-
 """
 Module for conversion of speech audio fetched by FastAPI to text format in given language.
 
@@ -95,19 +93,20 @@ class STT:
         Run audio preprocessing and return path to processed audio file.
         For now, AudioPreprocess simply returns the original path.
         """
-        preprocessor = AudioPreprocess(self.audio_file_name)
-        audio_preprocessed = preprocessor.process()
-        return audio_preprocessed
+        preprocessor = AudioPreprocess()
+        result = preprocessor.preprocess_file(self.audio_file_name)
+
+        return result.metadata.processed_path
 
     #  Local Whisper 
     def whisper_transcribe(self) -> str:
         try:
             whisper_model = ModelGenerator.whisper_model_generator()
-            audio_preprocessed = self.audio_preprocess()
+            audio_preprocessed_path = self.audio_preprocess()
 
             # whisper's python API expects a file path
             transcription_data = whisper_model.transcribe(
-                audio_preprocessed,
+                audio_preprocessed_path,
                 language=self.lang
             )
 

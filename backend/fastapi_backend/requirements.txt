@@ -9,12 +9,15 @@ pydantic-settings==2.4.0
 python-dotenv==1.0.1
 python-multipart==0.0.9
 
+gTTS>=2.5.0
 numpy==1.26.4
 scipy==1.12.0
 librosa==0.10.1
 soundfile==0.12.1
 pydub==0.25.1
 noisereduce==3.0.0
+webrtcvad-wheels==2.0.14
+
 
 openai-whisper==20231117
 
