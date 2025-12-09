@@ -15,7 +15,8 @@ async def lifespan(app: FastAPI):
     models.whisper_model = ModelGenerator.whisper_model_generator()
 
     # preload Qwen model
-    models.qwen_model = EvaluationEngine("Qwen/Qwen2.5-3B-Instruct")
+    models.qwen_model = EvaluationEngine("Qwen/Qwen2-1.5B-Instruct")
+
 
     # force Qwen download during startup
     models.qwen_model.get_model()
