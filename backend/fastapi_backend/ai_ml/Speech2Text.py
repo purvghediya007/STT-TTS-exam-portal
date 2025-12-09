@@ -13,24 +13,21 @@ print(stt.transcription_list)
 from __future__ import annotations
 
 #  Imports 
+import warnings
+warnings.filterwarnings("ignore")
+
+import whisper
+from transformers import pipeline
+
+from backend.fastapi_backend.ai_ml.AIExceptions import IllegalModelSelectionException
+
+from backend.fastapi_backend.ai_ml.AudioPreprocessor import AudioPreprocessor
+
+# torch is optional but useful for device detection
 try:
-    import warnings
-    warnings.filterwarnings("ignore")
-
-    import whisper
-    from transformers import pipeline
-
-    from .AudioPreprocess import AudioPreprocess
-    from .AIExceptions import IllegalModelSelectionException
-
-    # torch is optional but useful for device detection
-    try:
-        import torch
-    except Exception:
-        torch = None
-
-except Exception as e:
-    print("Could not find certain modules! Details:", e)
+    import torch
+except Exception:
+    torch = None
 
 
 #  Model Generator 
@@ -93,7 +90,7 @@ class STT:
         Run audio preprocessing and return path to processed audio file.
         For now, AudioPreprocess simply returns the original path.
         """
-        preprocessor = AudioPreprocess()
+        preprocessor = AudioPreprocessor()
         result = preprocessor.preprocess_file(self.audio_file_name)
 
         return result.metadata.processed_path

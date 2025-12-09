@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import soundfile as sf
 import webrtcvad
-from .AIExceptions import *
+from backend.fastapi_backend.ai_ml.AIExceptions import *
 
 
 @dataclass
