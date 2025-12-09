@@ -1,26 +1,22 @@
 from fastapi import FastAPI
-from app.routers import stt, evaluation,tts
+from app.routers import stt, evaluation, tts
 from contextlib import asynccontextmanager
 
 from ai_ml.Evaluation import EvaluationEngine
 from ai_ml.Speech2Text import ModelGenerator
 
+from app.core import models   
+
 from dotenv import load_dotenv
 load_dotenv()
 
-whisper_model = None
-qwen_model = None
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global whisper_model, qwen_model
+    # preload whisper model
+    models.whisper_model = ModelGenerator.whisper_model_generator()
 
-    # Pre-load whisper model for STT
-    whisper_model = ModelGenerator.whisper_model_generator()
-
-    # Pre-load Qwen model for Evaluation
-    qwen_model = EvaluationEngine(model_name="Qwen/Qwen2.5-3B-Instruct")
+    # preload Qwen model
+    models.qwen_model = EvaluationEngine("Qwen/Qwen2.5-3B-Instruct")
 
     yield
 

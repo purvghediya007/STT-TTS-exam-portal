@@ -4,8 +4,7 @@ from fastapi import UploadFile, HTTPException
 
 from ai_ml.Speech2Text import STT
 from app.config import settings
-from app.main import whisper_model  # preloaded at startup
-
+from app.core.models import whisper_model
 
 async def transcribe(audio: UploadFile, lang="en", model=None):
     model = model or settings.STT_DEFAULT_MODEL  # usually "whisper"
