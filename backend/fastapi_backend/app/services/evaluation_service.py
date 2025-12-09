@@ -1,8 +1,7 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
+from app.main import qwen_model
 
-# Lazy-loaded model
-evaluator = EvaluationEngine(model_name="Qwen/Qwen2.5-3B-Instruct")
 
 class EvaluationService:
 
@@ -10,16 +9,19 @@ class EvaluationService:
         data = payload.dict()
 
         try:
-            result = evaluator.model_evaluator(data)
+            result = qwen_model.model_evaluator(data)
 
-            # If model returned None or unexpected format
+            # Validate structure
+            required_keys = ["score", "strengths", "weakness", 
+                             "justification", "suggested_improvement"]
+
             if (
-                not result 
-                or not isinstance(result, dict) 
-                or any(k not in result for k in ["score", "strengths", "weakness", "justification", "suggested_improvement"])
+                not result
+                or not isinstance(result, dict)
+                or any(k not in result for k in required_keys)
             ):
                 raise ValueError("Model returned invalid output.")
-
+            
         except Exception as e:
             print("Evaluation error:", e)
 

@@ -1,50 +1,56 @@
 """
 Module for conversion of speech audio fetched by FastAPI to text format in given language.
 
-How to run:
-
+USAGE (old method still works):
+--------------------------------
 from ai_ml.Speech2Text import STT
-
 stt = STT(lang="en", model="whisper", audio_file_name=audio_file_path)
 stt.transcribe()
 print(stt.transcription_list)
+
+USAGE (recommended with preloaded Whisper model):
+-------------------------------------------------
+from app.main import whisper_model
+from ai_ml.Speech2Text import STT
+
+stt = STT(lang="en", model="whisper", audio_file_name=audio_file_path)
+text = stt.transcribe_with_existing_model(whisper_model, audio_file_path)
 """
 
 from __future__ import annotations
-
-#  Imports 
 import warnings
 warnings.filterwarnings("ignore")
 
+# Imports
 import whisper
 from transformers import pipeline
 
 from ai_ml.AIExceptions import IllegalModelSelectionException
-
 from ai_ml.AudioPreprocessor import AudioPreprocessor
 
-# torch is optional but useful for device detection
+
+# Optional Torch
 try:
     import torch
 except Exception:
     torch = None
 
 
-#  Model Generator 
+ 
+#   MODEL GENERATOR (Singleton Loaders)
 class ModelGenerator:
     """
-    Creates and caches models so that they are loaded only once per process.
+    Loads Whisper / HF Whisper models ONCE per process.
+    Used when user does NOT preload models via FastAPI startup.
     """
     _whisper_model = None
     _hf_model = None
 
     @staticmethod
-    def _get_default_device() -> int:
-        """
-        Returns -1 for CPU, 0 for first GPU if torch is available.
-        """
+    def _get_default_device():
+        """Return -1 (CPU) or 0 (GPU)."""
         try:
-            if "torch" in globals() and torch is not None and torch.cuda.is_available():
+            if torch is not None and torch.cuda.is_available():
                 return 0
         except Exception:
             pass
@@ -52,111 +58,101 @@ class ModelGenerator:
 
     @classmethod
     def whisper_model_generator(cls):
-        """
-        Load and cache OpenAI Whisper (local) model.
-        """
+        """Lazy-load Whisper Base model."""
         if cls._whisper_model is None:
-            # can change "base" -> "small", "medium", etc.
             cls._whisper_model = whisper.load_model("base")
         return cls._whisper_model
 
     @classmethod
     def hf_model_generator(cls):
-        """
-        Load and cache HuggingFace ASR pipeline (Whisper large-v3).
-        """
+        """Lazy-load HuggingFace Whisper Large-V3 pipeline."""
         if cls._hf_model is None:
             device = cls._get_default_device()
             cls._hf_model = pipeline(
                 task="automatic-speech-recognition",
                 model="openai/whisper-large-v3",
-                device=device,   # -1 = CPU, 0 = first GPU
+                device=device
             )
         return cls._hf_model
 
 
-#  STT main class 
+ 
+#   STT MAIN CLASS
 class STT:
     def __init__(self, lang: str, model: str, audio_file_name: str):
-        self.lang: str = lang.lower()
-        self.model: str = model.lower()          # "whisper" or "hf"
-        self.audio_file_name: str = audio_file_name
+        """
+        model = "whisper" OR "hf"
+        """
+        self.lang = lang.lower()
+        self.model = model.lower()
+        self.audio_file_name = audio_file_name
         self.transcription_list: list[str] = []
         self.new_student: bool = True
 
-    #  Preprocess 
+     
+    #   PREPROCESS     
     def audio_preprocess(self) -> str:
         """
-        Run audio preprocessing and return path to processed audio file.
-        For now, AudioPreprocess simply returns the original path.
+        Run audio preprocessing and return processed file path.
         """
         preprocessor = AudioPreprocessor()
         result = preprocessor.preprocess_file(self.audio_file_name)
-
         return result.metadata.processed_path
 
-    #  Local Whisper 
+     
+    #   LOCAL WHISPER TRANSCRIBE     
     def whisper_transcribe(self) -> str:
+        """
+        Uses ModelGenerator → loads Whisper only on first call.
+        (Backward compatible method)
+        """
         try:
             whisper_model = ModelGenerator.whisper_model_generator()
-            audio_preprocessed_path = self.audio_preprocess()
+            audio_path = self.audio_preprocess()
 
-            # whisper's python API expects a file path
-            transcription_data = whisper_model.transcribe(
-                audio_preprocessed_path,
-                language=self.lang
-            )
+            output = whisper_model.transcribe(audio_path, language=self.lang)
+            if isinstance(output, dict) and "text" in output:
+                return output["text"]
 
-            if isinstance(transcription_data, dict) and "text" in transcription_data:
-                return transcription_data["text"]
-
-            print("Unexpected Whisper output:", transcription_data)
+            print("Unexpected Whisper output:", output)
             return ""
-
         except Exception as e:
-            print("Error while accessing whisper model. Please try changing model")
-            print("Details:", e)
+            print("Error while accessing Whisper model:", e)
             return ""
 
-    #  HF Whisper pipeline 
+     
+    #   HF WHISPER PIPELINE     
     def hf_transcribe(self) -> str:
-        """
-        Use HuggingFace pipeline for ASR. Handles dict, list, and generator outputs.
-        """
         try:
-            asr_pipeline = ModelGenerator.hf_model_generator()
-            audio_preprocessed = self.audio_preprocess()
+            pipeline_model = ModelGenerator.hf_model_generator()
+            audio_path = self.audio_preprocess()
 
-            result = asr_pipeline(audio_preprocessed)
+            result = pipeline_model(audio_path)
 
-            # Case 1: list of dicts -> [{'text': '...'}]
+            # Handle: [{"text": "..."}]
             if isinstance(result, list) and result and isinstance(result[0], dict):
-                if "text" in result[0]:
-                    return result[0]["text"]
+                return result[0].get("text", "")
 
-            # Case 2: single dict -> {'text': '...'}
-            if isinstance(result, dict) and "text" in result:
-                return result["text"]
+            # Handle: {"text": "..."}
+            if isinstance(result, dict):
+                return result.get("text", "")
 
-            # Case 3: generator or other iterable (rare, but safe)
+            # Handle generators
             if hasattr(result, "__iter__") and not isinstance(result, (dict, list, str)):
-                result_list = list(result)
-                if result_list and isinstance(result_list[0], dict) and "text" in result_list[0]:
-                    return result_list[0]["text"]
+                items = list(result)
+                if items and isinstance(items[0], dict):
+                    return items[0].get("text", "")
 
             print("Unexpected HF pipeline output:", result)
             return ""
 
         except Exception as e:
-            print("Error while accessing Hugging Face model. Please try changing model")
-            print("Details:", e)
+            print("Error while accessing HF Whisper:", e)
             return ""
 
-    #  Selector 
+     
+    #   SELECTOR     
     def model_selector(self) -> str:
-        """
-        Choose which backend to use based on self.model.
-        """
         match self.model:
             case "whisper":
                 return self.whisper_transcribe()
@@ -164,18 +160,41 @@ class STT:
                 return self.hf_transcribe()
             case _:
                 raise IllegalModelSelectionException(
-                    f"Model type {self.model!r} not found. Try a different model type."
+                    f"Model type {self.model} is invalid. Choose 'whisper' or 'hf'."
                 )
 
-    #  Public API 
-    def transcribe(self) -> None:
+     
+    #   PUBLIC API     
+    def transcribe(self):
         """
-        Run transcription with selected model and store in transcription_list.
+        BACKWARD COMPATIBLE.
+        Loads Whisper at first use.
         """
         try:
-            transcription = self.model_selector()
-            if transcription:
-                self.transcription_list.append(transcription)
+            text = self.model_selector()
+            if text:
+                self.transcription_list.append(text)
         except Exception as e:
-            # You might want to log this instead of just printing
             print("Transcription error:", e)
+
+     
+    #   TRANSCRIBE WITH PRE-LOADED MODEL
+    def transcribe_with_existing_model(self, whisper_model, audio_file_path, lang=None):
+        """
+        Uses a *preloaded* whisper model (from FastAPI startup)
+        → NO reloading
+        → FAST response
+        """
+        try:
+            lang = lang or self.lang
+
+            output = whisper_model.transcribe(audio_file_path, language=lang)
+
+            if isinstance(output, dict) and "text" in output:
+                return output["text"]
+
+            print("Unexpected Whisper output:", output)
+            return ""
+        except Exception as e:
+            print("Whisper transcription failed:", e)
+            return ""
