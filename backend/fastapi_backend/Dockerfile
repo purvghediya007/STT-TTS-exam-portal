@@ -4,7 +4,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
@@ -20,10 +19,13 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Install CPU-only PyTorch (required for Whisper + HF)
+# Install PyTorch CPU
 RUN pip install --no-cache-dir torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
 
-# Install project Python packages
+# Install transformers + other dependencies first
+RUN pip install --no-cache-dir "transformers>=4.40.0" "accelerate>=0.30.0"
+
+# Install project deps
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .

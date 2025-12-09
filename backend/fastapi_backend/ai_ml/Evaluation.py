@@ -6,7 +6,7 @@ from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_huggingface import HuggingFacePipeline
 
 # Transformers for loading pre-trained models
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 # Pydantic for data validation and settings management
 from pydantic import BaseModel, Field
@@ -46,23 +46,28 @@ class HFModelCreation:
           HuggingFacePipeline: An initialized HuggingFacePipeline object if successful, None otherwise.
         """
         try:
-            # Initialize a text generation pipeline with specified model and parameters
-            model_pipeline = pipeline(
-                task="text-generation",
-                model=model_name,
-                temperature=0.1,  # Controls the randomness of the output
-                max_new_tokens=1024,  # Maximum number of tokens to generate
-                return_full_text=False,  # Only return generated text, not prompt
-                repetition_penalty=1.1  # Penalize repeating tokens
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype="auto",
+                device_map="auto"
             )
 
-            # Wrap the pipeline in LangChain's HuggingFacePipeline for compatibility
-            model = HuggingFacePipeline(pipeline=model_pipeline)
+            generation_pipeline = pipeline(
+                "text-generation",
+                model=model,
+                tokenizer=tokenizer,
+                max_new_tokens=1024,
+                temperature=0.1,
+                do_sample=False,
+                repetition_penalty=1.1
+            )
 
-            return model
+            return HuggingFacePipeline(pipeline=generation_pipeline)
 
         except Exception as e:
-            print(f"Some error occured! Details: {e}")
+            print(f"Error loading HF model: {e}")
             return None
 
 
