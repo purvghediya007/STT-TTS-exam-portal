@@ -59,6 +59,8 @@ class HFModelCreation:
                 model=model,
                 tokenizer=tokenizer,
                 max_new_tokens=1024,
+                trust_remote_code=True,           # required for Qwen 2.5
+                device_map="auto",                # Fixes GPU/CPU inference mismatch
                 temperature=0.1,
                 do_sample=False,
                 repetition_penalty=1.1
@@ -197,12 +199,11 @@ Maximum Marks: {max_marks}
 
             # Define the prompt template for the evaluation process
             template = """
-      <|im_start|>system
-You are a strict exam evaluation engine. You must respond with valid JSON only.
-Do not add any conversational text, Markdown formatting, or code blocks.
+<|im_start|>system
+You are a strict exam evaluation engine. You must respond ONLY with valid JSON.
+Do NOT include explanations, markdown, or extra text.
 <|im_end|>
 <|im_start|>user
-Refrence Material:
 Rubric: {rubric}
 Question: {question_text}
 Maximum Marks: {max_marks}
@@ -210,11 +211,11 @@ Maximum Marks: {max_marks}
 Student Answer:
 {student_answer}
 
-Evaluate the student answer.
+Evaluate the student answer and respond ONLY in this JSON format:
 {format_instructions}
 <|im_end|>
 <|im_start|>assistant
-      """
+"""
 
             # Create a PromptTemplate with input variables and partial variables for format instructions
             prompt = PromptTemplate(
