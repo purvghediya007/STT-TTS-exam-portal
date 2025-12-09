@@ -4,8 +4,7 @@ from contextlib import asynccontextmanager
 
 from ai_ml.Evaluation import EvaluationEngine
 from ai_ml.Speech2Text import ModelGenerator
-
-from app.core import models   
+from app.core import models
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,6 +16,9 @@ async def lifespan(app: FastAPI):
 
     # preload Qwen model
     models.qwen_model = EvaluationEngine("Qwen/Qwen2.5-3B-Instruct")
+
+    # force Qwen download during startup
+    models.qwen_model.get_model()
 
     yield
 
