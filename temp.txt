@@ -1,8 +1,0 @@
-from audio_preprocessing import AudioPreprocessor
-
-preprocessor = AudioPreprocessor()
-result = preprocessor.preprocess_file("user_audio.wav")
-
-for chunk in result.chunks:
-    # send chunk to your STT model
-    text = stt_model.transcribe(chunk, result.sample_rate)
