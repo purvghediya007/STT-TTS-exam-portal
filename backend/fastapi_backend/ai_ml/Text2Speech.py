@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 from gtts import gTTS
 
-from .AIExceptions import *
+from backend.fastapi_backend.ai_ml.AIExceptions import *
 
 @dataclass
 class TTSConfig:
