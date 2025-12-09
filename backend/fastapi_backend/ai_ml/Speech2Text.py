@@ -19,9 +19,9 @@ warnings.filterwarnings("ignore")
 import whisper
 from transformers import pipeline
 
-from backend.fastapi_backend.ai_ml.AIExceptions import IllegalModelSelectionException
+from ai_ml.AIExceptions import IllegalModelSelectionException
 
-from backend.fastapi_backend.ai_ml.AudioPreprocessor import AudioPreprocessor
+from ai_ml.AudioPreprocessor import AudioPreprocessor
 
 # torch is optional but useful for device detection
 try:
