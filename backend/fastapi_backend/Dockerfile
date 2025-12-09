@@ -9,16 +9,19 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     build-essential \
+    libsndfile1 \
+    libblas-dev \
+    liblapack-dev \
+    libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-# Install Torch separately (CPU)
+# Torch CPU build
 RUN pip install --no-cache-dir torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
 
-# Install all other requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
