@@ -46,12 +46,16 @@ class HFModelCreation:
           HuggingFacePipeline: An initialized HuggingFacePipeline object if successful, None otherwise.
         """
         try:
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                trust_remote_code=True
+            )
 
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype="auto",
-                device_map="auto"
+                device_map="auto",
+                trust_remote_code=True
             )
 
             generation_pipeline = pipeline(
@@ -59,8 +63,8 @@ class HFModelCreation:
                 model=model,
                 tokenizer=tokenizer,
                 max_new_tokens=1024,
-                trust_remote_code=True,           # required for Qwen 2.5
-                device_map="auto",                # Fixes GPU/CPU inference mismatch
+                trust_remote_code=True,
+                device_map="auto",
                 temperature=0.1,
                 do_sample=False,
                 repetition_penalty=1.1
