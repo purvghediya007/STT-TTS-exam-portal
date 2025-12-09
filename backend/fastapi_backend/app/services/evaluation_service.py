@@ -1,7 +1,6 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
-from app.main import qwen_model
-
+from app.core.models import qwen_model
 
 class EvaluationService:
 
