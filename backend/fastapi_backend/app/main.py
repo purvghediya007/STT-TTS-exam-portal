@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     models.whisper_model = ModelGenerator.whisper_model_generator()
 
     # preload Qwen model
-    models.qwen_model = EvaluationEngine("NousResearch/Hermes-2-Pro-Mistral-3B")
+    models.qwen_model = EvaluationEngine("NousResearch/Hermes-2-Pro-Mistral-7B")
 
 
     # force Qwen download during startup
