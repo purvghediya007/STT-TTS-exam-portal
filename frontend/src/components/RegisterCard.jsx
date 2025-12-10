@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Loader } from 'lucide-react'
 import logoImg from '../assets/vgec-logo.png'
 
 const initialState = {
   role: 'student',
-  fullName: '',
+  username: '',
   email: '',
-  enrollment: '',
-  facultyId: '',
+  enrollmentNumber: '',
   password: '',
   confirmPassword: '',
 }
@@ -16,37 +16,82 @@ export default function RegisterCard() {
   const navigate = useNavigate()
   const [form, setForm] = useState(initialState)
   const [message, setMessage] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setMessage(null)
+
+    // Validate passwords match
     if (form.password !== form.confirmPassword) {
       setMessage({ type: 'error', text: 'Passwords do not match.' })
       return
     }
 
-    const newUser = {
-      role: form.role,
-      fullName: form.fullName,
-      email: form.email,
-      enrollment: form.role === 'student' ? form.enrollment : undefined,
-      facultyId: form.role === 'faculty' ? form.facultyId : undefined,
-      password: form.password,
-      createdAt: new Date().toISOString(),
+    // Validate password length
+    if (form.password.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters.' })
+      return
     }
 
+    setIsLoading(true)
+
     try {
-      const users = JSON.parse(localStorage.getItem('registered_users') || '[]')
-      users.push(newUser)
-      localStorage.setItem('registered_users', JSON.stringify(users))
-      setMessage({ type: 'success', text: 'Registration saved. You can now log in.' })
-      setTimeout(() => navigate('/'), 800)
+      // Map frontend role to backend role
+      const apiRole = form.role === 'student' ? 'Student' : 'Teacher'
+
+      const requestBody = {
+        role: apiRole,
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      }
+
+      // Add enrollmentNumber for students
+      if (form.role === 'student' && form.enrollmentNumber) {
+        requestBody.enrollmentNumber = form.enrollmentNumber
+      }
+
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage({
+          type: 'error',
+          text: data.message || 'Registration failed. Please try again.'
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // Success
+      setMessage({
+        type: 'success',
+        text: 'Registration successful! Redirecting to login...'
+      })
+
+      // Redirect to login after 1.5 seconds
+      setTimeout(() => {
+        navigate('/')
+      }, 1500)
     } catch (error) {
-      console.error('Registration error', error)
-      setMessage({ type: 'error', text: 'Could not save registration. Please try again.' })
+      console.error('Registration error:', error)
+      setMessage({
+        type: 'error',
+        text: 'An error occurred. Please try again.'
+      })
+      setIsLoading(false)
     }
   }
 
@@ -65,6 +110,7 @@ export default function RegisterCard() {
             onClick={() => update('role', option)}
             role="tab"
             aria-selected={form.role === option}
+            disabled={isLoading}
           >
             {option === 'student' ? 'Student' : 'Faculty'}
           </button>
@@ -74,17 +120,31 @@ export default function RegisterCard() {
       <header className="card-copy">
         <p className="eyebrow">Create an account</p>
         <h1>Sign up</h1>
-        <p>Register with your {isStudent ? 'enrollment and email' : 'faculty ID and email'}.</p>
+        <p>Register with your {isStudent ? 'email and enrollment number' : 'email and faculty ID'}.</p>
       </header>
 
       <form className="login-form" onSubmit={handleSubmit}>
+        {message && (
+          <div style={{
+            padding: '10px 12px',
+            backgroundColor: message.type === 'success' ? '#efe' : '#fee',
+            color: message.type === 'success' ? '#060' : '#c00',
+            borderRadius: '4px',
+            marginBottom: '12px',
+            fontSize: '14px'
+          }}>
+            {message.text}
+          </div>
+        )}
+
         <label className="input-field">
-          <span>Full Name</span>
+          <span>Username</span>
           <input
             type="text"
-            placeholder="Your full name"
-            value={form.fullName}
-            onChange={(e) => update('fullName', e.target.value)}
+            placeholder="Choose a username"
+            value={form.username}
+            onChange={(e) => update('username', e.target.value)}
+            disabled={isLoading}
             required
           />
         </label>
@@ -96,30 +156,20 @@ export default function RegisterCard() {
             placeholder="you@example.com"
             value={form.email}
             onChange={(e) => update('email', e.target.value)}
+            disabled={isLoading}
             required
           />
         </label>
 
-        {isStudent ? (
+        {isStudent && (
           <label className="input-field">
             <span>Enrollment Number</span>
             <input
               type="text"
               placeholder="e.g. 20XX123456"
-              value={form.enrollment}
-              onChange={(e) => update('enrollment', e.target.value)}
-              required
-            />
-          </label>
-        ) : (
-          <label className="input-field">
-            <span>Faculty ID / Username</span>
-            <input
-              type="text"
-              placeholder="e.g. prof.patel@vgec.ac.in"
-              value={form.facultyId}
-              onChange={(e) => update('facultyId', e.target.value)}
-              required
+              value={form.enrollmentNumber}
+              onChange={(e) => update('enrollmentNumber', e.target.value)}
+              disabled={isLoading}
             />
           </label>
         )}
@@ -128,9 +178,10 @@ export default function RegisterCard() {
           <span>Password</span>
           <input
             type="password"
-            placeholder="Create password"
+            placeholder="Create password (min 6 characters)"
             value={form.password}
             onChange={(e) => update('password', e.target.value)}
+            disabled={isLoading}
             required
           />
         </label>
@@ -142,20 +193,29 @@ export default function RegisterCard() {
             placeholder="Repeat password"
             value={form.confirmPassword}
             onChange={(e) => update('confirmPassword', e.target.value)}
+            disabled={isLoading}
             required
           />
         </label>
 
-        {message && (
-          <div className={`notice ${message.type}`}>
-            {message.text}
-          </div>
-        )}
-
-        <button type="submit" className="primary">Create account</button>
+        <button type="submit" className="primary" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader style={{ width: 16, height: 16, marginRight: 6, animation: 'spin 1s linear infinite' }} />
+              Creating account...
+            </>
+          ) : (
+            'Create account'
+          )}
+        </button>
 
         <div className="form-footer">
-          <button type="button" className="linkish" onClick={() => navigate('/')}>
+          <button
+            type="button"
+            className="linkish"
+            onClick={() => navigate('/')}
+            disabled={isLoading}
+          >
             Back to login
           </button>
         </div>
@@ -163,10 +223,6 @@ export default function RegisterCard() {
     </div>
   )
 }
-
-
-
-
 
 
 

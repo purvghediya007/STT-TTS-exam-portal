@@ -1,6 +1,8 @@
 import React, { useMemo, useEffect, useState } from 'react'
 import { Clock } from 'lucide-react'
 import { useExams } from '../hooks/useExams'
+import { useAuth } from '../contexts/AuthContext'
+import { fetchAPI } from '../services/api'
 import HistoryTable from '../components/HistoryTable'
 
 /**
@@ -8,63 +10,52 @@ import HistoryTable from '../components/HistoryTable'
  */
 export default function HistoryView() {
   const { exams = [] } = useExams() || {}
+  const { user } = useAuth()
   const [submissions, setSubmissions] = useState({})
 
   // Fetch submissions for all exams
   useEffect(() => {
     const fetchSubmissions = async () => {
+      if (!user?.sub) return // Wait for user to be loaded
+
       const submissionsMap = {}
       for (const exam of exams) {
         try {
-          const response = await fetch(`/api/student/exams/${exam.id}/submissions?studentId=STU001`)
-          if (response.ok) {
-            const data = await response.json()
-            if (data.submissions && data.submissions.length > 0) {
-              // Get the most recent submission
-              submissionsMap[exam.id] = data.submissions[data.submissions.length - 1]
-            }
+          const response = await fetchAPI(`/student/exams/${exam.id}/submissions?studentId=${user.sub}`)
+          const data = await response.json()
+          if (data.submissions && data.submissions.length > 0) {
+            // Get the most recent submission
+            submissionsMap[exam.id] = data.submissions[data.submissions.length - 1]
           }
-        } catch {
-          // Ignore errors
+        } catch (error) {
+          console.error(`Failed to fetch submissions for exam ${exam.id}:`, error)
         }
       }
       setSubmissions(submissionsMap)
     }
     fetchSubmissions()
-  }, [exams])
+  }, [exams, user?.sub])
 
-  // Get submitted/completed exams with submission data
+  // Get all exams with submission data
   const completedExams = useMemo(() => {
-    const now = new Date()
-    return exams
-      .filter((exam) => {
-        // Check status first
-        if (exam.status === 'finished') return true
-        
-        // Then check dates if status is not set correctly
-        if (!exam.endsAt) return false
-        const ends = new Date(exam.endsAt)
-        
-        // Exam is finished if end time has passed
-        if (!isNaN(ends.getTime())) {
-          return now >= ends
-        }
-        return false
-      })
-      .map(exam => {
-        const submission = submissions[exam.id]
-        return {
-          ...exam,
-          result: submission ? {
-            score: submission.score,
-            maxScore: submission.maxScore
-          } : null,
-          pointsAwarded: submission?.score,
-          totalScore: submission?.maxScore,
-          timeTakenSec: submission?.timeSpent ? submission.timeSpent * 60 : null,
-          endsAt: submission?.submittedAt || exam.endsAt
-        }
-      })
+    return exams.map(exam => {
+      const submission = submissions[exam.id]
+      return {
+        ...exam,
+        // Map submission data to expected fields
+        result: submission ? {
+          score: submission.totalScore,
+          maxScore: submission.maxScore
+        } : null,
+        pointsAwarded: submission?.totalScore,
+        totalScore: submission?.maxScore,
+        percentage: submission?.percentage,
+        timeTakenSec: submission?.timeSpent ? submission.timeSpent * 60 : null,
+        endsAt: submission?.finishedAt || exam.endsAt || exam.endTime,
+        endTime: submission?.finishedAt || exam.endTime,
+        pointsTotal: exam.pointsTotal || submission?.maxScore
+      }
+    })
   }, [exams, submissions])
 
   return (

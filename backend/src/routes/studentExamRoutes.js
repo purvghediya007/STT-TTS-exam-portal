@@ -14,14 +14,224 @@ const router = express.Router();
 const mapQuestionForStudent = (q) => {
   return {
     id: q._id,
-    text: q.text,
+    question: q.text, // Return as 'question' to match frontend expectations
+    text: q.text, // Also return as 'text' for compatibility
     type: q.type,
     marks: q.marks,
+    points: q.marks, // Also return as 'points' for frontend compatibility
     instruction: q.instruction,
     media: q.media,
     order: q.order,
   };
 };
+
+/**
+ * Helper function to transform exam object for frontend
+ * Maps MongoDB field names to frontend field names
+ */
+function transformExamForFrontend(examObj) {
+  return {
+    ...examObj,
+    id: examObj._id,
+    startsAt: examObj.startTime,
+    endsAt: examObj.endTime,
+    durationMin: examObj.durationMinutes,
+    teacherName: examObj.teacherId?.name || "Unknown Teacher",
+  };
+}
+
+//
+// ---------- 0) LIST ALL PUBLISHED EXAMS FOR STUDENT ----------
+// GET /api/student/exams
+// Returns all published exams (upcoming, live, and finished)
+//
+router.get(
+  "/exams",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { status, limit = 100, page = 1 } = req.query;
+      const studentId = req.user.sub;
+
+      // Build filter for published exams only (students can't see draft or archived)
+      const filter = { status: "published" };
+
+      if (status && status !== "all") {
+        const now = new Date();
+        if (status === "upcoming") {
+          filter.startTime = { $gt: now };
+        } else if (status === "live") {
+          filter.startTime = { $lte: now };
+          filter.endTime = { $gte: now };
+        } else if (status === "finished") {
+          filter.endTime = { $lt: now };
+        }
+      }
+
+      const skip = (page - 1) * limit;
+
+      const exams = await Exam.find(filter)
+        .populate("teacherId", "name email")
+        .sort({ startTime: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+      const total = await Exam.countDocuments(filter);
+
+      // Find any existing attempts for this student on these exams
+      const attempts = await StudentExamAttempt.find({
+        studentId,
+        examId: { $in: exams.map((e) => e._id) },
+      });
+
+      const attemptsByExam = new Map();
+      attempts.forEach((a) => attemptsByExam.set(a.examId.toString(), a));
+
+      // Transform exams for frontend
+      const transformedExams = exams.map((exam) => {
+        const attempt = attemptsByExam.get(exam._id.toString());
+        return {
+          ...transformExamForFrontend(exam.toObject()),
+          attemptStatus: attempt ? attempt.status : null,
+        };
+      });
+
+      return res.status(200).json({
+        exams: transformedExams,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 0.5) GET EXAM SUMMARY ----------
+// GET /api/student/exams/:examId/summary
+// Get details of a specific exam for student
+//
+router.get(
+  "/exams/:examId/summary",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+
+      const exam = await Exam.findOne({
+        _id: examId,
+        status: "published",
+      }).populate("teacherId", "name email");
+
+      if (!exam) {
+        return res
+          .status(404)
+          .json({ message: "Exam not found or not published" });
+      }
+
+      const questionCount = await Question.countDocuments({ examId });
+
+      return res.status(200).json({
+        ...transformExamForFrontend(exam.toObject()),
+        questionCount,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 0.55) GET EXAM SUBMISSIONS BY STUDENT ----------
+// GET /api/student/exams/:examId/submissions?studentId=XXX
+// Get all submissions for a specific exam by a specific student
+//
+router.get(
+  "/exams/:examId/submissions",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const { studentId } = req.query;
+
+      if (!studentId) {
+        return res
+          .status(400)
+          .json({ message: "studentId query parameter is required" });
+      }
+
+      // Find all attempts for this exam and student
+      const attempts = await StudentExamAttempt.find({
+        examId,
+        studentId,
+      })
+        .sort({ startedAt: -1 })
+        .populate(
+          "examId",
+          "title examCode startTime endTime durationMinutes pointsTotal"
+        );
+
+      const submissions = attempts.map((attempt) => ({
+        attemptId: attempt._id,
+        examId: attempt.examId?._id,
+        studentId: attempt.studentId,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        finishedAt: attempt.finishedAt,
+        totalScore: attempt.totalScore,
+        maxScore: attempt.maxScore,
+        percentage:
+          attempt.maxScore > 0
+            ? Math.round((attempt.totalScore / attempt.maxScore) * 100)
+            : 0,
+      }));
+
+      return res.status(200).json({ submissions });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 0.6) GET EXAM QUESTIONS ----------
+// GET /api/student/exams/:examId/questions
+// Get all questions for a specific exam (student view - no answers)
+//
+router.get(
+  "/exams/:examId/questions",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+
+      const exam = await Exam.findOne({
+        _id: examId,
+        status: "published",
+      });
+
+      if (!exam) {
+        return res
+          .status(404)
+          .json({ message: "Exam not found or not published" });
+      }
+
+      const questions = await Question.find({ examId }).sort({ order: 1 });
+
+      // Map to student-safe view
+      const studentQuestions = questions.map(mapQuestionForStudent);
+
+      return res.status(200).json({ questions: studentQuestions });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 //
 // ---------- 1) LIST AVAILABLE EXAMS FOR STUDENT ----------
@@ -126,12 +336,13 @@ router.post(
         if (attempt.status === "in_progress") {
           return res.status(200).json({
             message: "Exam already started",
-            attempt,
+            attemptId: attempt._id.toString(),
+            expiresAt: attempt.deadlineAt.toISOString(),
+            firstQuestionId: null,
           });
         }
         return res.status(400).json({
           message: "You have already attempted this exam",
-          attempt,
         });
       }
 
@@ -152,7 +363,9 @@ router.post(
 
       return res.status(201).json({
         message: "Exam attempt started",
-        attempt,
+        attemptId: attempt._id.toString(),
+        expiresAt: deadlineAt.toISOString(),
+        firstQuestionId: null,
       });
     } catch (error) {
       next(error);
@@ -211,6 +424,121 @@ router.get(
         questions: safeQuestions,
       });
     } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 3.5) SUBMIT ANSWERS BY EXAM ID ----------
+// POST /api/student/exams/:examId/submit
+// Frontend endpoint that accepts examId instead of attemptId
+//
+router.post(
+  "/exams/:examId/submit",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const { attemptId, answers, mediaAnswers, timeSpent, startedAt } =
+        req.body;
+      const studentId = req.user.sub;
+      const now = new Date();
+
+      if (!attemptId) {
+        return res.status(400).json({ message: "attemptId is required" });
+      }
+
+      console.log("=== SUBMIT ENDPOINT ===");
+      console.log("Received attemptId:", attemptId);
+      console.log(
+        "Is valid MongoDB ID format:",
+        /^[0-9a-f]{24}$/.test(attemptId)
+      );
+
+      // Verify the attempt belongs to this student and exam
+      let attempt;
+      try {
+        attempt = await StudentExamAttempt.findById(attemptId);
+      } catch (err) {
+        console.error("Error finding attempt by ID:", err.message);
+        // If ID format is invalid, try to find by student and exam
+        attempt = await StudentExamAttempt.findOne({
+          examId,
+          studentId,
+          status: "in_progress",
+        });
+        if (!attempt) {
+          return res.status(400).json({
+            message:
+              "Invalid attemptId format and no active attempt found for this exam",
+            receivedAttemptId: attemptId,
+          });
+        }
+      }
+      if (!attempt) {
+        return res.status(404).json({ message: "Attempt not found" });
+      }
+
+      if (attempt.studentId.toString() !== studentId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      if (attempt.examId.toString() !== examId) {
+        return res
+          .status(400)
+          .json({ message: "Exam ID mismatch with attempt" });
+      }
+
+      // Check if exam is still live
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (now > attempt.deadlineAt) {
+        attempt.status = "expired";
+        await attempt.save();
+        return res.status(400).json({ message: "Attempt time is over" });
+      }
+
+      // Store mediaAnswers as StudentAnswers if provided
+      if (mediaAnswers && typeof mediaAnswers === "object") {
+        const questions = await Question.find({
+          examId: examId,
+        }).sort({ order: 1 });
+
+        for (const q of questions) {
+          const mediaAnswer = mediaAnswers[q._id.toString()];
+          if (mediaAnswer) {
+            await StudentAnswer.findOneAndUpdate(
+              { attemptId: attempt._id, questionId: q._id },
+              { answerText: mediaAnswer },
+              { upsert: true }
+            );
+          }
+        }
+      }
+
+      // Mark attempt as submitted
+      attempt.status = "submitted";
+      attempt.finishedAt = now;
+      if (timeSpent) {
+        attempt.timeSpent = timeSpent;
+      }
+      await attempt.save();
+
+      // Return success response
+      return res.status(200).json({
+        submissionId: attempt._id,
+        score: 0,
+        maxScore: exam.pointsTotal || 0,
+        percentage: 0,
+        message: "Exam submitted successfully",
+      });
+    } catch (error) {
+      console.error("Error submitting exam:", error);
       next(error);
     }
   }
@@ -280,9 +608,7 @@ router.post(
         examId: exam._id,
       });
 
-      const questionMap = new Map(
-        questions.map((q) => [q._id.toString(), q])
-      );
+      const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
 
       // 1) Save / upsert all answers first
       const bulkOps = [];
@@ -348,8 +674,7 @@ router.post(
         ans.score = score;
         ans.maxMarks = maxMarks;
         ans.evaluationFeedback = feedback;
-        ans.evaluationModel =
-          process.env.AI_MODEL || "gemini-1.5-flash";
+        ans.evaluationModel = process.env.AI_MODEL || "gemini-1.5-flash";
         ans.evaluatedAt = new Date();
 
         await ans.save();

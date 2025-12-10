@@ -6,11 +6,21 @@
  * Format a date string to a readable format: "Sep 1, 2025 • 10:00 AM — 11:00 AM"
  */
 export function formatExamTimeRange(
-  startsAt: string,
-  endsAt: string
+  startsAt: string | null | undefined,
+  endsAt: string | null | undefined
 ): string {
+  // Handle null or undefined dates
+  if (!startsAt || !endsAt) {
+    return "Not scheduled"
+  }
+
   const start = new Date(startsAt)
   const end = new Date(endsAt)
+
+  // Check if dates are valid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return "Invalid Date"
+  }
 
   const dateStr = start.toLocaleDateString('en-US', {
     month: 'short',
@@ -36,7 +46,10 @@ export function formatExamTimeRange(
 /**
  * Format duration in minutes to a readable string
  */
-export function formatDuration(minutes: number): string {
+export function formatDuration(minutes: number | null | undefined): string {
+  if (!minutes || minutes <= 0) {
+    return "—"
+  }
   if (minutes < 60) {
     return `${minutes}m`
   }
@@ -48,7 +61,10 @@ export function formatDuration(minutes: number): string {
 /**
  * Format time per question in seconds
  */
-export function formatTimePerQuestion(seconds: number): string {
+export function formatTimePerQuestion(seconds: number | null | undefined): string {
+  if (!seconds || seconds <= 0) {
+    return "—"
+  }
   if (seconds < 60) {
     return `${seconds}s`
   }
