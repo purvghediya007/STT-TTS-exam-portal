@@ -1,6 +1,6 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
-from app.core import models   # changed — load module, not variable
+from app.core import models   
 
 
 class EvaluationService:
