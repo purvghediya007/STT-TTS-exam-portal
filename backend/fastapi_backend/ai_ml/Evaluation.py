@@ -32,13 +32,18 @@ class HFModelCreation:
                 trust_remote_code=True
             )
 
+            tokenizer.pad_token = tokenizer.eos_token
+
             gen = pipeline(
                 "text-generation",
                 model=model,
                 tokenizer=tokenizer,
-                max_new_tokens=700,
-                temperature=0.2,
-                do_sample=False
+                max_new_tokens=600,
+                temperature=0.0,
+                do_sample=False,
+                eos_token_id=tokenizer.eos_token_id,
+                pad_token_id=tokenizer.eos_token_id,
+                return_full_text=False
             )
 
             return HuggingFacePipeline(pipeline=gen)
@@ -60,14 +65,20 @@ class EvaluationEngine(HFModelCreation):
         return self.model
 
     def sanitize_json(self, text: str) -> str:
-        text = text.strip()
         text = text.replace("```json", "").replace("```", "")
+        text = text.strip()
+
+        # extract first { ... }
+        match = re.search(r"\{[\s\S]*\}", text)
+        if match:
+            text = match.group(0)
+
+        # fix trailing commas
         text = re.sub(r",\s*}", "}", text)
         text = re.sub(r",\s*]", "]", text)
-        match = re.search(r"\{.*\}", text, re.DOTALL)
-        if match:
-            return match.group(0)
+
         return text
+
 
     def create_rubrics(self, input_features: dict) -> str:
         try:
@@ -135,11 +146,25 @@ Maximum Marks: {max_marks}
             input_features["rubric"] = self.create_rubrics(input_features)
 
             chain, parser = self.create_evaluation_chain()
-
             raw = chain.invoke(input_features)
 
-            cleaned = self.sanitize_json(str(raw))
+            # Extract actual text reliably
+            if isinstance(raw, dict) and "text" in raw:
+                output = raw["text"]
 
+            elif isinstance(raw, dict) and "generated_text" in raw:
+                output = raw["generated_text"]
+
+            elif hasattr(raw, "generations"):
+                output = raw.generations[0][0].text
+
+            elif isinstance(raw, list) and isinstance(raw[0], dict) and "generated_text" in raw[0]:
+                output = raw[0]["generated_text"]
+
+            else:
+                output = str(raw)
+
+            cleaned = self.sanitize_json(output)
             return parser.parse(cleaned)
 
         except Exception as e:
