@@ -5,6 +5,11 @@ const baseUserFields = require("./baseUserFields");
 const studentSchema = new mongoose.Schema(
   {
     ...baseUserFields,
+    enrollmentNumber: {
+      type: String,
+      sparse: true,
+      trim: true,
+    },
   },
   {
     collection: "Register_info_student",

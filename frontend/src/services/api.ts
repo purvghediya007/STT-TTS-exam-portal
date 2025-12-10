@@ -23,7 +23,7 @@ function getAuthHeaders(): HeadersInit {
 /**
  * Fetch wrapper with error handling
  */
-async function fetchAPI(
+export async function fetchAPI(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
@@ -414,34 +414,23 @@ export async function fetchFacultyExams(params: {
     if (params.page) queryParams.append('page', params.page.toString())
     if (params.limit) queryParams.append('limit', params.limit.toString())
 
-    const response = await fetchAPI(`/faculty/exams?${queryParams}`)
-    return response.json()
+    const response = await fetchAPI(`/exams/my?${queryParams}`)
+    const data = await response.json()
+    
+    return {
+      exams: data.exams || [],
+      page: params.page || 1,
+      limit: params.limit || 100,
+      total: data.exams?.length || 0
+    }
   } catch (err) {
-    console.warn('API fetch failed, using localStorage fallback:', err)
-    // Fallback to localStorage if server is not available
-    try {
-      const storedExams = localStorage.getItem('faculty_exams')
-      let exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
-      
-      // Initialize if empty
-      if (!storedExams) {
-        localStorage.setItem('faculty_exams', JSON.stringify(MOCK_FACULTY_EXAMS))
-      }
-      
-      return {
-        exams,
-        page: params.page || 1,
-        limit: params.limit || 100,
-        total: exams.length
-      }
-    } catch (fallbackErr) {
-      // Last resort: return mock data
-      return {
-        exams: MOCK_FACULTY_EXAMS,
-        page: params.page || 1,
-        limit: params.limit || 100,
-        total: MOCK_FACULTY_EXAMS.length
-      }
+    console.warn('API fetch failed, using fallback:', err)
+    // Fallback to empty array - no hardcoded mock data
+    return {
+      exams: [],
+      page: params.page || 1,
+      limit: params.limit || 100,
+      total: 0
     }
   }
 }
@@ -924,5 +913,49 @@ export async function fetchExamSubmissions(examId: string): Promise<{
   total: number
 }> {
   const response = await fetchAPI(`/faculty/exams/${examId}/submissions`)
+  return response.json()
+}
+
+/**
+ * Fetch exam results with all student submissions and answers
+ * GET /api/exams/:examId/results
+ */
+export async function fetchExamResults(examId: string): Promise<{
+  exam: {
+    id: string
+    title: string
+    examCode: string
+    startTime: string
+    endTime: string
+    durationMinutes: number
+    pointsTotal?: number
+  }
+  attempts: Array<{
+    attemptId: string
+    student: {
+      id: string
+      username: string
+      email: string
+    } | null
+    status: string
+    startedAt: string
+    finishedAt: string | null
+    totalScore: number | null
+    maxScore: number | null
+    answers: Array<{
+      questionId: string
+      text: string
+      marks: number
+      order: number
+      instruction: string
+      answerText: string
+      score: number | null
+      maxMarks: number
+      feedback: string | null
+      evaluatedAt: string | null
+    }>
+  }>
+}> {
+  const response = await fetchAPI(`/exams/${examId}/results`)
   return response.json()
 }
