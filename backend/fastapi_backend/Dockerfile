@@ -19,13 +19,12 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Install PyTorch CPU
-RUN pip install --no-cache-dir torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.2.2 \
+    --index-url https://download.pytorch.org/whl/cpu \
+    --extra-index-url https://pypi.org/simple
 
-# Install transformers + other dependencies first
 RUN pip install --no-cache-dir "transformers>=4.40.0" "accelerate>=0.30.0"
 
-# Install project deps
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
