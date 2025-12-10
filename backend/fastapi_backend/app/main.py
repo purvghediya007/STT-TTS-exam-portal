@@ -31,3 +31,4 @@ def health():
 
 app.include_router(stt.router)
 app.include_router(evaluation.router)
+app.include_router(tts.router)
