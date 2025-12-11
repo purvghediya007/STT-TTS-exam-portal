@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Clock, 
-  HelpCircle, 
-  User, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Clock,
+  HelpCircle,
+  User,
   ChevronDown,
   CheckSquare,
   FileText,
@@ -22,25 +22,40 @@ export default function StudentLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [studentName, setStudentName] = useState('Student')
+  const [enrollment, setEnrollment] = useState('N/A')
   const dropdownRef = useRef(null)
-  
+
   const { refreshExams } = useExams({ initialStatus: 'all' })
 
-  // Get user data (mock for now - replace with actual auth context)
-  // TODO: Replace with actual user context/state management
-  const user = {
-    name: 'Student Name',
-    enrollment: '230170116004',
-    avatarUrl: null
-  }
-
-  // Try to get enrollment from localStorage if available
+  // Get user data from localStorage
   useEffect(() => {
-    const storedEnrollment = localStorage.getItem('student_enrollment')
-    if (storedEnrollment) {
-      // Could update user state here if using state management
+    const userDataStr = localStorage.getItem('user_data')
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr)
+        // Set enrollment from userData (priority: enrollmentNumber > username)
+        if (userData.enrollmentNumber) {
+          setEnrollment(userData.enrollmentNumber)
+        } else if (userData.username) {
+          setEnrollment(userData.username)
+        }
+        // Set student name from userData (use username)
+        if (userData.username) {
+          setStudentName(userData.username)
+        }
+      } catch (e) {
+        console.error('Failed to parse user data:', e)
+      }
     }
   }, [])
+
+  // Create user object with dynamic data
+  const user = {
+    name: studentName,
+    enrollment: enrollment,
+    avatarUrl: null
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -132,14 +147,14 @@ export default function StudentLayout({ children }) {
                   <div className="text-sm font-semibold text-gray-900">{user.name}</div>
                   <div className="text-xs text-gray-500 mt-0.5">Enrollment: {user.enrollment}</div>
                 </div>
-                <button 
+                <button
                   onClick={() => { setShowUserDropdown(false); handleNavigation('dashboard') }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
                   <User className="w-4 h-4" />
                   Profile
                 </button>
-                <button 
+                <button
                   onClick={handleRefresh}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
@@ -147,7 +162,7 @@ export default function StudentLayout({ children }) {
                   Refresh Data
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
@@ -167,11 +182,10 @@ export default function StudentLayout({ children }) {
             {/* Dashboard */}
             <button
               onClick={() => handleNavigation('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'dashboard'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-100 hover:bg-blue-800'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'dashboard'
+                ? 'bg-blue-700 text-white'
+                : 'text-blue-100 hover:bg-blue-800'
+                }`}
             >
               <LayoutDashboard className="w-5 h-5" />
               <span className="font-medium">Dashboard</span>
@@ -180,11 +194,10 @@ export default function StudentLayout({ children }) {
             {/* Upcoming Quiz */}
             <button
               onClick={() => handleNavigation('upcoming')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'upcoming'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-100 hover:bg-blue-800'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'upcoming'
+                ? 'bg-blue-700 text-white'
+                : 'text-blue-100 hover:bg-blue-800'
+                }`}
             >
               <Calendar className="w-5 h-5" />
               <span className="font-medium">Upcoming Quiz</span>
@@ -193,11 +206,10 @@ export default function StudentLayout({ children }) {
             {/* Available Quiz */}
             <button
               onClick={() => handleNavigation('available')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'available'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-100 hover:bg-blue-800'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'available'
+                ? 'bg-blue-700 text-white'
+                : 'text-blue-100 hover:bg-blue-800'
+                }`}
             >
               <CheckSquare className="w-5 h-5" />
               <span className="font-medium">Available Quiz</span>
@@ -206,11 +218,10 @@ export default function StudentLayout({ children }) {
             {/* History */}
             <button
               onClick={() => handleNavigation('history')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'history'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-100 hover:bg-blue-800'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'history'
+                ? 'bg-blue-700 text-white'
+                : 'text-blue-100 hover:bg-blue-800'
+                }`}
             >
               <Clock className="w-5 h-5" />
               <span className="font-medium">History</span>
@@ -219,11 +230,10 @@ export default function StudentLayout({ children }) {
             {/* Guidelines */}
             <button
               onClick={() => handleNavigation('guidelines')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'guidelines'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-100 hover:bg-blue-800'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'guidelines'
+                ? 'bg-blue-700 text-white'
+                : 'text-blue-100 hover:bg-blue-800'
+                }`}
             >
               <HelpCircle className="w-5 h-5" />
               <span className="font-medium">Guidelines</span>

@@ -141,11 +141,11 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
 
   const handleStep3Finish = async () => {
     const newErrors = {}
-    
+
     if (!timeSettings.startsAt) {
       newErrors.startsAt = 'Start date and time is required'
     }
-    
+
     if (!timeSettings.endsAt) {
       newErrors.endsAt = 'End date and time is required'
     }
@@ -200,6 +200,11 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         }
       }
 
+      console.log("=== WIZARD: Publishing Exam ===");
+      console.log("questions state:", questions);
+      console.log("questions in examData:", examData.questions);
+      console.log("examData:", examData);
+
       // If editing an existing exam, update it instead of publishing
       if (initialExam) {
         const { updateExam } = await import('../services/api')
@@ -209,7 +214,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       } else {
         throw new Error('No draft or exam to publish/update')
       }
-      
+
       onSuccess?.()
       onClose()
     } catch (error) {
@@ -223,7 +228,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
   const handleQuestionsChange = (updatedQuestions) => {
     setQuestions(updatedQuestions)
     setErrors({})
-    
+
     // Auto-calculate total points from questions
     if (updatedQuestions && updatedQuestions.length > 0) {
       const totalPoints = updatedQuestions.reduce((sum, q) => sum + (q.points || 1), 0)
@@ -242,21 +247,19 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                      currentStep === step
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep === step
                         ? 'bg-blue-600 text-white'
                         : currentStep > step
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
                   >
                     {currentStep > step ? <Check className="w-4 h-4" /> : step}
                   </div>
                   {step < 3 && (
                     <div
-                      className={`w-12 h-1 mx-1 ${
-                        currentStep > step ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
+                      className={`w-12 h-1 mx-1 ${currentStep > step ? 'bg-green-500' : 'bg-gray-200'
+                        }`}
                     />
                   )}
                 </div>
@@ -295,7 +298,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Exam Basic Information</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -305,9 +308,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                       type="text"
                       value={basicInfo.title}
                       onChange={(e) => setBasicInfo({ ...basicInfo, title: e.target.value })}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.title ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.title ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="e.g., Introduction to Algorithms - Midterm"
                     />
                     {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
@@ -321,9 +323,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                       value={basicInfo.shortDescription}
                       onChange={(e) => setBasicInfo({ ...basicInfo, shortDescription: e.target.value })}
                       rows={3}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.shortDescription ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.shortDescription ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="Brief description of the exam..."
                     />
                     {errors.shortDescription && (
