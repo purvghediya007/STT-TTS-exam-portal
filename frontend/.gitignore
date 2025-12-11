@@ -31,3 +31,7 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.sw?
+
+# Database (demo data - can be regenerated)
+server/database.json
