@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Users, 
-  BarChart3, 
-  Settings, 
-  User, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  BarChart3,
+  Settings,
+  User,
   ChevronDown,
   RefreshCw,
   LogOut,
@@ -21,13 +21,32 @@ export default function FacultyLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [facultyName, setFacultyName] = useState('Faculty Name')
+  const [facultyEmail, setFacultyEmail] = useState('faculty@example.com')
   const dropdownRef = useRef(null)
 
-  // Get user data (mock for now - replace with actual auth context)
-  // TODO: Replace with actual user context/state management
+  // Get user data from localStorage
+  useEffect(() => {
+    const userDataStr = localStorage.getItem('user_data')
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr)
+        if (userData.username) {
+          setFacultyName(userData.username)
+        }
+        if (userData.email) {
+          setFacultyEmail(userData.email)
+        }
+      } catch (e) {
+        console.error('Failed to parse user data:', e)
+      }
+    }
+  }, [])
+
+  // Create user object with dynamic data
   const user = {
-    name: 'Faculty Name',
-    email: 'faculty@example.com',
+    name: facultyName,
+    email: facultyEmail,
     department: 'Computer Science',
     avatarUrl: null
   }
@@ -124,14 +143,14 @@ export default function FacultyLayout({ children }) {
                   <div className="text-xs text-gray-500 mt-0.5">{user.email}</div>
                   <div className="text-xs text-gray-500">{user.department}</div>
                 </div>
-                <button 
+                <button
                   onClick={() => { setShowUserDropdown(false); handleNavigation('dashboard') }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
                   <User className="w-4 h-4" />
                   Profile
                 </button>
-                <button 
+                <button
                   onClick={handleRefresh}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
@@ -139,7 +158,7 @@ export default function FacultyLayout({ children }) {
                   Refresh Data
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
@@ -159,11 +178,10 @@ export default function FacultyLayout({ children }) {
             {/* Dashboard */}
             <button
               onClick={() => handleNavigation('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'dashboard'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'dashboard'
                   ? 'bg-blue-700 text-white'
                   : 'text-blue-100 hover:bg-blue-800'
-              }`}
+                }`}
             >
               <LayoutDashboard className="w-5 h-5" />
               <span className="font-medium">Dashboard</span>
@@ -172,11 +190,10 @@ export default function FacultyLayout({ children }) {
             {/* My Exams */}
             <button
               onClick={() => handleNavigation('exams')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'exams'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'exams'
                   ? 'bg-blue-700 text-white'
                   : 'text-blue-100 hover:bg-blue-800'
-              }`}
+                }`}
             >
               <BookOpen className="w-5 h-5" />
               <span className="font-medium">My Exams</span>
@@ -185,11 +202,10 @@ export default function FacultyLayout({ children }) {
             {/* Students */}
             <button
               onClick={() => handleNavigation('students')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'students'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'students'
                   ? 'bg-blue-700 text-white'
                   : 'text-blue-100 hover:bg-blue-800'
-              }`}
+                }`}
             >
               <Users className="w-5 h-5" />
               <span className="font-medium">Students</span>
@@ -198,11 +214,10 @@ export default function FacultyLayout({ children }) {
             {/* Analytics */}
             <button
               onClick={() => handleNavigation('analytics')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'analytics'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'analytics'
                   ? 'bg-blue-700 text-white'
                   : 'text-blue-100 hover:bg-blue-800'
-              }`}
+                }`}
             >
               <BarChart3 className="w-5 h-5" />
               <span className="font-medium">Analytics</span>
@@ -211,11 +226,10 @@ export default function FacultyLayout({ children }) {
             {/* Settings */}
             <button
               onClick={() => handleNavigation('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
-                activeRoute === 'settings'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'settings'
                   ? 'bg-blue-700 text-white'
                   : 'text-blue-100 hover:bg-blue-800'
-              }`}
+                }`}
             >
               <Settings className="w-5 h-5" />
               <span className="font-medium">Settings</span>

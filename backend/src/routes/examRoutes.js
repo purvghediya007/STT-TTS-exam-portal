@@ -4,7 +4,7 @@ const Exam = require("../models/Exam");
 const Question = require("../models/Question");
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
-const uploadJson = require("../middleware/uploadJson"); 
+const uploadJson = require("../middleware/uploadJson");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
 
@@ -16,6 +16,21 @@ const parseDate = (value) => {
   const d = new Date(value);
   return isNaN(d.getTime()) ? undefined : d;
 };
+
+/**
+ * Helper function to transform exam object for frontend
+ * Maps MongoDB field names to frontend field names
+ */
+function transformExamForFrontend(examObj) {
+  return {
+    ...examObj,
+    id: examObj._id,
+    startsAt: examObj.startTime,
+    endsAt: examObj.endTime,
+    durationMin: examObj.durationMinutes,
+    teacherName: examObj.teacherId?.name || "Unknown Teacher",
+  };
+}
 
 //
 // ---------- EXAM BASIC CREATION (TEACHER) ----------
@@ -29,12 +44,7 @@ router.post(
   requireRole("teacher"),
   async (req, res, next) => {
     try {
-      const {
-        title,
-        description,
-        examCode,
-        settings,
-      } = req.body;
+      const { title, description, examCode, settings } = req.body;
 
       if (!title || !examCode) {
         return res.status(400).json({
@@ -88,7 +98,12 @@ router.get(
         createdAt: -1,
       });
 
-      return res.status(200).json({ exams });
+      // Transform for frontend compatibility
+      const transformedExams = exams.map((exam) =>
+        transformExamForFrontend(exam.toObject())
+      );
+
+      return res.status(200).json({ exams: transformedExams });
     } catch (error) {
       next(error);
     }
@@ -113,7 +128,10 @@ router.get(
         return res.status(403).json({ message: "Forbidden: not your exam" });
       }
 
-      return res.status(200).json({ exam });
+      // Transform for frontend compatibility
+      const transformedExam = transformExamForFrontend(exam.toObject());
+
+      return res.status(200).json({ exam: transformedExam });
     } catch (error) {
       next(error);
     }

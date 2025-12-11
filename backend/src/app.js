@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const examRoutes = require("./routes/examRoutes");
+const facultyRoutes = require("./routes/facultyRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const studentExamRoutes = require("./routes/studentExamRoutes");
 
@@ -15,7 +16,14 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 // Simple log to see requests
@@ -32,12 +40,14 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-
 // Exams + Questions
 app.use("/api/exams", examRoutes);
 
+// Faculty endpoints
+app.use("/api/faculty", facultyRoutes);
+
 // Student exam flow
-app.use("/api/student", studentExamRoutes); 
+app.use("/api/student", studentExamRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
