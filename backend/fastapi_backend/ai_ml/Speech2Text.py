@@ -1,7 +1,7 @@
 """
 Module for conversion of speech audio fetched by FastAPI to text format in given language.
 
-USAGE (old method still works):
+USAGE :
 --------------------------------
 from ai_ml.Speech2Text import STT
 stt = STT(lang="en", model="whisper", audio_file_name=audio_file_path)
@@ -22,61 +22,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Imports
-import whisper
+
 from transformers import pipeline
 
 from ai_ml.AIExceptions import IllegalModelSelectionException
 from ai_ml.AudioPreprocessor import AudioPreprocessor
+from ai_ml.ModelCreator import SpeechModelGenerator
 
-
-# Optional Torch
-try:
-    import torch
-except Exception:
-    torch = None
-
-
- 
-#   MODEL GENERATOR (Singleton Loaders)
-class ModelGenerator:
-    """
-    Loads Whisper / HF Whisper models ONCE per process.
-    Used when user does NOT preload models via FastAPI startup.
-    """
-    _whisper_model = None
-    _hf_model = None
-
-    @staticmethod
-    def _get_default_device():
-        """Return -1 (CPU) or 0 (GPU)."""
-        try:
-            if torch is not None and torch.cuda.is_available():
-                return 0
-        except Exception:
-            pass
-        return -1
-
-    @classmethod
-    def whisper_model_generator(cls):
-        """Lazy-load Whisper Base model."""
-        if cls._whisper_model is None:
-            cls._whisper_model = whisper.load_model("base")
-        return cls._whisper_model
-
-    @classmethod
-    def hf_model_generator(cls):
-        """Lazy-load HuggingFace Whisper Large-V3 pipeline."""
-        if cls._hf_model is None:
-            device = cls._get_default_device()
-            cls._hf_model = pipeline(
-                task="automatic-speech-recognition",
-                model="openai/whisper-large-v3",
-                device=device
-            )
-        return cls._hf_model
-
-
- 
 #   STT MAIN CLASS
 class STT:
     def __init__(self, lang: str, model: str, audio_file_name: str):
@@ -107,7 +59,7 @@ class STT:
         (Backward compatible method)
         """
         try:
-            whisper_model = ModelGenerator.whisper_model_generator()
+            whisper_model = SpeechModelGenerator.whisper_model_generator()
             audio_path = self.audio_preprocess()
 
             output = whisper_model.transcribe(audio_path, language=self.lang)
@@ -124,7 +76,7 @@ class STT:
     #   HF WHISPER PIPELINE     
     def hf_transcribe(self) -> str:
         try:
-            pipeline_model = ModelGenerator.hf_model_generator()
+            pipeline_model = SpeechModelGenerator.hf_model_generator()
             audio_path = self.audio_preprocess()
 
             result = pipeline_model(audio_path)
@@ -181,7 +133,7 @@ class STT:
     #   TRANSCRIBE WITH PRE-LOADED MODEL
     def transcribe_with_existing_model(self, whisper_model, audio_file_path, lang=None):
         """
-        Uses a *preloaded* whisper model (from FastAPI startup)
+        Uses a preloaded whisper model (from FastAPI startup)
         → NO reloading
         → FAST response
         """
