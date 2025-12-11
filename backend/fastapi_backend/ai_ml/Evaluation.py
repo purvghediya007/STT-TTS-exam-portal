@@ -1,13 +1,11 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_huggingface import HuggingFacePipeline
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from pydantic import BaseModel, Field
 from typing import List, Annotated
 import re
-import json
 
+from ai_ml.ModelCreator import HFModelCreation
 
 class EvalSchema(BaseModel):
     score: Annotated[int, Field(title="Score of student")]
@@ -16,41 +14,6 @@ class EvalSchema(BaseModel):
     justification: Annotated[str, Field(title="Summary of evaluation")]
     suggested_improvement: Annotated[str, Field(title="Improvements required")]
 
-
-class HFModelCreation:
-
-    def hf_model_creator(self, model_name: str):
-        try:
-            tokenizer = AutoTokenizer.from_pretrained(
-                model_name, trust_remote_code=True
-            )
-
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype="auto",
-                device_map="auto",
-                trust_remote_code=True
-            )
-
-            tokenizer.pad_token = tokenizer.eos_token
-
-            gen = pipeline(
-                "text-generation",
-                model=model,
-                tokenizer=tokenizer,
-                max_new_tokens=600,
-                temperature=0.0,
-                do_sample=False,
-                eos_token_id=tokenizer.eos_token_id,
-                pad_token_id=tokenizer.eos_token_id,
-                return_full_text=False
-            )
-
-            return HuggingFacePipeline(pipeline=gen)
-
-        except Exception as e:
-            print("Error loading HF model:", e)
-            return None
 
 
 class EvaluationEngine(HFModelCreation):
@@ -79,32 +42,6 @@ class EvaluationEngine(HFModelCreation):
 
         return text
 
-
-    def create_rubrics(self, input_features: dict) -> str:
-        try:
-            template = """
-You are an exam evaluator.
-Generate a clear marking rubric.
-
-Return only plain text (no JSON, no examples).
-
-Criteria 1 - X marks: description
-Criteria 2 - Y marks: description
-Total Marks: {max_marks}
-
-Question: {question_text}
-"""
-            prompt = PromptTemplate(
-                template=template,
-                input_variables=["question_text", "max_marks"]
-            )
-
-            chain = prompt | self.get_model()
-            return chain.invoke(input_features)
-
-        except Exception as e:
-            print("Rubric creation error:", e)
-            return ""
 
     def create_evaluation_chain(self):
         try:
@@ -143,7 +80,6 @@ Maximum Marks: {max_marks}
 
     def model_evaluator(self, input_features: dict):
         try:
-            input_features["rubric"] = self.create_rubrics(input_features)
 
             chain, parser = self.create_evaluation_chain()
             raw = chain.invoke(input_features)
