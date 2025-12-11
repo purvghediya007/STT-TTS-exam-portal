@@ -18,6 +18,39 @@ class QuestionsGenerator:
         if self.model is None:
             self.model = HFModelCreation.hf_model_creator(model_name)
 
+    
+    def chain_creator(self):
+        parser = JsonOutputParser(pydantic_object=OutputResponse)
+
+        template = """
+You are an exam evaluator. 
+You have to generate some number of questions on the given topic from the subject given below
+
+Be sure that the questions are well stuctured and to the context of the topic and must fall within the subject as requested
+Return ONLY valid JSON. If JSON is malformed, fix it and return valid JSON
+
+Number of questions: {num_questions},
+
+Topic: {topic}
+
+Suject: {subject}
+
+{format_instructions}
+"""
+
+        prompt = PromptTemplate(
+            template=template,
+            input_variables= ["num_questions", "topic", "subject"],
+            partial_variables= {
+                "format_instructions": parser.get_format_instructions()
+            }
+        )
+
+
+        chain = prompt | self.model
+
+        return chain, parser
+
     def sanitize_json(self, text: str) -> str:
         text = text.replace("```json", "").replace("```", "").strip()
         m = re.search(r"\{[\s\S]*\}", text)
@@ -41,31 +74,8 @@ class QuestionsGenerator:
         try:
             parser = JsonOutputParser(pydantic_object=OutputResponse)
 
-            template = """
-You are an exam evaluator. 
-You have to generate some number of questions on the given topic from the subject given below
-
-Be sure that the questions are well stuctured and to the context of the topic and must fall within the subject as requested
-Return ONLY valid JSON. If JSON is malformed, fix it and return valid JSON
-
-Number of questions: {num_questions},
-
-Topic: {topic}
-
-Suject: {subject}
-
-{format_instructions}
-"""
-
-            prompt = PromptTemplate(
-                template=template,
-                input_variables= ["num_questions", "topic", "subject"],
-                partial_variables= {
-                    "format_instructions": parser.get_format_instructions()
-                }
-            )
-
-            chain = prompt | self.model
+            
+            chain, parser = self.chain_creator()
 
             raw = chain.invoke(input_request)
 
