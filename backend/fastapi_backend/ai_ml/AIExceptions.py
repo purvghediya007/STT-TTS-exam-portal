@@ -3,15 +3,19 @@ class IllegalModelSelectionException(Exception):
         super().__init__(message)
 
 class AudioProcessingError(Exception):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
 
 class TTSException(Exception):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class TextSourceException(TTSException):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class EngineException(TTSException):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
