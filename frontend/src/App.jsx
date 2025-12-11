@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginCard from "./components/LoginCard";
 import RegisterCard from "./components/RegisterCard";
+import ResetPassword from "./components/ResetPassword";
 import ForgotPasswordCard from "./components/ForgotPasswordCard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Student from "./pages/StudentRoutes";
@@ -81,6 +82,7 @@ const App = () => {
             </ProtectedRoute>
           } 
         />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         
         {/* Redirect unknown routes to login */}
         <Route path="*" element={<Navigate to="/" replace />} />
