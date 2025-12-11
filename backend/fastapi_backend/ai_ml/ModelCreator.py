@@ -11,8 +11,9 @@ except Exception:
 class HFModelCreation:
     def __init__(self):
         pass
-
-    def hf_model_creator(self, model_name: str):
+    
+    @staticmethod
+    def hf_model_creator(model_name: str):
         try:
             tokenizer = AutoTokenizer.from_pretrained(
                 model_name, trust_remote_code=True
@@ -67,6 +68,7 @@ class SpeechModelGenerator:
     @classmethod
     def whisper_model_generator(cls):
         """Lazy-load Whisper Base model."""
+
         if cls._whisper_model is None:
             cls._whisper_model = whisper.load_model("base")
         return cls._whisper_model
@@ -74,6 +76,7 @@ class SpeechModelGenerator:
     @classmethod
     def hf_model_generator(cls):
         """Lazy-load HuggingFace Whisper Large-V3 pipeline."""
+        
         if cls._hf_model is None:
             device = cls._get_default_device()
             cls._hf_model = pipeline(

@@ -16,7 +16,7 @@ class EvalSchema(BaseModel):
 
 
 
-class EvaluationEngine(HFModelCreation):
+class EvaluationEngine():
 
     def __init__(self, model_name: str):
         self.model_name = model_name
@@ -24,24 +24,17 @@ class EvaluationEngine(HFModelCreation):
 
     def get_model(self):
         if self.model is None:
-            self.model = super().hf_model_creator(self.model_name)
+            self.model = HFModelCreation.hf_model_creator(self.model_name)
         return self.model
 
     def sanitize_json(self, text: str) -> str:
-        text = text.replace("```json", "").replace("```", "")
-        text = text.strip()
-
-        # extract first { ... }
+        text = text.replace("```json", "").replace("```", "").strip()
         match = re.search(r"\{[\s\S]*\}", text)
         if match:
             text = match.group(0)
-
-        # fix trailing commas
         text = re.sub(r",\s*}", "}", text)
         text = re.sub(r",\s*]", "]", text)
-
         return text
-
 
     def create_evaluation_chain(self):
         try:
