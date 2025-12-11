@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Plus, Edit, Trash2, Eye, Search, Filter, Calendar, Clock, Users, FileText, FileEdit } from 'lucide-react'
 import { useFacultyExams } from '../hooks/useFacultyExams'
 import ExamForm from '../components/ExamForm'
@@ -13,6 +13,7 @@ import { fetchDraftExams, deleteDraftExam } from '../services/api'
  */
 export default function FacultyExamsList() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const { exams, loading, error, refreshExams, refreshStats, deleteExam } = useFacultyExams()
   const [showForm, setShowForm] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
@@ -82,9 +83,9 @@ export default function FacultyExamsList() {
     setShowWizard(true)
   }
 
-  const handleView = (exam) => {
-    // Open exam view in a new tab - adjust route as needed
-    window.open(`/exams/${exam.id}`, '_blank')
+  const handleViewSubmissions = (exam) => {
+    // Navigate to exam submissions view
+    navigate(`/faculty/exams/${exam.id}/submissions`)
   }
 
   const handleDelete = async (examId) => {
@@ -140,7 +141,7 @@ export default function FacultyExamsList() {
   // Filter and search exams
   const filteredExams = publishedExams.filter(exam => {
     const status = classifyExam(exam)
-    
+
     // Status filter
     if (filterStatus !== 'all' && status !== filterStatus) {
       return false
@@ -197,21 +198,19 @@ export default function FacultyExamsList() {
         <div className="flex gap-4">
           <button
             onClick={() => setActiveTab('published')}
-            className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
-              activeTab === 'published'
+            className={`px-4 py-2 font-semibold border-b-2 transition-colors ${activeTab === 'published'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             Published Exams ({publishedExams.length})
           </button>
           <button
             onClick={() => setActiveTab('drafts')}
-            className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
-              activeTab === 'drafts'
+            className={`px-4 py-2 font-semibold border-b-2 transition-colors ${activeTab === 'drafts'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             Drafts ({drafts.length})
           </button>
@@ -314,85 +313,85 @@ export default function FacultyExamsList() {
 
           {/* Exams Grid */}
           {filteredExams.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg font-medium mb-2">
-            {searchQuery || filterStatus !== 'all' ? 'No exams found' : 'No exams yet'}
-          </p>
-          <p className="text-gray-400">
-            {searchQuery || filterStatus !== 'all' 
-              ? 'Try adjusting your search or filter' 
-              : 'Create your first exam to get started'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredExams.slice().reverse().map((exam) => {
-            const status = classifyExam(exam)
-            return (
-              <div
-                key={exam.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{exam.title}</h3>
-                    <p className="text-xs text-gray-500">ID: {exam.id}</p>
-                  </div>
-                  <StatusPill status={status} />
-                </div>
-
-                {/* Description */}
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{exam.shortDescription}</p>
-
-                {/* Details */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatExamTimeRange(exam.startsAt, exam.endsAt)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDuration(exam.durationMin)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Users className="w-4 h-4" />
-                    <span>{exam.submissionCount || 0} submissions</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                  {status === 'finished' && (
-                    <button
-                      onClick={() => handleView(exam)}
-                      className="px-3 py-2 text-sm bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleEdit(exam)}
-                    className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg font-medium mb-2">
+                {searchQuery || filterStatus !== 'all' ? 'No exams found' : 'No exams yet'}
+              </p>
+              <p className="text-gray-400">
+                {searchQuery || filterStatus !== 'all'
+                  ? 'Try adjusting your search or filter'
+                  : 'Create your first exam to get started'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredExams.slice().reverse().map((exam) => {
+                const status = classifyExam(exam)
+                return (
+                  <div
+                    key={exam.id}
+                    className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
                   >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exam.id)}
-                    disabled={deletingId === exam.id}
-                    className="px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{exam.title}</h3>
+                        <p className="text-xs text-gray-500">ID: {exam.id}</p>
+                      </div>
+                      <StatusPill status={status} />
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{exam.shortDescription}</p>
+
+                    {/* Details */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatExamTimeRange(exam.startsAt, exam.endsAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        <span>{formatDuration(exam.durationMin)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Users className="w-4 h-4" />
+                        <span>{exam.submissionCount || 0} submissions</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                      {(status === 'finished' || status === 'live') && (
+                        <button
+                          onClick={() => handleViewSubmissions(exam)}
+                          className="px-3 py-2 text-sm bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View Submissions
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleEdit(exam)}
+                        className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exam.id)}
+                        disabled={deletingId === exam.id}
+                        className="px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           {/* Exam Form Modal */}
           {showForm && (

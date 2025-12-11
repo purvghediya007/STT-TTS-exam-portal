@@ -42,22 +42,13 @@ const findUserByUsernameOrEmail = async (username, email) => {
 
   const [t, s, a] = await Promise.all([
     Teacher.findOne({
-      $or: [
-        { username: usernameLower },
-        { email: emailLower },
-      ],
+      $or: [{ username: usernameLower }, { email: emailLower }],
     }),
     Student.findOne({
-      $or: [
-        { username: usernameLower },
-        { email: emailLower },
-      ],
+      $or: [{ username: usernameLower }, { email: emailLower }],
     }),
     Admin.findOne({
-      $or: [
-        { username: usernameLower },
-        { email: emailLower },
-      ],
+      $or: [{ username: usernameLower }, { email: emailLower }],
     }),
   ]);
 
@@ -90,12 +81,14 @@ router.get("/captcha", (req, res) => {
   return res.status(200).json(response);
 });
 
-
 // ======== POST /api/auth/register =========
-// Body: { role: "Teacher"|"Student", email, username, password }
+// Body: { role: "Teacher"|"Student", email, username, password, enrollmentNumber (optional for students) }
 router.post("/register", async (req, res, next) => {
   try {
-    let { role, email, username, password } = req.body;
+    let { role, email, username, password, enrollmentNumber } = req.body;
+    console.log(
+      `Registration attempt: role=${role}, email=${email}, username=${username}`
+    );
 
     if (!role || !email || !username || !password) {
       return res.status(400).json({
@@ -105,7 +98,8 @@ router.post("/register", async (req, res, next) => {
 
     // Normalize role string, e.g., "Teacher" or "teacher" -> "teacher"
     const normalizedRole =
-      ROLE_MAP[role] || ROLE_MAP[role?.charAt(0).toUpperCase() + role?.slice(1)];
+      ROLE_MAP[role] ||
+      ROLE_MAP[role?.charAt(0).toUpperCase() + role?.slice(1)];
 
     if (!normalizedRole) {
       return res.status(400).json({
@@ -136,12 +130,23 @@ router.post("/register", async (req, res, next) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const userDoc = await Model.create({
+    // Build user document based on role
+    const userDocData = {
       email,
       username,
       passwordHash,
       role: normalizedRole,
-    });
+    };
+
+    // Add enrollmentNumber for students if provided
+    if (normalizedRole === "student" && enrollmentNumber) {
+      userDocData.enrollmentNumber = enrollmentNumber;
+    }
+
+    const userDoc = await Model.create(userDocData);
+    console.log(
+      `User registered successfully: ${userDoc.username} (role: ${userDoc.role})`
+    );
 
     return res.status(201).json({
       message: "Registration successful",
@@ -150,9 +155,11 @@ router.post("/register", async (req, res, next) => {
         email: userDoc.email,
         username: userDoc.username,
         role: userDoc.role,
+        enrollmentNumber: userDoc.enrollmentNumber || undefined,
       },
     });
   } catch (error) {
+    console.error(`Registration error: ${error.message}`);
     next(error);
   }
 });
@@ -171,6 +178,13 @@ router.post("/login", async (req, res, next) => {
 
     // Verify captcha
     const captchaOk = verifyCaptcha(captchaId, captchaValue);
+    console.log(
+      `Captcha verification: ${captchaOk} (id: ${captchaId.substring(
+        0,
+        8
+      )}..., value: ${captchaValue})`
+    );
+
     if (!captchaOk) {
       return res.status(400).json({
         message: "Invalid or expired captcha",
@@ -178,13 +192,22 @@ router.post("/login", async (req, res, next) => {
     }
 
     const usernameLower = username.toLowerCase();
+    console.log(`Attempting login for username: ${usernameLower}`);
 
     // Find user by username across all roles
-    const [teacher, student, admin] = await Promise.all([
+    let [teacher, student, admin] = await Promise.all([
       Teacher.findOne({ username: usernameLower }),
       Student.findOne({ username: usernameLower }),
       Admin.findOne({ username: usernameLower }),
     ]);
+
+    // If not found by username and input looks like a number, try finding student by enrollmentNumber
+    if (!teacher && !student && !admin && /^\d+$/.test(username)) {
+      console.log(
+        `Username looks like enrollment number, trying to find student by enrollmentNumber: ${username}`
+      );
+      student = await Student.findOne({ enrollmentNumber: username });
+    }
 
     const userDoc = teacher || student || admin;
 
@@ -192,10 +215,10 @@ router.post("/login", async (req, res, next) => {
       return res.status(401).json({ message: "Invalid username" });
     }
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      userDoc.passwordHash
-    );
+    console.log(`User found: ${userDoc.username} (role: ${userDoc.role})`);
+
+    const passwordMatch = await bcrypt.compare(password, userDoc.passwordHash);
+    console.log(`Password match: ${passwordMatch}`);
 
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid password" });
@@ -211,6 +234,7 @@ router.post("/login", async (req, res, next) => {
         email: userDoc.email,
         username: userDoc.username,
         role: userDoc.role,
+        enrollmentNumber: userDoc.enrollmentNumber || null,
       },
     });
   } catch (error) {
@@ -337,6 +361,27 @@ router.post("/reset-password", async (req, res) => {
     res.json({ message: "Password updated successfully." });
   } catch (err) {
     res.status(400).json({ message: "Invalid or expired token." });
+  }
+});
+// ======== DEBUG: GET /api/auth/debug/users =========
+// Lists all registered users (DEV ONLY)
+router.get("/debug/users", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ message: "Debug endpoint not available" });
+  }
+
+  try {
+    const students = await Student.find({}, { username: 1, email: 1, role: 1 });
+    const teachers = await Teacher.find({}, { username: 1, email: 1, role: 1 });
+
+    return res.status(200).json({
+      students,
+      teachers,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error fetching users", error: error.message });
   }
 });
 

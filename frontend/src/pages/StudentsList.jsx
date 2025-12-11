@@ -16,8 +16,8 @@ export default function StudentsList() {
   const mockStudents = [
     {
       id: 'STU001',
-      enrollment: '230170116001',
-      name: 'John Doe',
+      enrollmentNumber: '230170116001',
+      username: 'John Doe',
       email: 'john.doe@example.com',
       department: 'Computer Science',
       year: 3,
@@ -26,8 +26,8 @@ export default function StudentsList() {
     },
     {
       id: 'STU002',
-      enrollment: '230170116002',
-      name: 'Jane Smith',
+      enrollmentNumber: '230170116002',
+      username: 'Jane Smith',
       email: 'jane.smith@example.com',
       department: 'Computer Science',
       year: 2,
@@ -36,8 +36,8 @@ export default function StudentsList() {
     },
     {
       id: 'STU003',
-      enrollment: '230170116003',
-      name: 'Bob Johnson',
+      enrollmentNumber: '230170116003',
+      username: 'Bob Johnson',
       email: 'bob.johnson@example.com',
       department: 'Information Technology',
       year: 4,
@@ -49,7 +49,7 @@ export default function StudentsList() {
   const displayStudents = students.length > 0 ? students : mockStudents
 
   const departments = useMemo(() => {
-    return ['all', ...new Set(displayStudents.map(s => s.department))]
+    return ['all', ...new Set(displayStudents.map(s => s.department).filter(Boolean))]
   }, [displayStudents])
 
   const filteredStudents = displayStudents.filter(student => {
@@ -62,9 +62,9 @@ export default function StudentsList() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       return (
-        student.name.toLowerCase().includes(query) ||
-        student.enrollment.toLowerCase().includes(query) ||
-        student.email.toLowerCase().includes(query)
+        (student.username || '').toLowerCase().includes(query) ||
+        (student.enrollmentNumber || '').toLowerCase().includes(query) ||
+        (student.email || '').toLowerCase().includes(query)
       )
     }
 
@@ -173,10 +173,10 @@ export default function StudentsList() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          {(student.username || 'UN').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{student.name}</div>
+                          <div className="font-medium text-gray-900">{student.username}</div>
                           <div className="text-sm text-gray-500 flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {student.email}
@@ -184,10 +184,10 @@ export default function StudentsList() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{student.enrollment}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{student.department}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{student.year}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{student.examCount}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{student.enrollmentNumber}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{student.department || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{student.year || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{student.examCount || 0}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-semibold">
                         {student.avgScore}%
