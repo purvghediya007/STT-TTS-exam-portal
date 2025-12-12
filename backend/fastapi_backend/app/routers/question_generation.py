@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.schemas.question_generation import QuestionGenerationRequest, QuestionGenerationResponse
 from app.services.question_generation_service import generation_service
 
@@ -9,7 +9,15 @@ router = APIRouter(
 
 @router.post("/generate", response_model= QuestionGenerationResponse)
 async def generate_route(payload: QuestionGenerationRequest):
-    return generation_service.generate(payload)
+    questions = generation_service.generate(payload)
+
+    if not questions:
+        raise HTTPException(
+            status_code=500,
+            detail="Model failed to generate questions"
+        )
+
+    return questions
 
 
 
