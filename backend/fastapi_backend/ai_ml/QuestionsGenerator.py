@@ -15,9 +15,14 @@ class OutputResponse(BaseModel):
     questions: Annotated[List[str], Field(title="Questions", description="The questions created by the model")]
 
 class QuestionsGenerator:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, global_model = None):
+        self.model_name = model_name
+        self.model = global_model
+
+    def get_model(self):
         if self.model is None:
-            self.model = HFModelCreation.hf_model_creator(model_name)
+            self.model = HFModelCreation.hf_model_creator(self.model_name)
+        return self.model
 
     
     def chain_creator(self):
@@ -48,7 +53,7 @@ Suject: {subject}
         )
 
 
-        chain = prompt | self.model
+        chain = prompt | self.get_model()
 
         return chain, parser
 

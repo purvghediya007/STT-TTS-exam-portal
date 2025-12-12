@@ -1,5 +1,9 @@
 from app.schemas.question_generation import QuestionGenerationRequest
 from app.core import models
+from ai_ml.QuestionsGenerator import QuestionsGenerator
+from app.config import Settings
+
+model_name = Settings.HF_EVAL_MODEL_NAME
 
 class QuestionGenerationService:
 
@@ -11,7 +15,7 @@ class QuestionGenerationService:
 
             # Use models.ai_model loaded during lifespan
 
-            result = models.ai_model.create_questions(data)
+            result = QuestionsGenerator(model_name=model_name, global_model=models.ai_model).create_questions(data)
 
             required_keys = ["topic", "questions"]
 
