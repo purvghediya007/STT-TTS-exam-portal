@@ -21,5 +21,5 @@ class RubricsResponse(BaseModel):
                            StringConstraints(strip_whitespace=True, min_length=1)]
 
     rubrics: Annotated[List[str],
-                           StringConstraints(strip_whitespace=True, min_length=1)]
+                           StringConstraints(min_length=1)]
 
