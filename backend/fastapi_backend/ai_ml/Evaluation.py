@@ -41,8 +41,10 @@ class EvaluationEngine():
             parser = JsonOutputParser(pydantic_object=EvalSchema)
 
             template = """
-You are a strict exam evaluation engine.
+You are a very strict exam evaluation engine.
 Return ONLY valid JSON. If JSON is malformed, fix it and return valid JSON.
+If the student says that they do not know the answer then you must give them a 0
+DO NOT GIVE marks greater than 0 if the student doesn't know the answer
 
 Rubric:
 {rubric}
