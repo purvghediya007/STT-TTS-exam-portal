@@ -3,7 +3,7 @@ from app.routers import stt, evaluation, tts, question_generation
 from contextlib import asynccontextmanager
 
 from ai_ml.Evaluation import EvaluationEngine
-from ai_ml.Speech2Text import ModelGenerator
+from ai_ml.Speech2Text import SpeechModelGenerator
 from ai_ml.QuestionsGenerator import QuestionsGenerator
 from app.core import models
 
@@ -13,7 +13,7 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # preload whisper model
-    models.whisper_model = ModelGenerator.whisper_model_generator()
+    models.whisper_model = SpeechModelGenerator.whisper_model_generator()
 
     # preload model
     models.ai_model = EvaluationEngine("microsoft/Phi-3.5-mini-instruct")
