@@ -12,7 +12,8 @@ class EvaluateAnswer(BaseModel):
     student_answer: Annotated[str, 
         StringConstraints(strip_whitespace=True, min_length=1, max_length=8000)
     ]
-    
+    rubric: Annotated[str, 
+                      StringConstraints(strip_whitespace=True, min_length=1)]
     max_marks: Annotated[float, Field(ge=1, le=100)] = 10
     
     # # Optional fields remain the same
