@@ -17,15 +17,19 @@ class RubricsService:
 
             result = RubricsEngine(model_name=model_name, global_model=models.ai_model).create_rubrics(data)
 
-            required_keys = ["question", "rubrics"]
+            # Accept dict or pydantic model-like object
+            if not result:
+                raise ValueError("Model returned empty result.")
 
-            if (
-                not result 
-                or not isinstance(result, dict)
-                or any(k not in result for k in required_keys)
-            ):
-                raise ValueError("Model returned invalid output.")
-            
+            required_keys = ["question_text", "rubrics"]
+
+            # If it's a pydantic model instance, convert to dict
+            if not isinstance(result, dict) and hasattr(result, "model_dump"):
+                result = result.model_dump()
+
+            if not isinstance(result, dict) or any(k not in result for k in required_keys):
+                raise ValueError("Model returned invalid output: missing required keys.")
+                
         except Exception as e:
             
             print("Rubrics generation error: ", e)
