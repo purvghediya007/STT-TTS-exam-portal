@@ -46,18 +46,22 @@ class RubricsEngine():
 
             template = """
 You are an exam evaluator.
-Generate a clear marking rubric for the given questions.
+Generate marking rubrics for the given question.
 
-Return only plain text (no JSON, no examples).
+Return the output ONLY in valid JSON format exactly like this:
 
-Criteria 1 - X marks: description
-Criteria 2 - Y marks: description
-Total Marks: {max_marks}
+{
+  "question_id": "",
+  "question_text": "",
+  "rubrics": ["...", "..."]
+}
 
 Question: {question_text}
+Total Marks: {max_marks}
 
 {format_instructions}
 """
+
             prompt = PromptTemplate(
                 template=template,
                 input_variables=["question_text", "max_marks"],
