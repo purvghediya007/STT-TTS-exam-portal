@@ -6,11 +6,12 @@ from app.core import models
 class EvaluationService:
 
     def evaluate(self, payload: EvaluateAnswer):
-        data = payload.dict()
+        data = payload.model_dump()
 
         try:
-            # use models.qwen_model loaded during lifespan
-            result = models.qwen_model.model_evaluator(data)
+            # use models.ai_model loaded during lifespan
+      
+            result = models.ai_model.model_evaluator(data)
 
             required_keys = ["score", "strengths", "weakness",
                              "justification", "suggested_improvement"]

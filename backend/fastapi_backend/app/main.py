@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from app.routers import stt, evaluation, tts
+from app.routers import stt, evaluation, tts, question_generation
 from contextlib import asynccontextmanager
 
 from ai_ml.Evaluation import EvaluationEngine
 from ai_ml.Speech2Text import ModelGenerator
+from ai_ml.QuestionsGenerator import QuestionsGenerator
 from app.core import models
 
 from dotenv import load_dotenv
@@ -14,12 +15,11 @@ async def lifespan(app: FastAPI):
     # preload whisper model
     models.whisper_model = ModelGenerator.whisper_model_generator()
 
-    # preload Qwen model
-    models.qwen_model = EvaluationEngine("microsoft/Phi-3.5-mini-instruct")
+    # preload model
+    models.ai_model = EvaluationEngine("microsoft/Phi-3.5-mini-instruct")
 
-
-    # force Qwen download during startup
-    models.qwen_model.get_model()
+    # force download during startup
+    models.ai_model.get_model()
 
     yield
 
@@ -29,6 +29,7 @@ app = FastAPI(title="Examecho AI Service", lifespan=lifespan)
 def health():
     return {"status": "ok"}
 
+app.include_router(question_generation.router)
 app.include_router(stt.router)
 app.include_router(evaluation.router)
 app.include_router(tts.router)

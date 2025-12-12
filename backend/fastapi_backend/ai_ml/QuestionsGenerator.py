@@ -10,6 +10,7 @@ from ai_ml.AIExceptions import *
 
 
 class OutputResponse(BaseModel):
+    topic_id: Annotated[str, Field(title="Topic id", description="The topic id from database", min_length=1)]
     topic: Annotated[str, Field(title="Topic of Questions", description="The topic regarding which you wanted questions")]
     questions: Annotated[List[str], Field(title="Questions", description="The questions created by the model")]
 
