@@ -2,6 +2,7 @@ from app.schemas.rubrics import RubricsRequest
 from app.core import models
 from ai_ml.Rubrics import RubricsEngine
 from app.config import settings
+from fastapi import HTTPException
 
 model_name = settings.HF_EVAL_MODEL_NAME
 
@@ -29,11 +30,10 @@ class RubricsService:
             
             print("Rubrics generation error: ", e)
 
-            return {
-                "question_id": payload.question_id,
-                "question_text": payload.question_text,
-                "rubrics": ["No rubrics could be generated due to model error"]
-            }
+            raise HTTPException(
+                status_code=500,
+                detail="Rubrics generation failed due to model error"
+            )
         
         result["question_id"] = payload.question_id
         return result
