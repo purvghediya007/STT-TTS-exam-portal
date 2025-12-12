@@ -1,9 +1,9 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
 from app.core import models   
-from app.config import Settings
+from app.config import settings
 
-model_name = Settings.HF_EVAL_MODEL_NAME
+model_name = settings.HF_EVAL_MODEL_NAME
 
 class EvaluationService:
 
