@@ -78,8 +78,6 @@ Suject: {subject}
             raise KeyError("Input request must contain the number of questions you want related to the topic")
         
         try:
-            parser = JsonOutputParser(pydantic_object=OutputResponse)
-
             
             chain, parser = self.chain_creator()
 

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import stt, evaluation, tts, question_generation
+from app.routers import stt, evaluation, tts, question_generation, rubrics
 from contextlib import asynccontextmanager
 
 from ai_ml.ModelCreator import HFModelCreation
@@ -26,6 +26,8 @@ def health():
     return {"status": "ok"}
 
 app.include_router(question_generation.router)
+app.include_router(rubrics.router)
 app.include_router(stt.router)
 app.include_router(evaluation.router)
 app.include_router(tts.router)
+
