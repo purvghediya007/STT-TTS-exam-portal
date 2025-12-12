@@ -48,19 +48,20 @@ class RubricsEngine():
 You are an exam evaluator.
 Generate marking rubrics for the given question.
 
-Return the output ONLY in valid JSON format exactly like this:
+Return ONLY valid JSON in the following format:
 
-{
-  "question_id": "",
-  "question_text": "",
-  "rubrics": ["...", "..."]
-}
+{{
+  "question_id": "{question_id}",
+  "question_text": "{question_text}",
+  "rubrics": []
+}}
 
 Question: {question_text}
 Total Marks: {max_marks}
 
 {format_instructions}
 """
+
 
             prompt = PromptTemplate(
                 template=template,
