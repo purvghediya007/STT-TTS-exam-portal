@@ -1,9 +1,9 @@
 from app.schemas.question_generation import QuestionGenerationRequest
 from app.core import models
 from ai_ml.QuestionsGenerator import QuestionsGenerator
-from app.config import Settings
+from app.config import settings
 
-model_name = Settings.HF_EVAL_MODEL_NAME
+model_name = settings.HF_EVAL_MODEL_NAME
 
 class QuestionGenerationService:
 
