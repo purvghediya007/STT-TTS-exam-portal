@@ -1,7 +1,9 @@
 from ai_ml.Evaluation import EvaluationEngine
 from app.schemas.evaluation import EvaluateAnswer
 from app.core import models   
+from app.config import Settings
 
+model_name = Settings.HF_EVAL_MODEL_NAME
 
 class EvaluationService:
 
@@ -11,7 +13,7 @@ class EvaluationService:
         try:
             # use models.ai_model loaded during lifespan
       
-            result = models.ai_model.model_evaluator(data)
+            result = EvaluationEngine(model_name=model_name, global_model=models.ai_model).model_evaluator(data)
 
             required_keys = ["score", "strengths", "weakness",
                              "justification", "suggested_improvement"]

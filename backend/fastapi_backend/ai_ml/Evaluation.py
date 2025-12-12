@@ -18,9 +18,9 @@ class EvalSchema(BaseModel):
 
 class EvaluationEngine():
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, global_model = None):
         self.model_name = model_name
-        self.model = None
+        self.model = global_model
 
     def get_model(self):
         if self.model is None:
