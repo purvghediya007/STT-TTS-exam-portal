@@ -3,6 +3,8 @@ from langchain_huggingface import HuggingFacePipeline
 
 import whisper
 
+from sentence_transformers import SentenceTransformer, util
+
 try:
     import torch
 except Exception:
@@ -85,5 +87,4 @@ class SpeechModelGenerator:
                 device=device
             )
         return cls._hf_model
-
 
