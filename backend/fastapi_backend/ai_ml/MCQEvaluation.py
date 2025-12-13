@@ -40,9 +40,12 @@ class MCQEvaluationEngine:
             selected_option = input_features["selected_option"]
 
             # Generating necessary embeddings
-            correct_option_embeddings = self.model.encode(correct_option)
 
-            selected_option_embeddings = self.model.encode(selected_option)
+            model = self.get_model()
+
+            correct_option_embeddings = model.encode(correct_option)
+
+            selected_option_embeddings = model.encode(selected_option)
 
             # Calculate similarity score based on cosine similarity
             
