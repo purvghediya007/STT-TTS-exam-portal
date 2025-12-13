@@ -15,7 +15,7 @@ class MCQEvaluationService:
       
             result = models.st_model.evaluate(data)
 
-            required_keys = ["inference"]
+            required_keys = ["similarity_score","inference"]
 
             if (
                 not result
@@ -29,6 +29,7 @@ class MCQEvaluationService:
 
             return {
                 "question_id": payload.question_id,
+                "similarity_score": 0.00,
                 "inference": "Could not decide due to error"
             }
         
