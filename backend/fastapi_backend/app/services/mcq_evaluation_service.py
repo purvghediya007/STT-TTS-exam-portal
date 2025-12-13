@@ -13,7 +13,7 @@ class MCQEvaluationService:
         try:
             # use models.st_model loaded during lifespan
       
-            result = MCQEvaluationEngine(model_name=model_name, global_model=models.st_model).evaluate(data)
+            result = MCQEvaluationEngine(model_name=model_name, global_model=models.st_model.model).evaluate(data)
 
             required_keys = ["inference"]
 
