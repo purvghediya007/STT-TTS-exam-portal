@@ -16,7 +16,7 @@ class MCQEvaluationResponse(BaseModel):
 
 class MCQEvaluationEngine:
     def __init__(self, model_name: str, global_model = None):
-        self.threshold = 0.9
+        self.threshold = 0.75
         self.model_name = model_name
         self.model = global_model
 
@@ -25,6 +25,25 @@ class MCQEvaluationEngine:
            self.model = SentenceTransformer(self.model_name)
 
         return self.model
+
+    def _extract_option_label(self, text: str) -> str:
+        # Extract option label like 'a', 'b', 'c', 'd' from text.
+        
+        if not text:
+            return ""
+
+        text = text.strip().lower()
+
+        # common STT patterns
+        for prefix in ["option ", "answer ", "ans "]:
+            if text.startswith(prefix):
+                text = text.replace(prefix, "", 1)
+
+        # first character check
+        if text and text[0] in ["a", "b", "c", "d"]:
+            return text[0]
+
+        return ""
 
     def evaluate(self, input_features: dict):
         try:
@@ -42,6 +61,19 @@ class MCQEvaluationEngine:
 
             selected_option = input_features["selected_option"]
 
+            # Getting labels
+            correct_label = self._extract_option_label(correct_option)
+
+            selected_label = self._extract_option_label(selected_option)
+
+            # First compare labels
+            if correct_label and selected_label and correct_label == selected_label:
+                return {
+                    "question_id": input_features["question_id"],
+                    "similarity_score": 1.0,
+                    "inference": "Correct Answer"
+                }
+
             # Generating necessary embeddings
 
             model = self.get_model()
@@ -52,7 +84,7 @@ class MCQEvaluationEngine:
 
             # Calculate similarity score based on cosine similarity
             
-            cosine_score = util.cos_sim(correct_option_embeddings, selected_option_embeddings)
+            cosine_score = util.cos_sim(correct_option_embeddings, selected_option_embeddings).item()
 
             if cosine_score >= self.threshold:
                 return {
