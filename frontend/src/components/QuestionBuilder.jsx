@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Image, Video, FileText, X } from 'lucide-react'
+import { Plus, Trash2, Image, Video, FileText, X, Check } from 'lucide-react'
 
 /**
- * QuestionBuilder - Build Viva and Interview questions
+ * QuestionBuilder - Component for building MCQ, Viva, and Interview questions
  */
 export default function QuestionBuilder({ questions, onChange }) {
   const [editingIndex, setEditingIndex] = useState(null)
   const [newQuestion, setNewQuestion] = useState({
-    type: 'viva',
+    type: 'mcq', // Default to MCQ for the merged component
     question: '',
+    options: ['', '', '', ''], // MCQ field
+    correctAnswer: null, // MCQ field
     points: 1,
     media: {
       image: null,
@@ -17,10 +19,51 @@ export default function QuestionBuilder({ questions, onChange }) {
     }
   })
 
+  // Helper function to reset the state to the default new question state
+  const resetNewQuestionState = () => ({
+    type: 'mcq',
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: null,
+    points: 1,
+    media: { image: null, video: null, graph: null }
+  })
+
+  // Function to update state on type change, clearing irrelevant fields
+  const handleTypeChange = (newType) => {
+    setNewQuestion(prev => ({
+        ...prev,
+        type: newType,
+        // Clear MCQ specific fields if switching away from MCQ
+        options: newType === 'mcq' ? prev.options : ['', '', '', ''],
+        correctAnswer: newType === 'mcq' ? prev.correctAnswer : null,
+    }))
+  }
+
   const handleAddQuestion = () => {
     if (!newQuestion.question.trim()) {
       alert('Please enter a question')
       return
+    }
+
+    if (newQuestion.type === 'mcq') {
+      const validOptions = newQuestion.options.filter(opt => opt.trim())
+      if (validOptions.length < 2) {
+        alert('Please provide at least 2 options')
+        return
+      }
+      
+      // Check for duplicate options
+      const optionSet = new Set(validOptions.map(opt => opt.trim().toLowerCase()))
+      if (optionSet.size !== validOptions.length) {
+        alert('Please ensure all options are different. Duplicate answers are not allowed.')
+        return
+      }
+      
+      if (newQuestion.correctAnswer === null || newQuestion.options[newQuestion.correctAnswer].trim() === '') {
+        alert('Please select the correct answer')
+        return
+      }
     }
 
     const question = {
@@ -28,29 +71,58 @@ export default function QuestionBuilder({ questions, onChange }) {
       type: newQuestion.type,
       question: newQuestion.question.trim(),
       points: newQuestion.points || 1,
+      ...(newQuestion.type === 'mcq' && {
+        options: newQuestion.options.filter(opt => opt.trim()),
+        correctAnswer: newQuestion.correctAnswer
+      }),
       media: { ...newQuestion.media }
     }
 
     const updatedQuestions = [...questions, question]
     onChange(updatedQuestions)
     
-    setNewQuestion({
-      type: 'viva',
-      question: '',
-      points: 1,
-      media: { image: null, video: null, graph: null }
-    })
+    // Reset form
+    setNewQuestion(resetNewQuestionState())
     setEditingIndex(null)
   }
 
   const handleUpdateQuestion = (index) => {
-    const question = questions[index]
+    const questionToUpdate = questions[index]
+
+    if (!newQuestion.question.trim()) {
+        alert('Please enter a question')
+        return
+    }
+    
+    if (newQuestion.type === 'mcq') {
+        const validOptions = newQuestion.options.filter(opt => opt.trim())
+        if (validOptions.length < 2) {
+            alert('Please provide at least 2 options')
+            return
+        }
+        
+        // Validate MCQ options for duplicates
+        const optionSet = new Set(validOptions.map(opt => opt.trim().toLowerCase()))
+        if (optionSet.size !== validOptions.length) {
+          alert('Please ensure all options are different. Duplicate answers are not allowed.')
+          return
+        }
+
+        if (newQuestion.correctAnswer === null || newQuestion.options[newQuestion.correctAnswer].trim() === '') {
+            alert('Please select the correct answer')
+            return
+        }
+    }
     
     const updated = {
-      ...question,
+      ...questionToUpdate,
       type: newQuestion.type,
       question: newQuestion.question.trim(),
       points: newQuestion.points || 1,
+      ...(newQuestion.type === 'mcq' && {
+        options: newQuestion.options.filter(opt => opt.trim()),
+        correctAnswer: newQuestion.correctAnswer
+      }),
       media: { ...newQuestion.media }
     }
 
@@ -59,12 +131,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     onChange(updatedQuestions)
     
     setEditingIndex(null)
-    setNewQuestion({
-      type: 'viva',
-      question: '',
-      points: 1,
-      media: { image: null, video: null, graph: null }
-    })
+    setNewQuestion(resetNewQuestionState())
   }
 
   const handleDeleteQuestion = (index) => {
@@ -77,9 +144,21 @@ export default function QuestionBuilder({ questions, onChange }) {
   const handleEditQuestion = (index) => {
     const question = questions[index]
     setEditingIndex(index)
+    
+    let options = ['', '', '', '']
+    let correctAnswer = null
+
+    if (question.type === 'mcq' && question.options) {
+        // Fill options array back to 4 slots for editing, padding with empty strings
+        options = [...question.options, ...new Array(4 - question.options.length).fill('')].slice(0, 4)
+        correctAnswer = question.correctAnswer
+    }
+
     setNewQuestion({
-      type: question.type || 'viva',
+      type: question.type || 'mcq',
       question: question.question,
+      options: options,
+      correctAnswer: correctAnswer,
       points: question.points || 1,
       media: question.media || { image: null, video: null, graph: null }
     })
@@ -128,12 +207,36 @@ export default function QuestionBuilder({ questions, onChange }) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${q.type === 'interview' ? 'bg-indigo-100 text-indigo-700' : 'bg-pink-100 text-pink-700'}`}>
-                      {q.type === 'interview' ? 'INTERVIEW' : 'VIVA'}
+                    <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                      q.type === 'mcq' ? 'bg-green-100 text-green-700' : 
+                      q.type === 'interview' ? 'bg-indigo-100 text-indigo-700' : 'bg-pink-100 text-pink-700'
+                    }`}>
+                      {q.type.toUpperCase()}
                     </span>
                     <span className="text-sm text-gray-600">{q.points} point{q.points !== 1 ? 's' : ''}</span>
                   </div>
                   <p className="text-gray-900 font-medium">{q.question}</p>
+                  
+                  {/* MCQ Options Display */}
+                  {q.type === 'mcq' && q.options && (
+                    <div className="mt-2 space-y-1">
+                      {q.options.map((opt, optIndex) => (
+                        <div key={optIndex} className="flex items-center gap-2 text-sm">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                            optIndex === q.correctAnswer
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}>
+                            {optIndex === q.correctAnswer ? <Check className="w-3 h-3" /> : String.fromCharCode(65 + optIndex)}
+                          </span>
+                          <span className={optIndex === q.correctAnswer ? 'font-semibold text-green-700' : 'text-gray-700'}>
+                            {opt}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {(q.media?.image || q.media?.video || q.media?.graph) && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
                       {q.media.image && <Image className="w-4 h-4" />}
@@ -169,16 +272,28 @@ export default function QuestionBuilder({ questions, onChange }) {
             {editingIndex !== null ? 'Edit Question' : 'Add New Question'}
           </h4>
 
+        {/* Question Type Selector */}
         <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">Question Type</label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'mcq' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+              <input
+                type="radio"
+                name="questionType"
+                value="mcq"
+                checked={newQuestion.type === 'mcq'}
+                onChange={() => handleTypeChange('mcq')}
+                className="mr-2"
+              />
+              MCQ
+            </label>
             <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'viva' ? 'bg-pink-100 border-pink-300 text-pink-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
               <input
                 type="radio"
                 name="questionType"
                 value="viva"
                 checked={newQuestion.type === 'viva'}
-                onChange={() => setNewQuestion({ ...newQuestion, type: 'viva' })}
+                onChange={() => handleTypeChange('viva')}
                 className="mr-2"
               />
               Viva
@@ -189,14 +304,16 @@ export default function QuestionBuilder({ questions, onChange }) {
                 name="questionType"
                 value="interview"
                 checked={newQuestion.type === 'interview'}
-                onChange={() => setNewQuestion({ ...newQuestion, type: 'interview' })}
+                onChange={() => handleTypeChange('interview')}
                 className="mr-2"
               />
               Interview
             </label>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            {newQuestion.type === 'viva' ? 'Student records a spoken/video answer.' : 'Interview-style prompt; student records their response.'}
+            {newQuestion.type === 'mcq' && 'Students select one correct option from a list.'}
+            {newQuestion.type === 'viva' && 'Student records a spoken/video answer.'}
+            {newQuestion.type === 'interview' && 'Interview-style prompt; student records their response.'}
           </p>
         </div>
 
@@ -214,7 +331,63 @@ export default function QuestionBuilder({ questions, onChange }) {
           />
         </div>
 
-        
+        {/* --- MCQ Options Input --- */}
+        {newQuestion.type === 'mcq' && (
+          <div className="mb-4 space-y-3">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Options <span className="text-red-500">*</span>
+              <span className="text-xs text-gray-500 ml-2">(Provide at least 2 non-empty, unique options)</span>
+            </label>
+            {newQuestion.options.map((opt, index) => {
+              // Check if this option duplicates another (real-time feedback)
+              const trimmedOpt = opt.trim().toLowerCase()
+              const hasDuplicate = trimmedOpt !== '' && newQuestion.options.some((o, i) => i !== index && o.trim().toLowerCase() === trimmedOpt)
+              
+              return (
+                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
+                    newQuestion.correctAnswer === index
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {String.fromCharCode(65 + index)}
+                  </div>
+                  <div className="flex-1 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => {
+                        const newOptions = [...newQuestion.options]
+                        newOptions[index] = e.target.value
+                        setNewQuestion({ ...newQuestion, options: newOptions })
+                      }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        hasDuplicate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                    />
+                    {hasDuplicate && (
+                      <p className="text-red-600 text-xs mt-1">This option is a duplicate</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewQuestion({ ...newQuestion, correctAnswer: index })}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors flex-shrink-0 ${
+                      newQuestion.correctAnswer === index
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {newQuestion.correctAnswer === index ? 'Correct' : 'Mark Correct'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+        {/* --- End MCQ Options Input --- */}
+
 
         {/* Points */}
         <div className="mb-4">
@@ -323,12 +496,7 @@ export default function QuestionBuilder({ questions, onChange }) {
               type="button"
               onClick={() => {
                 setEditingIndex(null)
-                setNewQuestion({
-                  type: 'viva',
-                  question: '',
-                  points: 1,
-                  media: { image: null, video: null, graph: null }
-                })
+                setNewQuestion(resetNewQuestionState())
               }}
               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
