@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer, util
 from pydantic import BaseModel, Field
-from typing import List, Dict, Annotated
+from typing import Annotated
+import re
 
 class MCQEvaluationResponse(BaseModel):
 
@@ -32,16 +33,13 @@ class MCQEvaluationEngine:
         if not text:
             return ""
 
-        text = text.strip().lower()
+        text = text.lower()
 
-        # common STT patterns
-        for prefix in ["option ", "answer ", "ans "]:
-            if text.startswith(prefix):
-                text = text.replace(prefix, "", 1)
+        # match: "option b", "answer is c", "ans d", or standalone "b"
+        match = re.search(r"\b(option|answer|ans)?\s*([abcd])\b", text)
 
-        # first character check
-        if text and text[0] in ["a", "b", "c", "d"]:
-            return text[0]
+        if match:
+            return match.group(2)
 
         return ""
 
