@@ -7,13 +7,16 @@ class MCQEvaluationResponse(BaseModel):
     question_id: Annotated[str, 
                            Field(title="Question ID", description="Question ID of the question",min_length=1)]
     
+    similarity_score: Annotated[float,
+                                Field(title="Similarity Score", description="Similarity score between correct and selected option", ge=0.00, le=1.00)]
+
     inference: Annotated[str,
                           Field(title="Result", description="Result of student", min_length=1)]
 
 
 class MCQEvaluationEngine:
     def __init__(self, model_name: str, global_model = None):
-        self.threshold = 0.8
+        self.threshold = 0.9
         self.model_name = model_name
         self.model = global_model
 
@@ -54,12 +57,14 @@ class MCQEvaluationEngine:
             if cosine_score >= self.threshold:
                 return {
                     "question_id": input_features["question_id"],
+                    "similarity_score": cosine_score,
                     "inference": "Correct Answer"
                 }
             
             else: 
                 return {
                     "question_id": input_features["question_id"],
+                    "similarity_score": cosine_score,
                     "inference": "Incorrect Answer"
                 }
 
@@ -68,5 +73,6 @@ class MCQEvaluationEngine:
             print("MCQ Evaluation Error: ",e)
             return {
                 "question_id": input_features["question_id"],
+                "similarity_score": 0.00,
                 "inference": "Could not decide due to error"
             }
