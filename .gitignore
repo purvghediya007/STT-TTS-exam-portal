@@ -1,26 +1,54 @@
+# =========================
 # Python environment
+# =========================
 venv/
 __pycache__/
 *.pyc
 backend/fastapi_backend/.env
 
+# =========================
 # HuggingFace / Transformers models
-~/.cache/
-cache/
+# =========================
+.cache/
 huggingface/
 
+# =========================
 # Whisper model cache
+# =========================
 .whisper/
 
-# audio files
+# =========================
+# Audio files
+# =========================
 *.wav
 *.mp3
 *.ogg
 *.webm
 
+# =========================
 # FastAPI temp uploads
+# =========================
 tmp/
 *.tmp
 
-# VSCode
+# =========================
+# Node / Backend
+# =========================
+backend/node_modules/
+backend/.env
+
+# =========================
+# Backend backup
+# =========================
+backend_old/
+
+# =========================
+# Logs
+# =========================
+*.log
+backend/logs/
+
+# =========================
+# VS Code
+# =========================
 .vscode/
