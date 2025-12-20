@@ -6,13 +6,16 @@ const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
-const { evaluateAnswerWithAI } = require("../services/evaluationService");
+const {
+  evaluateAnswerWithAI,
+  evaluateMCQAnswer,
+} = require("../services/evaluationService");
 
 const router = express.Router();
 
 // Map question to student-safe view (no expectedAnswer, no sensitive fields)
 const mapQuestionForStudent = (q) => {
-  return {
+  const base = {
     id: q._id,
     question: q.text, // Return as 'question' to match frontend expectations
     text: q.text, // Also return as 'text' for compatibility
@@ -23,6 +26,16 @@ const mapQuestionForStudent = (q) => {
     media: q.media,
     order: q.order,
   };
+
+  // For MCQ, include options but not the isCorrect flag
+  if (q.type === "mcq" && q.options && q.options.length > 0) {
+    base.options = q.options.map((opt) => ({
+      text: opt.text,
+      // Don't expose isCorrect to student
+    }));
+  }
+
+  return base;
 };
 
 /**
@@ -36,7 +49,15 @@ function transformExamForFrontend(examObj) {
     startsAt: examObj.startTime,
     endsAt: examObj.endTime,
     durationMin: examObj.durationMinutes,
-    teacherName: examObj.teacherId?.name || "Unknown Teacher",
+    pointsTotal: examObj.pointsTotal,
+    timePerQuestionSec: examObj.timePerQuestion,
+    attemptsLeft: examObj.attemptsAllowed,
+    allowedReRecords: examObj.allowedReRecords,
+    strictMode: examObj.strictMode,
+    shortDescription: examObj.shortDescription,
+    instructions: examObj.instructions,
+    marks: examObj.marks,
+    teacherName: examObj.teacherId?.username || "Unknown Teacher",
   };
 }
 
@@ -72,7 +93,7 @@ router.get(
       const skip = (page - 1) * limit;
 
       const exams = await Exam.find(filter)
-        .populate("teacherId", "name email")
+        .populate("teacherId", "username email")
         .sort({ startTime: -1 })
         .skip(skip)
         .limit(parseInt(limit));
@@ -125,7 +146,7 @@ router.get(
       const exam = await Exam.findOne({
         _id: examId,
         status: "published",
-      }).populate("teacherId", "name email");
+      }).populate("teacherId", "username email");
 
       if (!exam) {
         return res
@@ -326,23 +347,38 @@ router.post(
         });
       }
 
-      // Check if attempt already exists
-      let attempt = await StudentExamAttempt.findOne({
+      // Check if student has remaining attempts
+      const attemptCount = await StudentExamAttempt.countDocuments({
         examId,
         studentId,
       });
 
+      // Get allowed attempts from exam (default to 1 if not set)
+      const allowedAttempts = exam.attemptsAllowed || 1;
+
+      // Check if there's an in-progress attempt
+      let attempt = await StudentExamAttempt.findOne({
+        examId,
+        studentId,
+        status: "in_progress",
+      });
+
       if (attempt) {
-        if (attempt.status === "in_progress") {
-          return res.status(200).json({
-            message: "Exam already started",
-            attemptId: attempt._id.toString(),
-            expiresAt: attempt.deadlineAt.toISOString(),
-            firstQuestionId: null,
-          });
-        }
+        return res.status(200).json({
+          message: "Exam already started",
+          attemptId: attempt._id.toString(),
+          expiresAt: attempt.deadlineAt.toISOString(),
+          firstQuestionId: null,
+        });
+      }
+
+      // Check if student has exhausted their attempts
+      if (attemptCount >= allowedAttempts) {
         return res.status(400).json({
-          message: "You have already attempted this exam",
+          message: "You have exhausted all your attempts for this exam",
+          error: "attempts_exhausted",
+          attemptsUsed: attemptCount,
+          allowedAttempts: allowedAttempts,
         });
       }
 
@@ -521,6 +557,42 @@ router.post(
         }
       }
 
+      // Store regular answers (MCQ and descriptive) if provided
+      if (answers && Array.isArray(answers)) {
+        for (const answer of answers) {
+          if (!answer.questionId) continue;
+
+          const answerUpdate = {
+            attemptId: attempt._id,
+            questionId: answer.questionId,
+          };
+
+          // For MCQ answers
+          if (answer.selectedOptionIndex !== undefined) {
+            answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
+          }
+
+          // For descriptive answers
+          if (answer.answerText) {
+            answerUpdate.answerText = answer.answerText;
+          }
+
+          // For audio/interview answers - store recording URLs from Cloudinary
+          if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
+            answerUpdate.recordingUrls = answer.recordingUrls;
+            console.log(
+              `Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
+            );
+          }
+
+          await StudentAnswer.findOneAndUpdate(
+            { attemptId: attempt._id, questionId: answer.questionId },
+            answerUpdate,
+            { upsert: true }
+          );
+        }
+      }
+
       // Mark attempt as submitted
       attempt.status = "submitted";
       attempt.finishedAt = now;
@@ -617,6 +689,21 @@ router.post(
         const q = questionMap.get(String(ans.questionId));
         if (!q) continue; // ignore invalid question id
 
+        const updateData = {};
+
+        // Handle MCQ answers
+        if (q.type === "mcq") {
+          if (
+            ans.selectedOptionIndex !== null &&
+            ans.selectedOptionIndex !== undefined
+          ) {
+            updateData.selectedOptionIndex = ans.selectedOptionIndex;
+          }
+        } else {
+          // Handle text answers for descriptive questions
+          updateData.answerText = ans.answerText || "";
+        }
+
         bulkOps.push({
           updateOne: {
             filter: {
@@ -626,9 +713,7 @@ router.post(
               examId: exam._id,
             },
             update: {
-              $set: {
-                answerText: ans.answerText || "",
-              },
+              $set: updateData,
             },
             upsert: true,
           },
@@ -642,14 +727,14 @@ router.post(
       // 2) Fetch all saved answers for this attempt
       const savedAnswers = await StudentAnswer.find({
         attemptId: attempt._id,
-      }).populate("questionId", "text marks expectedAnswer");
+      }).populate("questionId", "text marks expectedAnswer type options");
 
       let totalScore = 0;
       let maxScore = 0;
       let anyScored = false;
       let anyQuestions = false;
 
-      // 3) AI evaluation using Gemini for each answer
+      // 3) Evaluation (AI for descriptive, direct for MCQ)
       for (const ans of savedAnswers) {
         const q = ans.questionId;
         if (!q) continue;
@@ -659,12 +744,36 @@ router.post(
         const maxMarks = q.marks || 0;
         maxScore += maxMarks;
 
-        const { score, feedback } = await evaluateAnswerWithAI({
-          questionText: q.text,
-          expectedAnswer: q.expectedAnswer,
-          studentAnswer: ans.answerText,
-          maxMarks,
-        });
+        let score, feedback;
+
+        // MCQ evaluation
+        if (q.type === "mcq") {
+          // Find the correct option index
+          const correctOptionIndex = q.options.findIndex(
+            (opt) => opt.isCorrect === true
+          );
+
+          const { score: mcqScore, feedback: mcqFeedback } = evaluateMCQAnswer({
+            selectedOptionIndex: ans.selectedOptionIndex,
+            correctOptionIndex,
+            maxMarks,
+          });
+
+          score = mcqScore;
+          feedback = mcqFeedback;
+        } else {
+          // Descriptive evaluation using AI
+          const { score: aiScore, feedback: aiFeedback } =
+            await evaluateAnswerWithAI({
+              questionText: q.text,
+              expectedAnswer: q.expectedAnswer,
+              studentAnswer: ans.answerText,
+              maxMarks,
+            });
+
+          score = aiScore;
+          feedback = aiFeedback;
+        }
 
         if (score != null) {
           anyScored = true;
@@ -674,7 +783,10 @@ router.post(
         ans.score = score;
         ans.maxMarks = maxMarks;
         ans.evaluationFeedback = feedback;
-        ans.evaluationModel = process.env.AI_MODEL || "gemini-1.5-flash";
+        ans.evaluationModel =
+          q.type === "mcq"
+            ? "direct"
+            : process.env.AI_MODEL || "gemini-1.5-flash";
         ans.evaluatedAt = new Date();
 
         await ans.save();

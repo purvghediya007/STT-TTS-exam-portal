@@ -28,7 +28,15 @@ function transformExamForFrontend(examObj) {
     startsAt: examObj.startTime,
     endsAt: examObj.endTime,
     durationMin: examObj.durationMinutes,
-    teacherName: examObj.teacherId?.name || "Unknown Teacher",
+    timePerQuestionSec: examObj.timePerQuestion,
+    pointsTotal: examObj.pointsTotal,
+    attemptsLeft: examObj.attemptsAllowed,
+    allowedReRecords: examObj.allowedReRecords,
+    strictMode: examObj.strictMode,
+    shortDescription: examObj.shortDescription,
+    instructions: examObj.instructions,
+    marks: examObj.marks,
+    teacherName: examObj.teacherId?.username || "Unknown Teacher",
   };
 }
 
@@ -44,7 +52,23 @@ router.post(
   requireRole("teacher"),
   async (req, res, next) => {
     try {
-      const { title, description, examCode, settings } = req.body;
+      const {
+        title,
+        description,
+        shortDescription,
+        instructions,
+        examCode,
+        settings,
+        pointsTotal,
+        timePerQuestion,
+        attemptsAllowed,
+        strictMode,
+        allowedReRecords,
+        marks,
+        startsAt,
+        endsAt,
+        durationMin,
+      } = req.body;
 
       if (!title || !examCode) {
         return res.status(400).json({
@@ -65,9 +89,24 @@ router.post(
       const exam = await Exam.create({
         title,
         description,
+        shortDescription,
+        instructions,
         examCode: normalizedExamCode,
         teacherId: req.user.sub,
-        // status: "draft" by default
+        pointsTotal: pointsTotal ?? 100,
+        timePerQuestion,
+        attemptsAllowed: attemptsAllowed ?? 1,
+        strictMode: strictMode ?? false,
+        allowedReRecords: allowedReRecords ?? 1,
+        startTime: startsAt ? new Date(startsAt) : undefined,
+        endTime: endsAt ? new Date(endsAt) : undefined,
+        durationMinutes: durationMin,
+        marks: marks || {
+          mcq: 0,
+          viva: 0,
+          interview: 0,
+          total: pointsTotal ?? 100,
+        },
         settings: {
           thinkTimeSeconds: settings?.thinkTimeSeconds ?? 10,
           answerTimeSeconds: settings?.answerTimeSeconds ?? 60,
@@ -94,13 +133,24 @@ router.get(
   requireRole("teacher"),
   async (req, res, next) => {
     try {
-      const exams = await Exam.find({ teacherId: req.user.sub }).sort({
-        createdAt: -1,
-      });
+      const exams = await Exam.find({ teacherId: req.user.sub })
+        .populate("teacherId", "name email username")
+        .sort({
+          createdAt: -1,
+        });
 
-      // Transform for frontend compatibility
-      const transformedExams = exams.map((exam) =>
-        transformExamForFrontend(exam.toObject())
+      // Get submission counts for each exam
+      const transformedExams = await Promise.all(
+        exams.map(async (exam) => {
+          const submissionCount = await StudentExamAttempt.countDocuments({
+            examId: exam._id,
+          });
+          const transformed = transformExamForFrontend(exam.toObject());
+          return {
+            ...transformed,
+            submissionCount: submissionCount,
+          };
+        })
       );
 
       return res.status(200).json({ exams: transformedExams });
@@ -118,6 +168,37 @@ router.get(
   requireRole("teacher"),
   async (req, res, next) => {
     try {
+      const exam = await Exam.findById(req.params.id).populate(
+        "teacherId",
+        "name email username"
+      );
+
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (exam.teacherId._id.toString() !== req.user.sub) {
+        return res.status(403).json({ message: "Forbidden: not your exam" });
+      }
+
+      // Transform for frontend compatibility
+      const transformedExam = transformExamForFrontend(exam.toObject());
+
+      return res.status(200).json({ exam: transformedExam });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// PUT /api/exams/:id
+// Update exam details
+router.put(
+  "/:id",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
       const exam = await Exam.findById(req.params.id);
 
       if (!exam) {
@@ -128,10 +209,46 @@ router.get(
         return res.status(403).json({ message: "Forbidden: not your exam" });
       }
 
+      const {
+        title,
+        description,
+        shortDescription,
+        instructions,
+        pointsTotal,
+        timePerQuestion,
+        attemptsAllowed,
+        strictMode,
+        allowedReRecords,
+        marks,
+        startsAt,
+        endsAt,
+        durationMin,
+      } = req.body;
+
+      // Update fields
+      if (title != null) exam.title = title;
+      if (description != null) exam.description = description;
+      if (shortDescription != null) exam.shortDescription = shortDescription;
+      if (instructions != null) exam.instructions = instructions;
+      if (pointsTotal != null) exam.pointsTotal = pointsTotal;
+      if (timePerQuestion != null) exam.timePerQuestion = timePerQuestion;
+      if (attemptsAllowed != null) exam.attemptsAllowed = attemptsAllowed;
+      if (strictMode != null) exam.strictMode = strictMode;
+      if (allowedReRecords != null) exam.allowedReRecords = allowedReRecords;
+      if (marks != null) exam.marks = marks;
+      if (startsAt != null) exam.startTime = new Date(startsAt);
+      if (endsAt != null) exam.endTime = new Date(endsAt);
+      if (durationMin != null) exam.durationMinutes = durationMin;
+
+      await exam.save();
+
       // Transform for frontend compatibility
       const transformedExam = transformExamForFrontend(exam.toObject());
 
-      return res.status(200).json({ exam: transformedExam });
+      return res.status(200).json({
+        message: "Exam updated successfully",
+        exam: transformedExam,
+      });
     } catch (error) {
       next(error);
     }
@@ -170,6 +287,7 @@ router.post(
         perQuestionSettings,
         order,
         type,
+        options,
       } = req.body;
 
       if (!text || marks == null) {
@@ -178,9 +296,54 @@ router.post(
         });
       }
 
-      // Only allow descriptive types; default to long_answer
-      const allowedTypes = ["short_answer", "long_answer"];
+      // Validate type and allow MCQ, viva, interview
+      const allowedTypes = [
+        "short_answer",
+        "long_answer",
+        "mcq",
+        "viva",
+        "interview",
+      ];
       const finalType = allowedTypes.includes(type) ? type : "long_answer";
+
+      // MCQ specific validation
+      if (finalType === "mcq") {
+        if (!Array.isArray(options) || options.length === 0) {
+          return res.status(400).json({
+            message: "MCQ requires options array",
+          });
+        }
+
+        if (options.length < 2) {
+          return res.status(400).json({
+            message: "MCQ must have minimum 2 options",
+          });
+        }
+
+        if (options.length > 4) {
+          return res.status(400).json({
+            message: "MCQ can have maximum 4 options",
+          });
+        }
+
+        // Check if exactly one option is marked as correct
+        const correctCount = options.filter((opt) => opt.isCorrect).length;
+        if (correctCount !== 1) {
+          return res.status(400).json({
+            message: "MCQ must have exactly 1 correct option",
+          });
+        }
+
+        // Validate all options have text
+        if (!options.every((opt) => opt.text && opt.text.trim())) {
+          return res.status(400).json({
+            message: "All MCQ options must have text",
+          });
+        }
+      } else if (finalType !== "mcq") {
+        // For non-MCQ questions, options should be ignored
+        // Continue with normal flow
+      }
 
       const questionCount = await Question.countDocuments({ examId });
 
@@ -192,6 +355,7 @@ router.post(
         marks,
         expectedAnswer, // optional
         instruction,
+        options: finalType === "mcq" ? options : [], // Only include options for MCQ
         media: {
           imageUrl: media?.imageUrl,
           fileUrl: media?.fileUrl,
@@ -278,7 +442,13 @@ router.post(
         }
 
         // optional type: default to long_answer
-        const allowedTypes = ["short_answer", "long_answer"];
+        const allowedTypes = [
+          "short_answer",
+          "long_answer",
+          "mcq",
+          "viva",
+          "interview",
+        ];
         let finalType = "long_answer";
         if (q.type && allowedTypes.includes(q.type)) {
           finalType = q.type;
@@ -405,7 +575,13 @@ router.put(
       if (order != null) question.order = order;
 
       if (type != null) {
-        const allowedTypes = ["short_answer", "long_answer"];
+        const allowedTypes = [
+          "short_answer",
+          "long_answer",
+          "mcq",
+          "viva",
+          "interview",
+        ];
         if (allowedTypes.includes(type)) {
           question.type = type;
         }

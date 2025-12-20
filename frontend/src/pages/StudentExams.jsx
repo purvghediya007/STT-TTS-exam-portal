@@ -8,6 +8,7 @@ import HistoryView from './HistoryView'
 import GuidelinesView from './GuidelinesView'
 import TakeExamView from './TakeExamView'
 import ExamResultsView from './ExamResultsView'
+import ExamDetailsView from './ExamDetailsView'
 
 /**
  * StudentExams - Main container with routing for all student exam views
@@ -21,6 +22,7 @@ export default function StudentExams() {
         <Route path="available" element={<AvailableQuizView />} />
         <Route path="history" element={<HistoryView />} />
         <Route path="guidelines" element={<GuidelinesView />} />
+        <Route path="exams/:examId/details" element={<ExamDetailsView />} />
         <Route path="exams/:examId/take" element={<TakeExamView />} />
         <Route path="exams/:examId/results" element={<ExamResultsView />} />
         <Route path="" element={<Navigate to="dashboard" replace />} />

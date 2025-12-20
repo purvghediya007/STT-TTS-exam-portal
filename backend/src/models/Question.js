@@ -22,10 +22,10 @@ const questionSchema = new mongoose.Schema(
       required: true, // question text / prompt
       trim: true,
     },
-    // Only descriptive questions now (viva / interview)
+    // Question type: descriptive or MCQ
     type: {
       type: String,
-      enum: ["short_answer", "long_answer"],
+      enum: ["short_answer", "long_answer", "mcq", "viva", "interview"],
       default: "long_answer",
     },
     marks: {
@@ -34,10 +34,24 @@ const questionSchema = new mongoose.Schema(
       min: 0,
     },
     // Model/expected answer for AI evaluation later (not visible to student)
+    // For MCQ: this will be the index of correct option (0-3)
     expectedAnswer: {
       type: String,
       trim: true,
     },
+    // MCQ options (only used when type === "mcq")
+    options: [
+      {
+        text: {
+          type: String,
+          trim: true,
+        },
+        isCorrect: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     // Optional instructions for student for this question
     instruction: {
       type: String,

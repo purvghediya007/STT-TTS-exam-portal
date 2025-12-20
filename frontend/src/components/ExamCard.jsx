@@ -4,11 +4,11 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Clock, 
-  User, 
-  Award, 
-  Play, 
+import {
+  Clock,
+  User,
+  Award,
+  Play,
   FileText,
   Calendar,
   Timer
@@ -52,7 +52,8 @@ export default function ExamCard({ exam, onPrefetch }) {
     if (onPrefetch) {
       onPrefetch()
     }
-    // TODO: Navigate to exam details page or open details modal
+    // Navigate to exam details page to show full information
+    navigate(`/student/exams/${exam.id}/details`)
   }
 
   const handleViewResults = () => {
@@ -72,11 +73,10 @@ export default function ExamCard({ exam, onPrefetch }) {
   return (
     <>
       <article
-        className={`group relative bg-white rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${
-          isLive 
-            ? 'border-l-4 border-l-danger-dark shadow-md shadow-danger-dark/10' 
+        className={`group relative bg-white rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${isLive
+            ? 'border-l-4 border-l-danger-dark shadow-md shadow-danger-dark/10'
             : 'border-slate-200 hover:border-primary-300'
-        }`}
+          }`}
         onMouseEnter={handleMouseEnter}
         aria-labelledby={`exam-title-${exam.id}`}
       >
@@ -90,20 +90,18 @@ export default function ExamCard({ exam, onPrefetch }) {
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-3 mb-2">
-                <div className={`mt-0.5 p-2 rounded-lg flex-shrink-0 ${
-                  isLive 
-                    ? 'bg-danger-light' 
-                    : exam.status === 'upcoming' 
-                    ? 'bg-primary-100' 
-                    : 'bg-slate-100'
-                }`}>
-                  <FileText className={`w-5 h-5 ${
-                    isLive 
-                      ? 'text-danger-dark' 
-                      : exam.status === 'upcoming' 
-                      ? 'text-primary-600' 
-                      : 'text-slate-500'
-                  }`} aria-hidden="true" />
+                <div className={`mt-0.5 p-2 rounded-lg flex-shrink-0 ${isLive
+                    ? 'bg-danger-light'
+                    : exam.status === 'upcoming'
+                      ? 'bg-primary-100'
+                      : 'bg-slate-100'
+                  }`}>
+                  <FileText className={`w-5 h-5 ${isLive
+                      ? 'text-danger-dark'
+                      : exam.status === 'upcoming'
+                        ? 'text-primary-600'
+                        : 'text-slate-500'
+                    }`} aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3

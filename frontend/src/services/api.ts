@@ -65,6 +65,56 @@ export async function fetchAPI(
 }
 
 /**
+ * Upload media to Cloudinary via backend
+ */
+export async function uploadMedia(file: File): Promise<{
+  url: string
+  public_id: string
+  filename: string
+  size: number
+  mimetype: string
+}> {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/upload/media`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Upload failed')
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error('Error uploading media:', error)
+    throw error
+  }
+}
+
+/**
+ * Delete media from Cloudinary via backend
+ */
+export async function deleteMedia(publicId: string): Promise<void> {
+  try {
+    const response = await fetchAPI(`/upload/media/${encodeURIComponent(publicId)}`, {
+      method: 'DELETE',
+    })
+    await response.json()
+  } catch (error) {
+    console.error('Error deleting media:', error)
+    throw error
+  }
+}
+
+
+/**
  * Exam data types
  */
 export interface Exam {
@@ -480,12 +530,15 @@ export async function fetchFacultyStats(): Promise<FacultyStats> {
 export async function createExam(examData: {
   title: string
   shortDescription: string
+  instructions?: string
   startsAt: string
   endsAt: string
   durationMin: number
-  timePerQuestionSec?: number | null
+  timePerQuestion?: number | null
   pointsTotal: number
-  settingsSummary?: Record<string, unknown>
+  attemptsAllowed?: number
+  allowedReRecords?: number
+  strictMode?: boolean
 }): Promise<FacultyExam> {
   try {
     const response = await fetchAPI('/faculty/exams', {
@@ -513,13 +566,12 @@ export async function createExam(examData: {
       startsAt: examData.startsAt,
       endsAt: examData.endsAt,
       durationMin: examData.durationMin,
-      timePerQuestionSec: examData.timePerQuestionSec || null,
+      timePerQuestionSec: examData.timePerQuestion || null,
       status: new Date(examData.startsAt) > new Date() ? 'upcoming' : 'live',
       createdAt: new Date().toISOString(),
       submissionCount: 0,
       totalStudents: 0,
       pointsTotal: examData.pointsTotal,
-      settingsSummary: examData.settingsSummary || { strictMode: false }
     }
     
     // Save to localStorage

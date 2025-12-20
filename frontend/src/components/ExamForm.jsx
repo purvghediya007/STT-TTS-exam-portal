@@ -29,7 +29,7 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
       // Convert exam data to form format
       const startDate = exam.startsAt ? new Date(exam.startsAt).toISOString().slice(0, 16) : ''
       const endDate = exam.endsAt ? new Date(exam.endsAt).toISOString().slice(0, 16) : ''
-      
+
       setFormData({
         title: exam.title || '',
         shortDescription: exam.shortDescription || '',
@@ -38,64 +38,64 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
         durationMin: exam.durationMin || 60,
         timePerQuestionSec: exam.timePerQuestionSec || null,
         pointsTotal: exam.pointsTotal || 100,
-        attemptsLeft: exam.settingsSummary?.attemptsLeft || 1,
-        allowedReRecords: exam.settingsSummary?.allowedReRecords || 0,
-        strictMode: exam.settingsSummary?.strictMode || false,
-        instructions: exam.settingsSummary?.instructions || ''
+        attemptsLeft: exam.attemptsLeft || 1,
+        allowedReRecords: exam.allowedReRecords || 0,
+        strictMode: exam.strictMode || false,
+        instructions: exam.instructions || ''
       })
     }
   }, [exam])
 
   const validate = () => {
     const newErrors = {}
-    
+
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required'
     }
-    
+
     if (!formData.shortDescription.trim()) {
       newErrors.shortDescription = 'Description is required'
     }
-    
+
     if (!formData.startsAt) {
       newErrors.startsAt = 'Start date and time is required'
     }
-    
+
     if (!formData.endsAt) {
       newErrors.endsAt = 'End date and time is required'
     }
-    
+
     if (formData.startsAt && formData.endsAt) {
       const start = new Date(formData.startsAt)
       const end = new Date(formData.endsAt)
-      
+
       if (end <= start) {
         newErrors.endsAt = 'End time must be after start time'
       }
-      
+
       // Check if duration matches
       const diffMinutes = (end - start) / (1000 * 60)
       if (diffMinutes < formData.durationMin) {
         newErrors.durationMin = `Duration must be at least ${Math.ceil(diffMinutes)} minutes based on time range`
       }
     }
-    
+
     if (formData.durationMin < 1) {
       newErrors.durationMin = 'Duration must be at least 1 minute'
     }
-    
+
     if (formData.pointsTotal < 1) {
       newErrors.pointsTotal = 'Points must be at least 1'
     }
-    
+
     if (formData.attemptsLeft < 0) {
       newErrors.attemptsLeft = 'Attempts cannot be negative'
     }
-    
+
     if (formData.allowedReRecords < 0) {
       newErrors.allowedReRecords = 'Re-records cannot be negative'
     }
-    
+
     if (formData.timePerQuestionSec !== null && formData.timePerQuestionSec < 1) {
       newErrors.timePerQuestionSec = 'Time per question must be at least 1 second'
     }
@@ -106,38 +106,25 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validate()) {
       return
     }
 
     setLoading(true)
     try {
-      let teacherName = 'Current Faculty'
-      try {
-        const userData = JSON.parse(localStorage.getItem('user_data'))
-        if (userData?.role === 'faculty') {
-          teacherName = userData.name || userData.facultyId || 'Current Faculty'
-        }
-      } catch {
-        // Ignore parsing errors
-      }
-
       const examData = {
         title: formData.title.trim(),
         shortDescription: formData.shortDescription.trim(),
+        instructions: formData.instructions.trim(),
         startsAt: new Date(formData.startsAt).toISOString(),
         endsAt: new Date(formData.endsAt).toISOString(),
         durationMin: formData.durationMin,
-        timePerQuestionSec: formData.timePerQuestionSec || null,
+        timePerQuestion: formData.timePerQuestionSec || null,
         pointsTotal: formData.pointsTotal,
-        teacherName,
-        settingsSummary: {
-          strictMode: formData.strictMode,
-          attemptsLeft: formData.attemptsLeft,
-          allowedReRecords: formData.allowedReRecords,
-          instructions: formData.instructions
-        }
+        attemptsAllowed: formData.attemptsLeft,
+        allowedReRecords: formData.allowedReRecords,
+        strictMode: formData.strictMode,
       }
 
       let result
@@ -212,9 +199,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
               type="text"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.title ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.title ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="e.g., Introduction to Algorithms - Midterm"
             />
             {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
@@ -229,9 +215,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
               value={formData.shortDescription}
               onChange={(e) => handleChange('shortDescription', e.target.value)}
               rows={3}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.shortDescription ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.shortDescription ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Brief description of the exam..."
             />
             {errors.shortDescription && <p className="text-red-600 text-sm mt-1">{errors.shortDescription}</p>}
@@ -262,9 +247,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 type="datetime-local"
                 value={formData.startsAt}
                 onChange={(e) => handleChange('startsAt', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.startsAt ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.startsAt ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.startsAt && <p className="text-red-600 text-sm mt-1">{errors.startsAt}</p>}
             </div>
@@ -278,9 +262,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 type="datetime-local"
                 value={formData.endsAt}
                 onChange={(e) => handleChange('endsAt', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.endsAt ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.endsAt ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.endsAt && <p className="text-red-600 text-sm mt-1">{errors.endsAt}</p>}
             </div>
@@ -298,9 +281,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 min="1"
                 value={formData.durationMin}
                 onChange={(e) => handleChange('durationMin', parseInt(e.target.value) || 0)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.durationMin ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.durationMin ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.durationMin && <p className="text-red-600 text-sm mt-1">{errors.durationMin}</p>}
             </div>
@@ -315,9 +297,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 min="1"
                 value={formData.pointsTotal}
                 onChange={(e) => handleChange('pointsTotal', parseInt(e.target.value) || 0)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.pointsTotal ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.pointsTotal ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.pointsTotal && <p className="text-red-600 text-sm mt-1">{errors.pointsTotal}</p>}
             </div>
@@ -334,9 +315,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
               min="1"
               value={formData.timePerQuestionSec || ''}
               onChange={(e) => handleChange('timePerQuestionSec', e.target.value ? parseInt(e.target.value) : null)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.timePerQuestionSec ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.timePerQuestionSec ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Leave empty for no limit"
             />
             {errors.timePerQuestionSec && <p className="text-red-600 text-sm mt-1">{errors.timePerQuestionSec}</p>}
@@ -353,9 +333,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 min="0"
                 value={formData.attemptsLeft}
                 onChange={(e) => handleChange('attemptsLeft', parseInt(e.target.value) || 0)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.attemptsLeft ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.attemptsLeft ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.attemptsLeft && <p className="text-red-600 text-sm mt-1">{errors.attemptsLeft}</p>}
             </div>
@@ -369,9 +348,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
                 min="0"
                 value={formData.allowedReRecords}
                 onChange={(e) => handleChange('allowedReRecords', parseInt(e.target.value) || 0)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.allowedReRecords ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.allowedReRecords ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
               {errors.allowedReRecords && <p className="text-red-600 text-sm mt-1">{errors.allowedReRecords}</p>}
             </div>
