@@ -251,10 +251,16 @@ router.post("/forgot-password", async (req, res) => {
     if (!identifier)
       return res.status(400).json({ message: "Identifier required." });
 
-    let user = await Student.findOne({ email: identifier }) ||
-               await Student.findOne({ username: identifier }) ||
-               await Teacher.findOne({ email: identifier }) ||
-               await Teacher.findOne({ username: identifier });
+    let user =
+      (await Student.findOne({ email: identifier })) ||
+      (await Student.findOne({ username: identifier })) ||
+      (await Teacher.findOne({ email: identifier })) ||
+      (await Teacher.findOne({ username: identifier }));
+
+    // If not found and identifier looks like enrollment number, try finding student by enrollmentNumber
+    if (!user && /^\d+$/.test(identifier)) {
+      user = await Student.findOne({ enrollmentNumber: identifier });
+    }
 
     if (!user)
       return res.json({ message: "If account exists, reset email sent." });
@@ -271,7 +277,7 @@ router.post("/forgot-password", async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    // Hash before saving 
+    // Hash before saving
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     await ResetToken.create({
@@ -317,12 +323,13 @@ router.get("/verify-reset-token/:token", async (req, res) => {
       tokenHash,
       expiresAt: { $gt: new Date() },
     });
-    if(record){
+    if (record) {
       console.log("Reset token record:", record);
-    } else{
+    } else {
       console.log("No valid reset token record found.");
     }
-    if (!record) return res.status(400).json({ message: "Invalid or expired token." });
+    if (!record)
+      return res.status(400).json({ message: "Invalid or expired token." });
 
     res.json({ valid: true });
   } catch (err) {
@@ -344,13 +351,14 @@ router.post("/reset-password", async (req, res) => {
       expiresAt: { $gt: Date.now() },
     });
 
-    if (!record) 
+    if (!record)
       return res.status(400).json({ message: "Invalid or expired token." });
 
     // Find user
     let user;
 
-    if (record.role === "student") user = await Student.findById(decoded.userId);
+    if (record.role === "student")
+      user = await Student.findById(decoded.userId);
     else user = await Teacher.findById(decoded.userId);
 
     // Update password

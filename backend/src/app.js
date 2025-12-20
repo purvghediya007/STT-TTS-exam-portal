@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const examRoutes = require("./routes/examRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const studentExamRoutes = require("./routes/studentExamRoutes");
 
@@ -34,6 +35,9 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+
+// Upload endpoints
+app.use("/api/upload", uploadRoutes);
 
 // Health check route (ROOT LEVEL)
 app.get("/health", (req, res) => {

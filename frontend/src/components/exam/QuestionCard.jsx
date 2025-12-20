@@ -26,33 +26,24 @@ export default function QuestionCard({ question, index, total }) {
         </div>
       </div>
 
-      {(question.media?.image || question.media?.video || question.media?.graph) && (
+      {(question.media?.imageUrl || question.media?.fileUrl) && (
         <div className="mb-6 space-y-3">
-          {question.media.image && (
+          {question.media.imageUrl && (
             <div className="border border-gray-200 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Image className="w-5 h-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">Image</span>
               </div>
-              <img src={question.media.image.url} alt="Question image" className="max-w-full h-auto rounded" />
+              <img src={question.media.imageUrl} alt="Question image" className="max-w-full h-auto rounded" />
             </div>
           )}
-          {question.media.video && (
+          {question.media.fileUrl && (
             <div className="border border-gray-200 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Video className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Video</span>
+                <span className="text-sm font-medium text-gray-700">Video/File</span>
               </div>
-              <video src={question.media.video.url} controls className="max-w-full rounded" />
-            </div>
-          )}
-          {question.media.graph && (
-            <div className="border border-gray-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Graph/Chart</span>
-              </div>
-              <img src={question.media.graph.url} alt="Question graph" className="max-w-full h-auto rounded" />
+              <video src={question.media.fileUrl} controls className="max-w-full rounded" />
             </div>
           )}
         </div>

@@ -133,6 +133,39 @@ Rules:
   }
 };
 
+/**
+ * Evaluate MCQ answer
+ * @param {number} selectedOptionIndex - Index of selected option (0-3)
+ * @param {number} correctOptionIndex - Index of correct option (0-3)
+ * @param {number} maxMarks - Full marks for the question
+ * @returns {object} {score, feedback}
+ */
+const evaluateMCQAnswer = ({
+  selectedOptionIndex,
+  correctOptionIndex,
+  maxMarks,
+}) => {
+  if (selectedOptionIndex === null || selectedOptionIndex === undefined) {
+    return {
+      score: 0,
+      feedback: "No answer selected.",
+    };
+  }
+
+  if (selectedOptionIndex === correctOptionIndex) {
+    return {
+      score: maxMarks,
+      feedback: "Correct answer.",
+    };
+  } else {
+    return {
+      score: 0,
+      feedback: "Incorrect answer.",
+    };
+  }
+};
+
 module.exports = {
   evaluateAnswerWithAI,
+  evaluateMCQAnswer,
 };

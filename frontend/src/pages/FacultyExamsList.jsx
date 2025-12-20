@@ -199,8 +199,8 @@ export default function FacultyExamsList() {
           <button
             onClick={() => setActiveTab('published')}
             className={`px-4 py-2 font-semibold border-b-2 transition-colors ${activeTab === 'published'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
             Published Exams ({publishedExams.length})
@@ -208,8 +208,8 @@ export default function FacultyExamsList() {
           <button
             onClick={() => setActiveTab('drafts')}
             className={`px-4 py-2 font-semibold border-b-2 transition-colors ${activeTab === 'drafts'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
             Drafts ({drafts.length})
@@ -372,20 +372,24 @@ export default function FacultyExamsList() {
                           View Submissions
                         </button>
                       )}
-                      <button
-                        onClick={() => handleEdit(exam)}
-                        className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(exam.id)}
-                        disabled={deletingId === exam.id}
-                        className="px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {status !== 'live' && (
+                        <>
+                          <button
+                            onClick={() => handleEdit(exam)}
+                            className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(exam.id)}
+                            disabled={deletingId === exam.id}
+                            className="px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )

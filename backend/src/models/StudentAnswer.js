@@ -30,6 +30,21 @@ const studentAnswerSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // 🔹 MCQ specific field - selected option index (0-3)
+    selectedOptionIndex: {
+      type: Number,
+      min: 0,
+      max: 3,
+    },
+
+    // 🔹 Audio recordings (for viva/interview questions)
+    recordingUrls: [
+      {
+        type: String, // Cloudinary URL
+        trim: true,
+      },
+    ],
+
     // 🔹 AI evaluation fields
     score: {
       type: Number,

@@ -12,6 +12,14 @@ const examSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    shortDescription: {
+      type: String,
+      trim: true,
+    },
+    instructions: {
+      type: String,
+      trim: true,
+    },
     examCode: {
       type: String,
       required: true,
@@ -40,6 +48,50 @@ const examSchema = new mongoose.Schema(
     durationMinutes: {
       type: Number,
       min: 1,
+    },
+    // Exam marks breakdown
+    marks: {
+      mcq: {
+        type: Number,
+        default: 0,
+      },
+      viva: {
+        type: Number,
+        default: 0,
+      },
+      interview: {
+        type: Number,
+        default: 0,
+      },
+      total: {
+        type: Number,
+        default: 0,
+      },
+    },
+    // Total points/marks for the exam
+    pointsTotal: {
+      type: Number,
+      default: 100,
+    },
+    // Time per question in seconds
+    timePerQuestion: {
+      type: Number,
+    },
+    // Number of attempts allowed
+    attemptsAllowed: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    // Strict mode - whether to enforce strict rules
+    strictMode: {
+      type: Boolean,
+      default: false,
+    },
+    // Re-record attempts allowed
+    allowedReRecords: {
+      type: Number,
+      default: 1,
     },
     // default settings for all questions of this exam (can override per question if needed)
     settings: {

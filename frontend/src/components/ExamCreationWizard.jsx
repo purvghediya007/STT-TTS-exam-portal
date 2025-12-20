@@ -20,7 +20,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
   const [basicInfo, setBasicInfo] = useState({
     title: initialDraft?.title || initialExam?.title || '',
     shortDescription: initialDraft?.shortDescription || initialExam?.shortDescription || '',
-    instructions: initialDraft?.instructions || initialExam?.settingsSummary?.instructions || ''
+    instructions: initialDraft?.instructions || initialExam?.instructions || ''
   })
 
   // Step 2: Questions - Load from draft/exam if available
@@ -33,9 +33,9 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     durationMin: initialExam?.durationMin || 60,
     timePerQuestionSec: initialExam?.timePerQuestionSec || null,
     pointsTotal: initialExam?.pointsTotal || (questions.length > 0 ? questions.reduce((sum, q) => sum + (q.points || 1), 0) : 100),
-    attemptsLeft: initialExam?.settingsSummary?.attemptsLeft || 1,
-    allowedReRecords: initialExam?.settingsSummary?.allowedReRecords || 0,
-    strictMode: initialExam?.settingsSummary?.strictMode || false
+    attemptsLeft: initialExam?.attemptsLeft || 1,
+    allowedReRecords: initialExam?.allowedReRecords || 0,
+    strictMode: initialExam?.strictMode || false
   })
 
   // If editing a draft, start at step 2 if questions exist, otherwise step 1
@@ -200,11 +200,6 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         }
       }
 
-      console.log("=== WIZARD: Publishing Exam ===");
-      console.log("questions state:", questions);
-      console.log("questions in examData:", examData.questions);
-      console.log("examData:", examData);
-
       // If editing an existing exam, update it instead of publishing
       if (initialExam) {
         const { updateExam } = await import('../services/api')
@@ -229,9 +224,9 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     setQuestions(updatedQuestions)
     setErrors({})
 
-    // Auto-calculate total points from questions
+    // Auto-calculate total points from questions (use 'marks' field from QuestionBuilder)
     if (updatedQuestions && updatedQuestions.length > 0) {
-      const totalPoints = updatedQuestions.reduce((sum, q) => sum + (q.points || 1), 0)
+      const totalPoints = updatedQuestions.reduce((sum, q) => sum + (q.marks || 1), 0)
       setTimeSettings(prev => ({ ...prev, pointsTotal: totalPoints }))
     }
   }
@@ -248,10 +243,10 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                 <div key={step} className="flex items-center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep === step
-                        ? 'bg-blue-600 text-white'
-                        : currentStep > step
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 text-gray-600'
+                      ? 'bg-blue-600 text-white'
+                      : currentStep > step
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 text-gray-600'
                       }`}
                   >
                     {currentStep > step ? <Check className="w-4 h-4" /> : step}
