@@ -62,3 +62,6 @@ backend_old/
 # Logs
 *.log
 backend/logs/
+
+# Frontend node modules
+frontend/node_modules/

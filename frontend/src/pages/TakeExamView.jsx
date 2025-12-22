@@ -81,13 +81,13 @@ const TakeExamView = () => {
   const { examId } = useParams() || {};
   const location = useLocation() || {};
   const navigate = useNavigate();
+  const audioRef = useRef(null);
 
   // State for loading and questions
   const [questions, setQuestions] = useState([]);
   const [examSummary, setExamSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [examStatus, setExamStatus] = useState([]);
   const [remainingTime, setRemainingTime] = useState(3600);
@@ -841,8 +841,11 @@ const TakeExamView = () => {
               >
                 Go Back
               </button>
+              
               <button
-                onClick={startExam}
+                  onClick={() => {
+                  startExam();                
+                }}
                 className="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition transform hover:scale-105 shadow-lg"
               >
                 🚀 Start Exam in Fullscreen
@@ -903,6 +906,24 @@ const TakeExamView = () => {
 
                 <div className="text-xl font-medium text-gray-900 mb-4 leading-relaxed">
                   {currentQuestion?.text}
+                  {currentQuestion?.ttsAudioUrl && (
+                    <>
+                      <audio ref={audioRef} src={`http://localhost:3001${currentQuestion.ttsAudioUrl}`}/>
+
+                      <button
+                          onClick={() => {
+                            audioRef.current?.play().catch(err =>
+                            console.log("Audio blocked:", err)
+                            );
+                          }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded"
+                      >
+                        🔊 Play Question
+                      </button>
+                    </>
+                  )}
+
+
                 </div>
 
                 <MultimediaDisplay multimedia={currentQuestion?.media} />
@@ -993,7 +1014,9 @@ const TakeExamView = () => {
             </div>
           </div>
         </div>
-      )}
+        )}
+        <audio ref={audioRef} preload="auto" />
+
     </div>
   );
 };

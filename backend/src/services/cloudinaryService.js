@@ -82,10 +82,12 @@ const deleteFromCloudinary = async (publicId) => {
 };
 
 // Helper function to upload raw file (for FormData)
+// Helper function to upload raw file (for FormData)
 const uploadFile = async (fileBuffer, fileName, mediaType = "image") => {
   try {
     let folder = "exam-portal/media";
     let resourceType = "auto";
+    let format = undefined; // ✅ FIX: always defined
 
     if (mediaType === "image") {
       folder = "exam-portal/images";
@@ -93,14 +95,20 @@ const uploadFile = async (fileBuffer, fileName, mediaType = "image") => {
     } else if (mediaType === "video") {
       folder = "exam-portal/videos";
       resourceType = "video";
+    } else if (mediaType === "raw") {
+      // 🔴 FIX: audio must be uploaded as VIDEO to be playable
+      folder = "exam-portal/audio";
+      resourceType = "video";
+      format = "mp3"; // ✅ ONLY here
     }
 
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          folder: folder,
+          folder,
           resource_type: resourceType,
-          public_id: `${Date.now()}_${fileName.replace(/[^a-z0-9]/gi, "_")}`,
+          public_id: `${Date.now()}_${fileName.replace(/\.mp3$/i, "")}`,
+          format, // ✅ now safe
         },
         (error, result) => {
           if (error) reject(error);
@@ -116,6 +124,7 @@ const uploadFile = async (fileBuffer, fileName, mediaType = "image") => {
     throw error;
   }
 };
+
 
 module.exports = {
   cloudinary,

@@ -6,6 +6,7 @@ const Student = require("../models/Student");
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
+const aiQueue = require("../queues/aiQueue");
 
 const router = express.Router();
 
@@ -488,6 +489,21 @@ router.post(
 
       // Update exam with publication details
       draft.status = "published";
+
+      // 🔒 AI readiness check before publishing exam
+      const pendingQuestions = await Question.find({
+        examId: draftId,
+        isReadyForPublish: false,
+      });
+
+      if (pendingQuestions.length > 0) {
+          return res.status(409).json({
+          message: "Some questions are still generating audio or rubric",
+          pendingCount: pendingQuestions.length,
+        });
+      }
+
+
       draft.startTime = new Date(startsAt);
       draft.endTime = new Date(endsAt);
       draft.durationMinutes = durationMin;
@@ -536,6 +552,15 @@ router.post(
             },
           };
 
+          // ✅ REQUIRED: audio for all question types
+          mapped.requiresAudio = true;
+
+          // ✅ REQUIRED: MCQ does not need rubric
+          if (mapped.type === "mcq") {
+            mapped.aiStatus = { rubric: "skipped" };
+          }
+
+
           // Add options for MCQ questions
           if (
             (q.type === "mcq" || q.type === "MCQ") &&
@@ -554,10 +579,36 @@ router.post(
         inserted.forEach((q) => {
           console.log("Saved question:", q.text, "with marks:", q.marks);
         });
+
+        // ✅ QUEUE AI JOBS FOR EACH QUESTION (FIXED SCOPE)
+        for (let index = 0; index < inserted.length; index++) {
+          const q = inserted[index];
+
+          await aiQueue.add(
+            "process-question",
+            { questionId: q._id },
+            {
+              delay: index * 30000, // ⏱ 30 seconds gap between questions
+              attempts: 3,
+              backoff: {
+              type: "exponential",
+              delay: 20000,
+              },
+              removeOnComplete: true,
+              removeOnFail: false,
+            }
+          );
+
+          console.log(
+          `✅ AI job queued for question ${q._id.toString()} (delay ${index * 30}s)`
+          );
+        }
+
+
       } else {
         console.log("No questions to save");
       }
-
+     
       // Transform for frontend compatibility
       const transformedDraft = transformExamForFrontend(draft.toObject());
 

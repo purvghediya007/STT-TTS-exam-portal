@@ -10,6 +10,7 @@ const facultyRoutes = require("./routes/facultyRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const studentExamRoutes = require("./routes/studentExamRoutes");
+const path = require("path");
 
 dotenv.config();
 connectDB();
@@ -32,6 +33,13 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
+
+
+// ✅ ADDED: serve local uploads
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 // Routes
 app.use("/api/auth", authRoutes);

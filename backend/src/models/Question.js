@@ -1,5 +1,6 @@
 // src/models/Question.js
 const mongoose = require("mongoose");
+const { uploadFile } = require("../services/cloudinaryService");
 
 const questionSchema = new mongoose.Schema(
   {
@@ -8,38 +9,40 @@ const questionSchema = new mongoose.Schema(
       ref: "Exam",
       required: true,
     },
+
     teacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
       required: true,
     },
+
     order: {
       type: Number,
-      default: 0, // question order in exam
+      default: 0,
     },
+
     text: {
       type: String,
-      required: true, // question text / prompt
+      required: true,
       trim: true,
     },
-    // Question type: descriptive or MCQ
+
     type: {
       type: String,
-      enum: ["short_answer", "long_answer", "mcq", "viva", "interview"],
-      default: "long_answer",
+      enum: ["mcq", "viva", "interview"],
     },
+
     marks: {
       type: Number,
       required: true,
       min: 0,
     },
-    // Model/expected answer for AI evaluation later (not visible to student)
-    // For MCQ: this will be the index of correct option (0-3)
+
     expectedAnswer: {
       type: String,
       trim: true,
     },
-    // MCQ options (only used when type === "mcq")
+
     options: [
       {
         text: {
@@ -52,23 +55,109 @@ const questionSchema = new mongoose.Schema(
         },
       },
     ],
-    // Optional instructions for student for this question
+
     instruction: {
       type: String,
       trim: true,
     },
-    // Optional media (image/file) reference
+
     media: {
       imageUrl: { type: String },
       fileUrl: { type: String },
     },
-    // Optional per-question timing overrides (for later audio flow)
+
     perQuestionSettings: {
       thinkTimeSeconds: { type: Number },
       answerTimeSeconds: { type: Number },
       reRecordAllowed: { type: Number },
     },
+
+    // ====== TTS audio storage =======
+    ttsGenerated: {
+      type: Boolean,
+      default: false,
+    },
+
+    ttsAudioUrl: {
+      type: String,
+      trim: true,
+    },
+
+    ttsAudioPublicId: {
+      type: String,
+      trim: true,
+    },
+
+    requiresAudio: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ====== Rubric storage =======
+    rubricGenerated: {
+      type: Boolean,
+      default: false,
+    },
+
+    rubricId: {
+      type: String,
+      trim: true,
+    },
+
+    rubricData: {
+      type: Object,
+      default: {},
+    },
+
+    // =====================================================
+    // ====== NEW FIELDS (NON-BREAKING, GUARANTEE LAYER) ====
+    // =====================================================
+
+    // Unified AI processing status for publish-time validation
+    aiStatus: {
+      audio: {
+        type: String,
+        enum: ["pending", "done", "failed"],
+        default: "pending",
+      },
+      rubric: {
+        type: String,
+        enum: ["pending", "done", "failed", "skipped"],
+        default: "pending",
+      },
+    },
+
+    // Retry counters for background jobs (Bull / Worker safety)
+    aiRetryCount: {
+      audio: {
+        type: Number,
+        default: 0,
+      },
+      rubric: {
+        type: Number,
+        default: 0,
+      },
+    },
+
+    // Error visibility for debugging & teacher UI
+    aiError: {
+      audio: {
+        type: String,
+        trim: true,
+      },
+      rubric: {
+        type: String,
+        trim: true,
+      },
+    },
+
+    // Lock flag to prevent exam publish until AI work is done
+    isReadyForPublish: {
+      type: Boolean,
+      default: false,
+    },
   },
+
   { timestamps: true }
 );
 

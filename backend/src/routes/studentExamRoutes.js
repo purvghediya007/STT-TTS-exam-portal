@@ -25,6 +25,8 @@ const mapQuestionForStudent = (q) => {
     instruction: q.instruction,
     media: q.media,
     order: q.order,
+    ttsAudioUrl: q.ttsAudioUrl,
+    requiresAudio: q.requiresAudio,
   };
 
   // For MCQ, include options but not the isCorrect flag

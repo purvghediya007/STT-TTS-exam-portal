@@ -7,7 +7,7 @@ const requireRole = require("../middleware/requireRole");
 const uploadJson = require("../middleware/uploadJson");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
-
+const aiQueue = require("../queues/aiQueue");
 const router = express.Router();
 
 // Helper to parse optional ISO date strings safely
@@ -296,7 +296,6 @@ router.post(
         });
       }
 
-      // Validate type and allow MCQ, viva, interview
       const allowedTypes = [
         "short_answer",
         "long_answer",
@@ -306,43 +305,26 @@ router.post(
       ];
       const finalType = allowedTypes.includes(type) ? type : "long_answer";
 
-      // MCQ specific validation
+      // MCQ validation (unchanged)
       if (finalType === "mcq") {
-        if (!Array.isArray(options) || options.length === 0) {
+        if (!Array.isArray(options) || options.length < 2 || options.length > 4) {
           return res.status(400).json({
-            message: "MCQ requires options array",
+            message: "MCQ must have 2 to 4 options",
           });
         }
 
-        if (options.length < 2) {
-          return res.status(400).json({
-            message: "MCQ must have minimum 2 options",
-          });
-        }
-
-        if (options.length > 4) {
-          return res.status(400).json({
-            message: "MCQ can have maximum 4 options",
-          });
-        }
-
-        // Check if exactly one option is marked as correct
-        const correctCount = options.filter((opt) => opt.isCorrect).length;
+        const correctCount = options.filter((o) => o.isCorrect).length;
         if (correctCount !== 1) {
           return res.status(400).json({
             message: "MCQ must have exactly 1 correct option",
           });
         }
 
-        // Validate all options have text
-        if (!options.every((opt) => opt.text && opt.text.trim())) {
+        if (!options.every((o) => o.text && o.text.trim())) {
           return res.status(400).json({
             message: "All MCQ options must have text",
           });
         }
-      } else if (finalType !== "mcq") {
-        // For non-MCQ questions, options should be ignored
-        // Continue with normal flow
       }
 
       const questionCount = await Question.countDocuments({ examId });
@@ -353,9 +335,9 @@ router.post(
         text,
         type: finalType,
         marks,
-        expectedAnswer, // optional
+        expectedAnswer,
         instruction,
-        options: finalType === "mcq" ? options : [], // Only include options for MCQ
+        options: finalType === "mcq" ? options : [],
         media: {
           imageUrl: media?.imageUrl,
           fileUrl: media?.fileUrl,
@@ -366,7 +348,27 @@ router.post(
           answerTimeSeconds: perQuestionSettings?.answerTimeSeconds,
           reRecordAllowed: perQuestionSettings?.reRecordAllowed,
         },
+
+        // ✅ ADDED: Audio required for ALL question types
+        requiresAudio: true,
       });
+
+      // ✅ ADDED: MCQ never needs rubric
+      if (finalType === "mcq") {
+        await Question.findByIdAndUpdate(question._id, {
+          "aiStatus.rubric": "skipped",
+        });
+      }
+
+      // 🔹 Trigger background AI processing (unchanged)
+      aiQueue.add(
+        "process-question",
+        { questionId: question._id },
+        {
+          attempts: 5,
+          backoff: { type: "exponential", delay: 5000 },
+        }
+      );
 
       return res.status(201).json({
         message: "Question added to exam",
@@ -378,14 +380,13 @@ router.post(
   }
 );
 
-// METHOD 2: Bulk import from JSON file
-// POST /api/exams/:examId/questions/import
-// multipart/form-data with field: file (JSON)
+// ================= BULK IMPORT =================
+
 router.post(
   "/:examId/questions/import",
   authMiddleware,
   requireRole("teacher"),
-  uploadJson.single("file"), // 👈 expects "file" field
+  uploadJson.single("file"),
   async (req, res, next) => {
     try {
       const { examId } = req.params;
@@ -405,25 +406,10 @@ router.post(
         });
       }
 
-      let json;
-      try {
-        const text = req.file.buffer.toString("utf8");
-        json = JSON.parse(text);
-      } catch (err) {
+      const json = JSON.parse(req.file.buffer.toString("utf8"));
+      if (!Array.isArray(json.questions) || json.questions.length === 0) {
         return res.status(400).json({
-          message: "Invalid JSON file format",
-        });
-      }
-
-      if (!json.questions || !Array.isArray(json.questions)) {
-        return res.status(400).json({
-          message: "JSON must contain a 'questions' array",
-        });
-      }
-
-      if (json.questions.length === 0) {
-        return res.status(400).json({
-          message: "'questions' array cannot be empty",
+          message: "JSON must contain non-empty 'questions' array",
         });
       }
 
@@ -437,11 +423,10 @@ router.post(
 
         if (!q.text || q.marks == null) {
           return res.status(400).json({
-            message: `Question at index ${index} is missing required fields 'text' or 'marks'`,
+            message: `Question at index ${index} missing text or marks`,
           });
         }
 
-        // optional type: default to long_answer
         const allowedTypes = [
           "short_answer",
           "long_answer",
@@ -449,10 +434,9 @@ router.post(
           "viva",
           "interview",
         ];
-        let finalType = "long_answer";
-        if (q.type && allowedTypes.includes(q.type)) {
-          finalType = q.type;
-        }
+        const finalType = allowedTypes.includes(q.type)
+          ? q.type
+          : "long_answer";
 
         docsToInsert.push({
           examId,
@@ -460,7 +444,7 @@ router.post(
           text: q.text,
           type: finalType,
           marks: q.marks,
-          expectedAnswer: q.expectedAnswer || "", // optional; AI will infer if empty
+          expectedAnswer: q.expectedAnswer || "",
           instruction: q.instruction || "",
           media: {
             imageUrl: q.media?.imageUrl || "",
@@ -472,10 +456,31 @@ router.post(
             answerTimeSeconds: q.perQuestionSettings?.answerTimeSeconds,
             reRecordAllowed: q.perQuestionSettings?.reRecordAllowed,
           },
+
+          // ✅ ADDED: Audio for all question types
+          requiresAudio: true,
         });
       }
 
       const inserted = await Question.insertMany(docsToInsert);
+
+      // ✅ ADDED: Mark MCQ rubric skipped
+      for (const q of inserted) {
+        if (q.type === "mcq") {
+          await Question.findByIdAndUpdate(q._id, {
+            "aiStatus.rubric": "skipped",
+          });
+        }
+
+        aiQueue.add(
+          "process-question",
+          { questionId: q._id },
+          {
+            attempts: 5,
+            backoff: { type: "exponential", delay: 5000 },
+          }
+        );
+      }
 
       return res.status(201).json({
         message: "Questions imported successfully",
@@ -487,6 +492,7 @@ router.post(
     }
   }
 );
+
 
 // GET /api/exams/:examId/questions
 // Get all questions for an exam (for teacher to review)
