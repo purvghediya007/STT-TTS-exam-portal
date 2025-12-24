@@ -1,5 +1,6 @@
 // src/routes/studentExamRoutes.js
 const express = require("express");
+const multer = require("multer");
 const Exam = require("../models/Exam");
 const Question = require("../models/Question");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
@@ -10,13 +11,35 @@ const {
   evaluateAnswerWithAI,
   evaluateMCQAnswer,
 } = require("../services/evaluationService");
+const {
+  saveAnswerAudio,
+  getAnswerAudioUrl,
+} = require("../services/localStorageService");
+const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
 
 const router = express.Router();
+
+// Configure multer for audio file uploads (in-memory storage for processing)
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ["audio/webm", "audio/wav", "audio/mpeg", "audio/ogg"];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Audio type ${file.mimetype} is not allowed`));
+    }
+  },
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB limit for audio
+  },
+});
 
 // Map question to student-safe view (no expectedAnswer, no sensitive fields)
 const mapQuestionForStudent = (q) => {
   const base = {
-    id: q._id,
+    _id: q._id, // MongoDB ID - required by frontend
+    id: q._id, // Also return as 'id' for compatibility
     question: q.text, // Return as 'question' to match frontend expectations
     text: q.text, // Also return as 'text' for compatibility
     type: q.type,
@@ -215,6 +238,119 @@ router.get(
 
       return res.status(200).json({ submissions });
     } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- SIMPLE AUDIO UPLOAD ----------
+// POST /api/student/exams/:examId/upload-audio
+// Simple endpoint to receive and save audio files for exam answers
+// Body: FormData with:
+//   - audio: audio file
+//   - questionId: question ID
+//   - attemptId: attempt ID
+//
+router.post(
+  "/exams/:examId/upload-audio",
+  authMiddleware,
+  requireRole("student"),
+  audioUpload.single("audio"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const { questionId, attemptId } = req.body;
+      const studentId = req.user.sub;
+
+      console.log(`\n📤 AUDIO UPLOAD ENDPOINT CALLED`);
+      console.log(`  Exam ID: ${examId}`);
+      console.log(`  Student ID: ${studentId}`);
+      console.log(`  Question ID: ${questionId}`);
+      console.log(`  Attempt ID: ${attemptId}`);
+      console.log(`  File received: ${req.file ? "YES" : "NO"}`);
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No audio file provided" });
+      }
+
+      if (!questionId || !attemptId) {
+        return res
+          .status(400)
+          .json({ message: "questionId and attemptId are required" });
+      }
+
+      // Save the audio file
+      const saveResult = saveAnswerAudio(
+        req.file.buffer,
+        examId,
+        studentId,
+        questionId
+      );
+
+      if (!saveResult.success) {
+        console.error(`❌ Failed to save audio: ${saveResult.error}`);
+        return res.status(500).json({
+          message: "Failed to save audio",
+          error: saveResult.error,
+        });
+      }
+
+      // Update the StudentAnswer with the recording URL
+      console.log(`\n💾 Updating StudentAnswer...`);
+      console.log(
+        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`
+      );
+      console.log(
+        `   Update: { examId: "${examId}", studentId: "${studentId}", recordingUrl }`
+      );
+
+      try {
+        const answer = await StudentAnswer.findOneAndUpdate(
+          { attemptId, questionId },
+          {
+            examId, // Required field
+            studentId, // Required field
+            recordingUrls: [saveResult.url],
+            answerText: `[Audio recording: ${saveResult.url}]`,
+          },
+          { upsert: true, new: true }
+        );
+
+        if (!answer) {
+          console.error(
+            `❌ Failed to create/update StudentAnswer - returned null`
+          );
+          return res.status(500).json({
+            message: "Failed to save answer to database",
+            details: "findOneAndUpdate returned null",
+          });
+        }
+
+        console.log(`✅ StudentAnswer saved with ID: ${answer._id}`);
+        console.log(
+          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`
+        );
+        console.log(`✅ Audio file URL: ${saveResult.url}\n`);
+
+        return res.status(200).json({
+          success: true,
+          url: saveResult.url,
+          message: "Audio uploaded successfully",
+          answerId: answer._id,
+        });
+      } catch (dbError) {
+        console.error(`❌ Database error updating StudentAnswer:`);
+        console.error(`   Error message: ${dbError.message}`);
+        console.error(`   Error code: ${dbError.code}`);
+        console.error(`   Full error:`, dbError);
+        return res.status(500).json({
+          message: "Database error saving answer",
+          error: dbError.message,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error uploading audio:", error.message);
       next(error);
     }
   }
@@ -471,20 +607,45 @@ router.get(
 // ---------- 3.5) SUBMIT ANSWERS BY EXAM ID ----------
 // POST /api/student/exams/:examId/submit
 // Frontend endpoint that accepts examId instead of attemptId
+// Accepts multipart form data with optional audio files for each question
 //
 router.post(
   "/exams/:examId/submit",
   authMiddleware,
   requireRole("student"),
+  audioUpload.any(), // Accept any files named by question IDs
   async (req, res, next) => {
     try {
       const { examId } = req.params;
-      const { attemptId, answers, mediaAnswers, timeSpent, startedAt } =
-        req.body;
+      let { attemptId, answers, mediaAnswers, timeSpent, startedAt } = req.body;
       const studentId = req.user.sub;
       const now = new Date();
 
+      // ✅ ADD INITIAL LOGGING
+      console.log("\n✅ SUBMIT ENDPOINT CALLED");
+      console.log("Exam ID:", examId);
+      console.log("Student ID:", studentId);
+      console.log("FormData Received:", req.files?.length || 0, "files");
+      console.log(
+        "Answers from body:",
+        typeof answers,
+        answers ? Object.keys(answers).length : 0,
+        "questions"
+      );
+
+      // Parse JSON if answers came as FormData field
+      if (typeof answers === "string") {
+        try {
+          answers = JSON.parse(answers);
+          console.log("✅ Parsed answers from JSON string");
+        } catch (parseErr) {
+          console.error("❌ Error parsing answers JSON:", parseErr.message);
+          return res.status(400).json({ message: "Invalid answers format" });
+        }
+      }
+
       if (!attemptId) {
+        console.error("❌ No attemptId provided");
         return res.status(400).json({ message: "attemptId is required" });
       }
 
@@ -499,15 +660,22 @@ router.post(
       let attempt;
       try {
         attempt = await StudentExamAttempt.findById(attemptId);
+        console.log(`✅ Found attempt by ID: ${attempt ? "YES" : "NO"}`);
       } catch (err) {
-        console.error("Error finding attempt by ID:", err.message);
+        console.error("❌ Error finding attempt by ID:", err.message);
         // If ID format is invalid, try to find by student and exam
         attempt = await StudentExamAttempt.findOne({
           examId,
           studentId,
           status: "in_progress",
         });
+        console.log(
+          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`
+        );
         if (!attempt) {
+          console.log(
+            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`
+          );
           return res.status(400).json({
             message:
               "Invalid attemptId format and no active attempt found for this exam",
@@ -516,30 +684,47 @@ router.post(
         }
       }
       if (!attempt) {
+        console.log(`❌ Attempt is null after lookup`);
         return res.status(404).json({ message: "Attempt not found" });
       }
 
       if (attempt.studentId.toString() !== studentId) {
+        console.log(
+          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`
+        );
         return res.status(403).json({ message: "Forbidden" });
       }
 
       if (attempt.examId.toString() !== examId) {
+        console.log(`❌ Exam ID mismatch: ${attempt.examId} vs ${examId}`);
         return res
           .status(400)
           .json({ message: "Exam ID mismatch with attempt" });
       }
 
+      console.log(`✅ Student ID and Exam ID validation passed`);
+
       // Check if exam is still live
       const exam = await Exam.findById(examId);
       if (!exam) {
+        console.log(`❌ Exam not found: ${examId}`);
         return res.status(404).json({ message: "Exam not found" });
       }
 
+      console.log(`✅ Exam found`);
+
       if (now > attempt.deadlineAt) {
+        console.log(`❌ Attempt expired`);
         attempt.status = "expired";
         await attempt.save();
         return res.status(400).json({ message: "Attempt time is over" });
       }
+
+      console.log(
+        `✅ Attempt not expired. Processing ${
+          answers ? answers.length : 0
+        } answers...`
+      );
 
       // Store mediaAnswers as StudentAnswers if provided
       if (mediaAnswers && typeof mediaAnswers === "object") {
@@ -561,8 +746,14 @@ router.post(
 
       // Store regular answers (MCQ and descriptive) if provided
       if (answers && Array.isArray(answers)) {
+        console.log(`📝 Processing ${answers.length} answers...`);
         for (const answer of answers) {
-          if (!answer.questionId) continue;
+          if (!answer.questionId) {
+            console.log(`  ⚠️ Answer missing questionId, skipping`);
+            continue;
+          }
+
+          console.log(`  📝 Processing question: ${answer.questionId}`);
 
           const answerUpdate = {
             attemptId: attempt._id,
@@ -572,38 +763,113 @@ router.post(
           // For MCQ answers
           if (answer.selectedOptionIndex !== undefined) {
             answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
+            console.log(
+              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`
+            );
           }
 
           // For descriptive answers
           if (answer.answerText) {
             answerUpdate.answerText = answer.answerText;
-          }
-
-          // For audio/interview answers - store recording URLs from Cloudinary
-          if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
-            answerUpdate.recordingUrls = answer.recordingUrls;
             console.log(
-              `Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
+              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`
             );
           }
 
+          // For audio/interview answers - process uploaded files and store local URLs
+          const audioFile = req.files?.find(
+            (f) => f.fieldname === `audio_${answer.questionId}`
+          );
+          if (audioFile) {
+            console.log(
+              `    🎤 Found audio file for question ${answer.questionId}, saving...`
+            );
+            const saveResult = saveAnswerAudio(
+              audioFile.buffer,
+              examId,
+              studentId,
+              answer.questionId
+            );
+
+            if (saveResult.success) {
+              answerUpdate.recordingUrls = [saveResult.url];
+              console.log(
+                `    ✅ Stored audio for question ${answer.questionId}: ${saveResult.url}`
+              );
+            } else {
+              console.error(
+                `    ❌ Failed to save audio for question ${answer.questionId}: ${saveResult.error}`
+              );
+            }
+          }
+          // Also support legacy recordingUrls field (for backward compatibility)
+          else if (
+            answer.recordingUrls &&
+            Array.isArray(answer.recordingUrls)
+          ) {
+            answerUpdate.recordingUrls = answer.recordingUrls;
+            console.log(
+              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
+            );
+          } else {
+            console.log(
+              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`
+            );
+          }
+
+          console.log(`    💾 Saving to DB...`);
           await StudentAnswer.findOneAndUpdate(
             { attemptId: attempt._id, questionId: answer.questionId },
             answerUpdate,
             { upsert: true }
           );
+          console.log(`    ✅ Saved to DB`);
         }
+      } else {
+        console.log(`⚠️ No answers provided in request`);
       }
 
       // Mark attempt as submitted
+      console.log(`📤 Marking attempt as submitted...`);
       attempt.status = "submitted";
       attempt.finishedAt = now;
       if (timeSpent) {
         attempt.timeSpent = timeSpent;
       }
       await attempt.save();
+      console.log(`✅ Attempt marked as submitted`);
 
-      // Return success response
+      // Push transcription job to queue (asynchronous, don't wait)
+      try {
+        await answersTranscriptionQueue.add(
+          "transcribe-answers",
+          {
+            examId,
+            studentId,
+            attemptId: attempt._id.toString(),
+          },
+          {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+            delay: 10000, // Wait 10 seconds before processing - gives time for audio uploads
+          }
+        );
+        console.log(
+          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`
+        );
+      } catch (queueError) {
+        console.error(
+          `⚠️ Failed to queue transcription job (non-critical):`,
+          queueError.message
+        );
+        // Don't fail the submission if queue fails
+      }
+
+      // Return success response immediately
+      console.log(`✅ SUBMISSION COMPLETE - Returning success response`);
       return res.status(200).json({
         submissionId: attempt._id,
         score: 0,
@@ -612,7 +878,8 @@ router.post(
         message: "Exam submitted successfully",
       });
     } catch (error) {
-      console.error("Error submitting exam:", error);
+      console.error("❌ ERROR in submit endpoint:", error.message);
+      console.error("Stack:", error.stack);
       next(error);
     }
   }
@@ -621,6 +888,7 @@ router.post(
 //
 // ---------- 4) SUBMIT ANSWERS & FINISH + AI EVALUATION ----------
 // POST /api/student/attempts/:attemptId/submit
+// Accepts multipart form data with optional audio files for each question
 //
 // Body:
 // {
@@ -634,6 +902,7 @@ router.post(
   "/attempts/:attemptId/submit",
   authMiddleware,
   requireRole("student"),
+  audioUpload.any(),
   async (req, res, next) => {
     try {
       const { attemptId } = req.params;

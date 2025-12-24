@@ -13,16 +13,23 @@ export function AuthProvider({ children }) {
         const savedToken = localStorage.getItem('auth_token')
         const savedUserStr = localStorage.getItem('user_data')
 
+        console.log('🔐 AuthContext initializing...')
+        console.log('   Token:', savedToken ? 'YES' : 'NO')
+        console.log('   User data:', savedUserStr ? 'YES' : 'NO')
+
         if (savedToken && savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr)
+                console.log('✅ AuthContext restored user:', savedUser)
                 setToken(savedToken)
                 setUser(savedUser)
             } catch (e) {
-                console.error('Failed to restore auth:', e)
+                console.error('❌ Failed to restore auth:', e)
                 localStorage.removeItem('auth_token')
                 localStorage.removeItem('user_data')
             }
+        } else {
+            console.log('ℹ️ No saved auth data in localStorage')
         }
 
         setIsLoading(false)
@@ -52,13 +59,18 @@ export function AuthProvider({ children }) {
                 throw new Error(data.message || 'Login failed')
             }
 
+            console.log('🔐 Login response data:', data)
+
             const userData = {
                 id: data.user.id,
+                sub: data.user.id, // Add sub field for compatibility
                 email: data.user.email,
                 username: data.user.username,
                 role: data.user.role,
                 loginTime: new Date().toISOString(),
             }
+
+            console.log('📦 userData prepared:', userData)
 
             setToken(data.token)
             setUser(userData)

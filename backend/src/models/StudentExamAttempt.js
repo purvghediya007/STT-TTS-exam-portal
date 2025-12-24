@@ -15,7 +15,7 @@ const studentExamAttemptSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["in_progress", "submitted", "evaluated", "expired"],
+      enum: ["in_progress", "submitted", "transcribed", "evaluated", "expired"],
       default: "in_progress",
     },
     startedAt: {
