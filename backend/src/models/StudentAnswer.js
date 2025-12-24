@@ -45,6 +45,24 @@ const studentAnswerSchema = new mongoose.Schema(
       },
     ],
 
+    // 🔹 Speech-to-Text fields
+    transcribedText: {
+      type: String,
+      trim: true,
+    },
+    sttStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "skipped"],
+      default: "pending",
+    },
+    sttError: {
+      type: String,
+      trim: true,
+    },
+    sttTimestamp: {
+      type: Date,
+    },
+
     // 🔹 AI evaluation fields
     score: {
       type: Number,
@@ -61,6 +79,11 @@ const studentAnswerSchema = new mongoose.Schema(
     evaluationModel: {
       type: String,
       trim: true,
+    },
+    evaluationStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "skipped"],
+      default: "pending",
     },
     evaluatedAt: {
       type: Date,

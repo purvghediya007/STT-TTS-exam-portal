@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { KeyRound, UserPlus, Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import logoImg from '../assets/vgec-logo.png'
 
 const roleConfig = {
@@ -24,6 +25,7 @@ const roleConfig = {
 
 function LoginCard() {
   const navigate = useNavigate()
+  const { login: authLogin } = useAuth()
   const [role, setRole] = useState('student')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -93,55 +95,29 @@ function LoginCard() {
 
       console.log('Login attempt:', {
         username,
+        role,
         captchaId: captchaId.substring(0, 8) + '...',
-        captchaValue: captchaText
       })
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          captchaId,
-          captchaValue: captchaText,
-        }),
-      })
+      // Use AuthContext.login() instead of direct fetch
+      const result = await authLogin(username, password, captchaId, captchaText)
 
-      const data = await response.json()
-      console.log('Login response:', { status: response.status, data })
+      if (!result.success) {
+        let errorMsg = result.error || 'Login failed'
 
-      if (!response.ok) {
-        // Provide more specific error messages
-        let errorMsg = data.message || 'Login failed'
-
-        if (response.status === 401) {
+        if (result.error === 'Login failed') {
           errorMsg = 'Invalid username, password, or captcha'
-        } else if (response.status === 400) {
-          errorMsg = data.message || 'Please fill in all fields'
         }
 
         setError(errorMsg)
         fetchCaptcha() // Refresh captcha on error
-        setIsLoading(false)
         return
       }
 
-      // Store auth token and user data
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('user_data', JSON.stringify({
-        id: data.user.id,
-        email: data.user.email,
-        username: data.user.username,
-        role: data.user.role,
-        enrollmentNumber: data.user.enrollmentNumber,
-        loginTime: new Date().toISOString()
-      }))
+      console.log('✅ Login successful, AuthContext updated with user:', result.user)
 
       // Redirect based on role
-      if (data.user.role === 'teacher') {
+      if (result.user.role === 'teacher') {
         navigate('/faculty/dashboard')
       } else {
         navigate('/student/dashboard')

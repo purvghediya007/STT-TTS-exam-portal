@@ -431,71 +431,115 @@ const TakeExamView = () => {
     setIsSubmitting(true);
 
     try {
-      // Build the answers in the correct format for backend
-      const answers = await Promise.all(examStatus.map(async (status, index) => {
+      // Create attempt (without audio for now)
+      const attemptId = location.state?.attemptId || `ATT-${Date.now()}`;
+
+      // Build answers (MCQ and text only)
+      const answers = [];
+      const audioAnswers = []; // Collect audio answers separately
+
+      for (let index = 0; index < questions.length; index++) {
         const question = questions[index];
-        if (!question) return null;
+        const status = examStatus[index];
+
+        if (!question || !status.answer) continue;
 
         // MCQ: send selectedOptionIndex
         if (question.type === 'mcq' && status.answer !== null) {
-          return {
+          answers.push({
             questionId: question._id,
             selectedOptionIndex: status.answer
-          };
+          });
         }
         // Descriptive: send answerText
         else if (question.type !== 'mcq' && status.answer?.text) {
-          return {
+          answers.push({
             questionId: question._id,
             answerText: status.answer.text
-          };
+          });
         }
-        // Audio/Interview/Viva: upload recordings and send URLs
+        // Audio/Interview/Viva: save for separate upload
         else if ((question.type === 'viva' || question.type === 'interview') && status.answer?.recordings?.length > 0) {
-          const { uploadMedia } = await import('../services/api');
-
-          // Upload all recordings to Cloudinary
-          const audioUrls = await Promise.all(
-            status.answer.recordings.map(async (recordingUrl, recordIndex) => {
-              try {
-                // Convert blob URL to blob
-                const response = await fetch(recordingUrl);
-                const blob = await response.blob();
-
-                // Create file from blob
-                const file = new File([blob], `answer_${question._id}_${recordIndex}.webm`, { type: 'audio/webm' });
-
-                // Upload to Cloudinary
-                const uploadResult = await uploadMedia(file);
-                console.log(`Audio ${recordIndex} uploaded:`, uploadResult.url);
-
-                return uploadResult.url;
-              } catch (uploadError) {
-                console.error(`Error uploading audio ${recordIndex}:`, uploadError);
-                throw uploadError;
-              }
-            })
-          );
-
-          return {
+          audioAnswers.push({
             questionId: question._id,
-            recordingUrls: audioUrls
-          };
+            recordings: status.answer.recordings
+          });
+        }
+      }
+
+      console.log(`📝 Submitting exam with ${answers.length} text/MCQ answers and ${audioAnswers.length} audio answers`);
+      if (audioAnswers.length === 0) {
+        console.warn(`⚠️ No audio answers collected. Check question types and recordings.`);
+        console.log(`Debug info:`, answerStatuses);
+      }
+
+      // Submit exam (text/MCQ answers only)
+      const result = await submitExam(examId, {
+        answers,
+        attemptId,
+        timeSpent: Math.round((3600 - remainingTime) / 60), // in minutes
+      });
+
+      console.log(`✅ Exam submitted successfully. Attempt ID: ${result.submissionId}`);
+
+      // Now upload audio files if any
+      if (audioAnswers.length > 0) {
+        console.log(`📤 Uploading ${audioAnswers.length} audio files...`);
+        let audioUploadCount = 0;
+
+        for (const audioAnswer of audioAnswers) {
+          console.log(`📤 Processing audio answer for question: ${audioAnswer.questionId}`);
+          console.log(`   Recordings count: ${audioAnswer.recordings.length}`);
+
+          for (let i = 0; i < audioAnswer.recordings.length; i++) {
+            const recordingUrl = audioAnswer.recordings[i];
+            console.log(`   🎙️ Recording ${i + 1}: ${recordingUrl.substring(0, 50)}...`);
+
+            try {
+              // Convert blob URL to file
+              const response = await fetch(recordingUrl);
+              const blob = await response.blob();
+              console.log(`   ✅ Blob fetched. Size: ${blob.size} bytes, Type: ${blob.type}`);
+
+              // Create FormData for this single audio file
+              const audioFormData = new FormData();
+              audioFormData.append('audio', blob, `answer_${audioAnswer.questionId}.webm`);
+              audioFormData.append('questionId', audioAnswer.questionId);
+              audioFormData.append('attemptId', result.submissionId);
+
+              console.log(`   📤 Sending to: /api/student/exams/${examId}/upload-audio`);
+              console.log(`   📋 FormData: questionId=${audioAnswer.questionId}, attemptId=${result.submissionId}`);
+
+              // Send to backend
+              const audioRes = await fetch(
+                `/api/student/exams/${examId}/upload-audio`,
+                {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+                  },
+                  body: audioFormData,
+                }
+              );
+
+              console.log(`   📨 Response status: ${audioRes.status}`);
+
+              if (!audioRes.ok) {
+                const error = await audioRes.json();
+                console.error(`   ❌ Failed to upload audio for question ${audioAnswer.questionId}:`, error);
+              } else {
+                const uploadResult = await audioRes.json();
+                audioUploadCount++;
+                console.log(`   ✅ Uploaded audio for question ${audioAnswer.questionId}:`, uploadResult);
+              }
+            } catch (error) {
+              console.error(`❌ Error uploading audio for question ${audioAnswer.questionId}:`, error);
+            }
+          }
         }
 
-        return null;
-      }));
-
-      const validAnswers = answers.filter(Boolean);
-
-      // Call backend API to submit exam
-      const result = await submitExam(examId, {
-        answers: validAnswers,
-        attemptId: location.state?.attemptId || `ATT-${Date.now()}`,
-        startedAt: new Date().toISOString(),
-        timeSpent: Math.round((3600 - remainingTime) / 60), // in minutes
-        studentId: localStorage.getItem('user_id') || 'unknown'
-      });
+        console.log(`✅ Audio upload complete: ${audioUploadCount}/${audioAnswers.length} uploaded`);
+      }
 
       // Show success message
       alert("Exam successfully submitted!");
@@ -841,10 +885,10 @@ const TakeExamView = () => {
               >
                 Go Back
               </button>
-              
+
               <button
-                  onClick={() => {
-                  startExam();                
+                onClick={() => {
+                  startExam();
                 }}
                 className="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition transform hover:scale-105 shadow-lg"
               >
@@ -908,14 +952,14 @@ const TakeExamView = () => {
                   {currentQuestion?.text}
                   {currentQuestion?.ttsAudioUrl && (
                     <>
-                      <audio ref={audioRef} src={`http://localhost:3001${currentQuestion.ttsAudioUrl}`}/>
+                      <audio ref={audioRef} src={`http://localhost:3001${currentQuestion.ttsAudioUrl}`} />
 
                       <button
-                          onClick={() => {
-                            audioRef.current?.play().catch(err =>
+                        onClick={() => {
+                          audioRef.current?.play().catch(err =>
                             console.log("Audio blocked:", err)
-                            );
-                          }}
+                          );
+                        }}
                         className="px-4 py-2 bg-blue-600 text-white rounded"
                       >
                         🔊 Play Question
@@ -1014,8 +1058,8 @@ const TakeExamView = () => {
             </div>
           </div>
         </div>
-        )}
-        <audio ref={audioRef} preload="auto" />
+      )}
+      <audio ref={audioRef} preload="auto" />
 
     </div>
   );

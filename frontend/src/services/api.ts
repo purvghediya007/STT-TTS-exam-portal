@@ -243,11 +243,12 @@ export async function fetchExamQuestions(examId: string): Promise<{
 export async function submitExam(
   examId: string,
   data: {
-    answers: Record<string, number | string>
-    attemptId: string
-    startedAt: string
-    timeSpent: number
-    studentId: string
+    formData?: FormData
+    attemptId?: string
+    answers?: Record<string, number | string>
+    startedAt?: string
+    timeSpent?: number
+    studentId?: string
     mediaAnswers?: Record<string, string>
   }
 ): Promise<{
@@ -255,7 +256,27 @@ export async function submitExam(
   score: number
   maxScore: number
   percentage: number
-}>{
+}> {
+  // Handle FormData (multipart) for audio submissions
+  if (data.formData) {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${examId}/submit`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+        // Don't set Content-Type for FormData - let browser set it
+      },
+      body: data.formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Exam submission failed')
+    }
+
+    return response.json()
+  }
+
+  // Handle JSON (legacy format without audio files)
   const response = await fetchAPI(`/student/exams/${examId}/submit`, {
     method: 'POST',
     body: JSON.stringify(data),

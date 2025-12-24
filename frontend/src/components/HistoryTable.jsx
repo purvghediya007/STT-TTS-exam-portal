@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Filter, Clock, Award, Calendar, FileText, Eye, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 /**
@@ -41,6 +42,7 @@ function formatDuration(exam) {
 }
 
 export default function HistoryTable({ exams = [] }) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [subjectFilter, setSubjectFilter] = useState(null);
@@ -171,9 +173,8 @@ export default function HistoryTable({ exams = [] }) {
                     {subjects.map((subj) => (
                       <button
                         key={subj}
-                        className={`block w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors ${
-                          subjectFilter === subj ? "bg-blue-100 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
+                        className={`block w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors ${subjectFilter === subj ? "bg-blue-100 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
                         onClick={() => {
                           setSubjectFilter(subjectFilter === subj ? null : subj);
                           setShowSubjectMenu(false);
@@ -246,8 +247,8 @@ export default function HistoryTable({ exams = [] }) {
               const status = score != null
                 ? 'Submitted'
                 : endedAt
-                ? 'Pending'
-                : 'Absent'
+                  ? 'Pending'
+                  : 'Absent'
 
               return (
                 <tr key={ex.id} className="border-t hover:bg-slate-50 text-sm">
@@ -313,17 +314,22 @@ export default function HistoryTable({ exams = [] }) {
                     <button
                       onClick={() => {
                         if (score != null) {
-                          window.location.href = `/student/exams/${ex.id}/results`
+                          navigate(`/student/exams/${ex.id}/results`, {
+                            state: {
+                              score: score,
+                              maxScore: maxScore,
+                              percentage: percentage
+                            }
+                          })
                         } else {
                           alert('Results are not available yet. Please wait for faculty to grade your submission.')
                         }
                       }}
                       disabled={score == null}
-                      className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-lg transition-colors ${
-                        score != null
+                      className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-lg transition-colors ${score != null
                           ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer'
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
+                        }`}
                       title={score != null ? 'View exam results' : 'Results not available yet'}
                     >
                       <Eye className="w-3 h-3" />
@@ -343,7 +349,7 @@ export default function HistoryTable({ exams = [] }) {
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg font-medium mb-2">No exam history found</p>
           <p className="text-gray-400 text-sm">
-            {search || subjectFilter 
+            {search || subjectFilter
               ? "Try adjusting your search or filter criteria"
               : "Complete your first exam to see it here"}
           </p>
