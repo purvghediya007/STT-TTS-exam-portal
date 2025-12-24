@@ -263,7 +263,10 @@ export default function ExamSubmissionsView() {
                                                             <div>
                                                                 <p className="text-xs font-semibold text-gray-600 mb-2">STUDENT ANSWER</p>
                                                                 <div className="bg-white p-3 rounded border border-gray-200 text-gray-900 whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
-                                                                    {answer.answerText || '(No answer provided)'}
+                                                                    {answer.type === 'mcq' && answer.selectedOptionIndex !== null && answer.selectedOptionIndex !== undefined
+                                                                        ? `Option ${answer.selectedOptionIndex + 1}${answer.options && answer.options[answer.selectedOptionIndex] ? ': ' + answer.options[answer.selectedOptionIndex].text : ''}`
+                                                                        : (answer.answerText || '(No answer provided)')
+                                                                    }
                                                                 </div>
                                                             </div>
 
