@@ -116,6 +116,9 @@ new Worker(
           if (!answer.recordingUrls || answer.recordingUrls.length === 0) {
             console.log(`⏭️ Skipping question ${answer.questionId} - no audio`);
             answer.sttStatus = "skipped";
+            // Ensure required fields are set before saving
+            if (!answer.studentId) answer.studentId = studentId;
+            if (!answer.examId) answer.examId = examId;
             await answer.save();
             continue;
           }
@@ -184,6 +187,9 @@ new Worker(
           // Mark this answer as failed but continue with others
           answer.sttStatus = "failed";
           answer.sttError = answerError.message;
+          // Ensure required fields are set before saving
+          if (!answer.studentId) answer.studentId = studentId;
+          if (!answer.examId) answer.examId = examId;
           await answer.save();
           failureCount++;
         }

@@ -757,6 +757,8 @@ router.post(
 
           const answerUpdate = {
             attemptId: attempt._id,
+            examId, // Required field
+            studentId, // Required field
             questionId: answer.questionId,
           };
 

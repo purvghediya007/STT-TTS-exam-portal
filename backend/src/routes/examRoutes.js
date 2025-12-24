@@ -307,7 +307,11 @@ router.post(
 
       // MCQ validation (unchanged)
       if (finalType === "mcq") {
-        if (!Array.isArray(options) || options.length < 2 || options.length > 4) {
+        if (
+          !Array.isArray(options) ||
+          options.length < 2 ||
+          options.length > 4
+        ) {
           return res.status(400).json({
             message: "MCQ must have 2 to 4 options",
           });
@@ -492,7 +496,6 @@ router.post(
     }
   }
 );
-
 
 // GET /api/exams/:examId/questions
 // Get all questions for an exam (for teacher to review)
@@ -749,7 +752,7 @@ router.get(
       // 2) Fetch all answers for these attempts, with question info
       const answers = await StudentAnswer.find({
         attemptId: { $in: attemptIds },
-      }).populate("questionId", "text marks instruction order");
+      }).populate("questionId", "text marks instruction order type options");
 
       // Group answers by attemptId
       const answersByAttempt = new Map();
@@ -762,10 +765,13 @@ router.get(
         answersByAttempt.get(key).push({
           questionId: q?._id,
           text: q?.text,
+          type: q?.type,
           marks: q?.marks,
           order: q?.order,
           instruction: q?.instruction,
+          options: q?.type === "mcq" ? q?.options : undefined,
           answerText: ans.answerText,
+          selectedOptionIndex: ans.selectedOptionIndex,
           score: ans.score,
           maxMarks: ans.maxMarks,
           feedback: ans.evaluationFeedback,

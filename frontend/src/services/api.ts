@@ -1018,10 +1018,13 @@ export async function fetchExamResults(examId: string): Promise<{
     answers: Array<{
       questionId: string
       text: string
+      type?: string
       marks: number
       order: number
       instruction: string
       answerText: string
+      selectedOptionIndex?: number | null
+      options?: Array<{ text: string }>
       score: number | null
       maxMarks: number
       feedback: string | null

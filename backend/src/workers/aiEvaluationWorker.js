@@ -112,6 +112,7 @@ new Worker(
                   correctOptionIndex + 1
                 }`;
             answer.evaluationStatus = "completed";
+            answer.evaluatedAt = new Date();
 
             await answer.save();
             totalScore += answer.score;
