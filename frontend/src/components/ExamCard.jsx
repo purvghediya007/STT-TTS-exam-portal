@@ -1,7 +1,3 @@
-/**
- * ExamCard component - displays exam information in a well-structured card layout
- */
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -19,25 +15,17 @@ import StatusPill from './StatusPill'
 import Badge from './Badge'
 import JoinModal from './JoinModal'
 
-/**
- * @param {Object} props
- * @param {import('../services/api').Exam} props.exam
- * @param {() => void} [props.onPrefetch]
- */
 export default function ExamCard({ exam, onPrefetch }) {
   const navigate = useNavigate()
   const [showJoinModal, setShowJoinModal] = useState(false)
 
   const { formatted: countdownFormatted, expired } = useCountdown(
     exam.endsAt,
-    () => {
-      // Countdown expired - could refresh exam status
-    }
+    () => {}
   )
 
   const isLive = exam.status === 'live' && !expired
 
-  // Trigger prefetch on hover
   const handleMouseEnter = () => {
     if (onPrefetch) {
       onPrefetch()
@@ -52,7 +40,6 @@ export default function ExamCard({ exam, onPrefetch }) {
     if (onPrefetch) {
       onPrefetch()
     }
-    // Navigate to exam details page to show full information
     navigate(`/student/exams/${exam.id}/details`)
   }
 
@@ -60,7 +47,6 @@ export default function ExamCard({ exam, onPrefetch }) {
     navigate(`/student/exams/${exam.id}/results`)
   }
 
-  // Get teacher initials for avatar
   const getInitials = (name) => {
     return name
       .split(' ')
@@ -73,183 +59,195 @@ export default function ExamCard({ exam, onPrefetch }) {
   return (
     <>
       <article
-        className={`group relative bg-white rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${isLive
-            ? 'border-l-4 border-l-danger-dark shadow-md shadow-danger-dark/10'
-            : 'border-slate-200 hover:border-primary-300'
+        className={`group relative bg-white rounded-xl border-[0.5px] border-blue-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5 focus-within:ring-1 focus-within:ring-blue-300 focus-within:ring-offset-1 ${isLive
+            ? 'border-blue-400 shadow-sm shadow-blue-100/30 bg-white'
+            : 'hover:border-blue-300 hover:bg-blue-50/20'
           }`}
         onMouseEnter={handleMouseEnter}
         aria-labelledby={`exam-title-${exam.id}`}
       >
-        {/* Live indicator gradient bar */}
-        {isLive && (
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-danger-dark via-danger-dark/80 to-transparent"></div>
-        )}
+        <div className={`h-0.5 w-full ${isLive 
+          ? 'bg-gradient-to-r from-blue-500 to-cyan-500' 
+          : exam.status === 'upcoming'
+            ? 'bg-gradient-to-r from-sky-400 to-blue-400'
+            : 'bg-gradient-to-r from-blue-400 to-cyan-400'
+        }`}></div>
 
         <div className="p-5 md:p-6">
-          {/* Header Section: Title, ID, and Status */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-3 mb-2">
-                <div className={`mt-0.5 p-2 rounded-lg flex-shrink-0 ${isLive
-                    ? 'bg-danger-light'
+              <div className="flex items-start gap-3">
+                <div className={`p-2.5 rounded-lg flex-shrink-0 ${isLive
+                    ? 'bg-blue-50'
                     : exam.status === 'upcoming'
-                      ? 'bg-primary-100'
-                      : 'bg-slate-100'
+                      ? 'bg-sky-50'
+                      : 'bg-blue-50'
                   }`}>
                   <FileText className={`w-5 h-5 ${isLive
-                      ? 'text-danger-dark'
+                      ? 'text-blue-600'
                       : exam.status === 'upcoming'
-                        ? 'text-primary-600'
-                        : 'text-slate-500'
+                        ? 'text-sky-600'
+                        : 'text-blue-600'
                     }`} aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3
                     id={`exam-title-${exam.id}`}
-                    className="text-lg font-bold text-slate-900 mb-1.5 leading-tight line-clamp-2"
+                    className="text-lg md:text-xl font-bold text-gray-900 mb-1 leading-tight line-clamp-2"
                   >
                     {exam.title}
                   </h3>
-                  <p className="text-xs font-medium text-slate-500">ID: {exam.id}</p>
+                  <p className="text-xs text-gray-500 font-medium">ID: {exam.id}</p>
                 </div>
               </div>
             </div>
             <StatusPill status={exam.status} pulse={isLive} />
           </div>
 
-          {/* Description Section */}
-          <div className="mb-5 pb-4 border-b border-slate-100">
-            <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
-              {exam.shortDescription}
-            </p>
-          </div>
+          {exam.shortDescription && (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                {exam.shortDescription}
+              </p>
+            </div>
+          )}
 
-          {/* Time Information Section */}
-          <div className="mb-5 space-y-3">
-            {/* Date and Time Range */}
-            <div className="flex items-start gap-2.5 p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <div className="mb-4 space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50/50 rounded-lg border-[0.5px] border-blue-200">
+              <div className="p-1.5 bg-blue-100 rounded-md flex-shrink-0">
+                <Calendar className="w-4 h-4 text-blue-600" aria-hidden="true" />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">
                   Exam Schedule
                 </p>
-                <p className="text-sm font-semibold text-slate-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {formatExamTimeRange(exam.startsAt, exam.endsAt)}
                 </p>
               </div>
             </div>
 
-            {/* Duration and Time per Question */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2.5 p-2.5 bg-primary-50 rounded-lg border border-primary-100">
-                <div className="p-1.5 bg-primary-100 rounded-md">
-                  <Clock className="w-4 h-4 text-primary-600" aria-hidden="true" />
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="flex items-center gap-2 p-2.5 bg-sky-50 rounded-lg border-[0.5px] border-sky-200">
+                <div className="p-1.5 bg-sky-100 rounded-md">
+                  <Clock className="w-4 h-4 text-sky-600" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-500 font-medium">Duration</p>
-                  <p className="text-sm font-bold text-primary-700">{formatDuration(exam.durationMin)}</p>
+                  <p className="text-xs text-gray-600 font-medium">Duration</p>
+                  <p className="text-sm font-bold text-gray-900">{formatDuration(exam.durationMin)}</p>
                 </div>
               </div>
               {exam.timePerQuestionSec && (
-                <div className="flex items-center gap-2.5 p-2.5 bg-brand-50 rounded-lg border border-brand-100">
-                  <div className="p-1.5 bg-brand-100 rounded-md">
-                    <Timer className="w-4 h-4 text-brand-600" aria-hidden="true" />
+                <div className="flex items-center gap-2 p-2.5 bg-cyan-50 rounded-lg border-[0.5px] border-cyan-200">
+                  <div className="p-1.5 bg-cyan-100 rounded-md">
+                    <Timer className="w-4 h-4 text-cyan-600" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-500 font-medium">Per Question</p>
-                    <p className="text-sm font-bold text-brand-700">{formatTimePerQuestion(exam.timePerQuestionSec)}</p>
+                    <p className="text-xs text-gray-600 font-medium">Per Question</p>
+                    <p className="text-sm font-bold text-gray-900">{formatTimePerQuestion(exam.timePerQuestionSec)}</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Live Countdown Section */}
           {isLive && (
-            <div className="mb-5 p-3 bg-danger-light/50 border border-danger-dark/20 rounded-lg">
+            <div className="mb-4 p-3 bg-blue-50 border-[0.5px] border-blue-200 rounded-lg">
               <div
-                className="flex items-center gap-2 text-sm font-bold text-danger-dark"
+                className="flex items-center gap-2 text-sm font-semibold text-blue-700"
                 aria-live="polite"
                 aria-atomic="true"
               >
                 <div className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger-dark opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-danger-dark"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                 </div>
                 <span>Ends in {countdownFormatted}</span>
               </div>
             </div>
           )}
 
-          {/* Badges Section: Attempts and Re-records */}
-          {(exam.attemptsLeft > 0 || exam.allowedReRecords > 0) && (
-            <div className="mb-5 flex items-center gap-2 flex-wrap">
-              {exam.attemptsLeft > 0 && (
-                <Badge variant="success">
-                  <span className="font-bold">{exam.attemptsLeft}</span>
-                  <span className="ml-1">
-                    {exam.attemptsLeft === 1 ? 'attempt' : 'attempts'} left
-                  </span>
-                </Badge>
-              )}
-              {exam.allowedReRecords > 0 && (
-                <Badge variant="brand">
-                  <span className="font-bold">{exam.allowedReRecords}</span>
-                  <span className="ml-1">
-                    re-record{exam.allowedReRecords !== 1 ? 's' : ''} left
-                  </span>
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="mb-4 flex items-center gap-2 flex-wrap">
+            {(() => {
+              const attemptsLeft = exam.attemptsLeft ?? exam.attempts_left ?? exam.attemptsRemaining ?? exam.attempts_remaining ?? exam.attempts ?? exam.remainingAttempts ?? null
+              if (attemptsLeft !== undefined && attemptsLeft !== null) {
+                return (
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${
+                    attemptsLeft > 0 
+                      ? 'bg-green-50 text-green-700 border-green-200' 
+                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}>
+                    <span className="font-bold">{attemptsLeft}</span>
+                    <span>{attemptsLeft === 1 ? 'attempt' : 'attempts'} {attemptsLeft > 0 ? 'left' : 'allowed'}</span>
+                  </div>
+                )
+              }
+              return null
+            })()}
 
-          {/* Footer Section: Teacher, Questions, and Points */}
-          <div className="mb-5 pb-4 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-brand-400 flex items-center justify-center shadow-sm">
+            {(() => {
+              const allowedReRecords = exam.allowedReRecords ?? exam.allowed_re_records ?? exam.reRecordAllowed ?? exam.re_record_allowed ?? exam.allowedReRecordsCount ?? exam.reRecordsAllowed ?? null
+              if (allowedReRecords !== undefined && allowedReRecords !== null) {
+                return (
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${
+                    allowedReRecords > 0 
+                      ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}>
+                    <span className="font-bold">{allowedReRecords}</span>
+                    <span>re-record{allowedReRecords !== 1 ? 's' : ''} allowed</span>
+                  </div>
+                )
+              }
+              return null
+            })()}
+          </div>
+
+          <div className="mb-4 pb-4 border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
                   <span className="text-xs font-bold text-white">
                     {getInitials(exam.teacherName)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-slate-400" aria-hidden="true" />
-                  <span className="text-sm font-medium text-slate-700">{exam.teacherName}</span>
+                  <User className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                  <span className="text-sm font-medium text-gray-700">{exam.teacherName}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {exam.questions && exam.questions.length > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-200">
-                    <FileText className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 rounded-md border-[0.5px] border-blue-200">
+                    <FileText className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
                     <span className="text-sm font-bold text-blue-700">{exam.questions.length}</span>
                     <span className="text-xs text-blue-600">Q</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-warning-light rounded-lg border border-warning-dark/20">
-                  <Award className="w-4 h-4 text-warning-dark" aria-hidden="true" />
-                  <span className="text-sm font-bold text-warning-dark">{exam.pointsTotal}</span>
-                  <span className="text-xs text-warning-dark/80">pts</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 rounded-md border-[0.5px] border-amber-200">
+                  <Award className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
+                  <span className="text-sm font-bold text-amber-700">{exam.pointsTotal}</span>
+                  <span className="text-xs text-amber-600">pts</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Button Section */}
-          <div className="mt-6">
+          <div className="mt-4">
             {exam.status === 'live' && (
               <button
                 onClick={handleJoinClick}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm"
                 aria-label={`Join exam: ${exam.title}`}
               >
-                <Play className="w-5 h-5" aria-hidden="true" />
+                <Play className="w-4 h-4" aria-hidden="true" />
                 <span>Join now</span>
               </button>
             )}
             {exam.status === 'upcoming' && (
               <button
                 onClick={handleViewDetails}
-                className="w-full bg-white border-2 border-primary-300 hover:border-primary-500 hover:bg-primary-50 text-primary-600 hover:text-primary-700 font-bold py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98]"
+                className="w-full bg-blue-50 hover:bg-blue-100 border-[0.5px] border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-[0.98] text-sm"
                 aria-label={`View details for exam: ${exam.title}`}
               >
                 View details
@@ -258,7 +256,7 @@ export default function ExamCard({ exam, onPrefetch }) {
             {exam.status === 'finished' && (
               <button
                 onClick={handleViewResults}
-                className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-bold py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 active:scale-[0.98]"
+                className="w-full bg-gray-50 hover:bg-gray-100 border-[0.5px] border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 active:scale-[0.98] text-sm"
                 aria-label={`View results for exam: ${exam.title}`}
               >
                 View results

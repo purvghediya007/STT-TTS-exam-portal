@@ -181,17 +181,31 @@ export default function JoinModal({ exam, onClose, onSuccess }) {
               </div>
             )}
 
-            <div className="flex items-center justify-between py-2 border-t border-slate-200">
-              <span className="font-semibold text-slate-800">Attempts left:</span>
-              <span className="font-medium text-slate-700">{exam.attemptsLeft}</span>
-            </div>
+            {(() => {
+              const attemptsLeft = exam.attemptsLeft ?? exam.attempts_left ?? exam.attemptsRemaining ?? exam.attempts_remaining ?? exam.attempts ?? exam.remainingAttempts ?? null
+              if (attemptsLeft !== undefined && attemptsLeft !== null) {
+                return (
+                  <div className="flex items-center justify-between py-2 border-t border-slate-200">
+                    <span className="font-semibold text-slate-800">Attempts left:</span>
+                    <span className="font-medium text-slate-700">{attemptsLeft}</span>
+                  </div>
+                )
+              }
+              return null
+            })()}
 
-            {exam.allowedReRecords > 0 && (
-              <div className="flex items-center justify-between py-2 border-t border-slate-200">
-                <span className="font-semibold text-slate-800">Re-records allowed:</span>
-                <span className="font-medium text-slate-700">{exam.allowedReRecords}</span>
-              </div>
-            )}
+            {(() => {
+              const allowedReRecords = exam.allowedReRecords ?? exam.allowed_re_records ?? exam.reRecordAllowed ?? exam.re_record_allowed ?? exam.allowedReRecordsCount ?? exam.reRecordsAllowed ?? 0
+              if (allowedReRecords > 0) {
+                return (
+                  <div className="flex items-center justify-between py-2 border-t border-slate-200">
+                    <span className="font-semibold text-slate-800">Re-records allowed:</span>
+                    <span className="font-medium text-slate-700">{allowedReRecords}</span>
+                  </div>
+                )
+              }
+              return null
+            })()}
 
             {exam.settingsSummary?.strictMode && (
               <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
@@ -248,7 +262,10 @@ export default function JoinModal({ exam, onClose, onSuccess }) {
           </button>
           <button
             onClick={handleStart}
-            disabled={isStarting || exam.attemptsLeft === 0 || success}
+            disabled={isStarting || ( (() => {
+              const attemptsLeft = exam.attemptsLeft ?? exam.attempts_left ?? exam.attemptsRemaining ?? exam.attempts_remaining ?? exam.attempts ?? exam.remainingAttempts ?? null
+              return attemptsLeft === 0
+            })() ) || success}
             className="flex-1 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             {isStarting ? (
