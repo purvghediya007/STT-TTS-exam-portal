@@ -20,8 +20,20 @@ export default function QuestionBuilder({ questions, onChange }) {
       image: null,
       video: null,
       graph: null
-    }
+    },
+    // Frontend-only fields for new modes
+    // File upload mode
+    file: null,
+    fileDescription: '',
+    // Topic based generation mode
+    topicName: '',
+    difficulty: 'Easy',
+    numQuestions: 1,
+    questionTypesToGenerate: ['mcq'],
+    topicWeights: { mcq: 0, viva: 0, interview: 0 }
   })
+  
+
 
   // Handler for media uploads to Cloudinary
   const handleMediaUpload = async (type, file) => {
@@ -67,7 +79,15 @@ export default function QuestionBuilder({ questions, onChange }) {
     correctAnswer: null,
     marks: 1,
     expectedAnswer: '',
-    media: { image: null, video: null, graph: null }
+    media: { image: null, video: null, graph: null },
+    // Frontend-only defaults
+    file: null,
+    fileDescription: '',
+    topicName: '',
+    difficulty: 'Easy',
+    numQuestions: 1,
+    questionTypesToGenerate: ['mcq'],
+    topicWeights: { mcq: 0, viva: 0, interview: 0 }
   })
 
   // Function to update state on type change, clearing irrelevant fields
@@ -78,11 +98,52 @@ export default function QuestionBuilder({ questions, onChange }) {
       // Clear MCQ specific fields if switching away from MCQ
       options: newType === 'mcq' ? prev.options : ['', '', '', ''],
       correctAnswer: newType === 'mcq' ? prev.correctAnswer : null,
+      // Clear media when switching to modes that don't use it
+      media: (newType === 'mcq' || newType === 'viva' || newType === 'interview') ? prev.media : { image: null, video: null, graph: null },
+      // File upload specific
+      file: newType === 'file_upload' ? prev.file : null,
+      fileDescription: newType === 'file_upload' ? prev.fileDescription : '',
+      // Topic based specific
+      topicName: newType === 'topic_based' ? prev.topicName : '',
+      difficulty: newType === 'topic_based' ? prev.difficulty : 'Easy',
+      numQuestions: newType === 'topic_based' ? prev.numQuestions : 1,
+      questionTypesToGenerate: newType === 'topic_based' ? prev.questionTypesToGenerate : ['mcq'],
+      topicWeights: newType === 'topic_based' ? prev.topicWeights : { mcq: 0, viva: 0, interview: 0 }
     }))
   }
 
+  // Toggle which question types will be generated for topic_based and adjust weights
+  const handleToggleQuestionType = (type) => {
+    setNewQuestion(prev => {
+      const prevTypes = Array.isArray(prev.questionTypesToGenerate) ? prev.questionTypesToGenerate : []
+      const selected = prevTypes.includes(type)
+      const newTypes = selected ? prevTypes.filter(t => t !== type) : [...prevTypes, type]
+
+      // compute new weights
+      let newWeights = { ...(prev.topicWeights || { mcq: 0, viva: 0, interview: 0 }) }
+
+      if (newTypes.length === 0) {
+        newWeights = { mcq: 0, viva: 0, interview: 0 }
+      } else if (newTypes.length === 1) {
+        // single selection gets 100%
+        newWeights = { mcq: 0, viva: 0, interview: 0 }
+        newWeights[newTypes[0]] = 100
+      } else {
+        // multiple selection: per requested behavior, start selected types at 0%
+        // and keep unselected types at 0% (user will distribute manually)
+        newWeights = { mcq: 0, viva: 0, interview: 0 }
+        newTypes.forEach(t => {
+          newWeights[t] = 0
+        })
+      }
+
+      return { ...prev, questionTypesToGenerate: newTypes, topicWeights: newWeights }
+    })
+  }
+
   const handleAddQuestion = () => {
-    if (!newQuestion.text.trim()) {
+    // For file_upload and topic_based modes question text is optional
+    if (newQuestion.type !== 'file_upload' && newQuestion.type !== 'topic_based' && !newQuestion.text.trim()) {
       alert('Please enter a question')
       return
     }
@@ -118,7 +179,20 @@ export default function QuestionBuilder({ questions, onChange }) {
             isCorrect: index === newQuestion.correctAnswer
           }))
       }),
-      media: { ...newQuestion.media }
+      media: { ...newQuestion.media },
+      // Frontend-only: include uploaded file metadata for file_upload
+      ...(newQuestion.type === 'file_upload' && {
+        file: newQuestion.file ? { name: newQuestion.file.name, size: newQuestion.file.size, type: newQuestion.file.type } : null,
+        fileDescription: newQuestion.fileDescription || ''
+      }),
+      // Frontend-only: include topic based configuration
+      ...(newQuestion.type === 'topic_based' && {
+        topicName: newQuestion.topicName || '',
+        difficulty: newQuestion.difficulty || 'Easy',
+        numQuestions: newQuestion.numQuestions || 1,
+        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['mcq'],
+        topicWeights: newQuestion.topicWeights || { mcq: 0, viva: 0, interview: 0 }
+      })
     }
 
     const updatedQuestions = [...questions, question]
@@ -132,7 +206,8 @@ export default function QuestionBuilder({ questions, onChange }) {
   const handleUpdateQuestion = (index) => {
     const questionToUpdate = questions[index]
 
-    if (!newQuestion.text.trim()) {
+    // For file_upload and topic_based modes question text is optional
+    if (newQuestion.type !== 'file_upload' && newQuestion.type !== 'topic_based' && !newQuestion.text.trim()) {
       alert('Please enter a question')
       return
     }
@@ -164,7 +239,18 @@ export default function QuestionBuilder({ questions, onChange }) {
             isCorrect: optIndex === newQuestion.correctAnswer
           }))
       }),
-      media: { ...newQuestion.media }
+      media: { ...newQuestion.media },
+      ...(newQuestion.type === 'file_upload' && {
+        file: newQuestion.file ? { name: newQuestion.file.name, size: newQuestion.file.size, type: newQuestion.file.type } : null,
+        fileDescription: newQuestion.fileDescription || ''
+      }),
+      ...(newQuestion.type === 'topic_based' && {
+        topicName: newQuestion.topicName || '',
+        difficulty: newQuestion.difficulty || 'Easy',
+        numQuestions: newQuestion.numQuestions || 1,
+        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['mcq'],
+        topicWeights: newQuestion.topicWeights || { mcq: 0, viva: 0, interview: 0 }
+      })
     }
 
     const updatedQuestions = [...questions]
@@ -201,7 +287,15 @@ export default function QuestionBuilder({ questions, onChange }) {
       correctAnswer: correctAnswer,
       marks: question.marks || 1,
       expectedAnswer: question.expectedAnswer || '',
-      media: question.media || { image: null, video: null, graph: null }
+      media: question.media || { image: null, video: null, graph: null },
+      // Load frontend-only fields if present
+      file: question.file || null,
+      fileDescription: question.fileDescription || '',
+      topicName: question.topicName || '',
+      difficulty: question.difficulty || 'Easy',
+      numQuestions: question.numQuestions || 1,
+      questionTypesToGenerate: question.questionTypesToGenerate || (question.questionTypeToGenerate ? [question.questionTypeToGenerate] : ['mcq']),
+      topicWeights: question.topicWeights || { mcq: 0, viva: 0, interview: 0 }
     })
   }
 
@@ -335,27 +429,53 @@ export default function QuestionBuilder({ questions, onChange }) {
               />
               Interview
             </label>
+            <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'file_upload' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+              <input
+                type="radio"
+                name="questionType"
+                value="file_upload"
+                checked={newQuestion.type === 'file_upload'}
+                onChange={() => handleTypeChange('file_upload')}
+                className="mr-2"
+              />
+              File / Excel Upload
+            </label>
+            <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'topic_based' ? 'bg-teal-100 border-teal-300 text-teal-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+              <input
+                type="radio"
+                name="questionType"
+                value="topic_based"
+                checked={newQuestion.type === 'topic_based'}
+                onChange={() => handleTypeChange('topic_based')}
+                className="mr-2"
+              />
+              Topic Based (AI Generated)
+            </label>
           </div>
           <p className="mt-2 text-xs text-gray-500">
             {newQuestion.type === 'mcq' && 'Students select one correct option from a list.'}
             {newQuestion.type === 'viva' && 'Student records a spoken/video answer.'}
             {newQuestion.type === 'interview' && 'Interview-style prompt; student records their response.'}
+            {newQuestion.type === 'file_upload' && 'Faculty can upload question banks. AI processing will be handled later.'}
+            {newQuestion.type === 'topic_based' && 'Questions will be generated automatically by AI during exam creation.'}
           </p>
         </div>
 
-        {/* Question Text */}
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Question <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={newQuestion.text}
-            onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your question here..."
-          />
-        </div>
+        {/* Question Text (hidden for file_upload and topic_based) */}
+        {newQuestion.type !== 'file_upload' && newQuestion.type !== 'topic_based' && (
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Question <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={newQuestion.text}
+              onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your question here..."
+            />
+          </div>
+        )}
 
         {/* --- MCQ Options Input --- */}
         {newQuestion.type === 'mcq' && (
@@ -411,6 +531,182 @@ export default function QuestionBuilder({ questions, onChange }) {
         )}
         {/* --- End MCQ Options Input --- */}
 
+        {/* File / Excel Upload UI (frontend-only) */}
+        {newQuestion.type === 'file_upload' && (
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Upload PDF or Excel containing Questions & Answers</label>
+
+            <label htmlFor="file-upload-input" className="border-2 border-dashed border-gray-300 rounded-md p-4 flex items-center gap-4 cursor-pointer">
+              <div className="flex-shrink-0">
+                <Upload className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-900">Click to select a file</div>
+                <div className="text-xs text-gray-500">Accepted: .pdf, .xlsx, .xls, .csv</div>
+                <input
+                  id="file-upload-input"
+                  type="file"
+                  accept=".pdf,.xlsx,.xls,.csv"
+                  onChange={(e) => {
+                    const f = e.target.files[0]
+                    setNewQuestion(prev => ({ ...prev, file: f || null }))
+                  }}
+                  className="hidden"
+                />
+
+                {newQuestion.file ? (
+                  <div className="mt-3 flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-slate-600" />
+                      <div className="text-sm text-gray-800 truncate">{newQuestion.file.name}</div>
+                      <div className="text-xs text-gray-500">{Math.round((newQuestion.file.size || 0) / 1024)} KB</div>
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setNewQuestion(prev => ({ ...prev, file: null })) }}
+                        className="text-red-600 hover:text-red-700 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-xs text-gray-500">No file selected</div>
+                )}
+              </div>
+            </label>
+
+            <textarea
+              placeholder="Optional instructions for this upload"
+              value={newQuestion.fileDescription}
+              onChange={(e) => setNewQuestion({ ...newQuestion, fileDescription: e.target.value })}
+              rows={3}
+              className="w-full mt-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+
+            <p className="mt-2 text-xs text-gray-500">Faculty can upload question banks. AI processing will be handled later.</p>
+          </div>
+        )}
+
+        {/* Topic Based (AI Generated) UI (frontend-only) */}
+        {newQuestion.type === 'topic_based' && (
+          <div className="mb-4 space-y-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Topic Based Configuration</label>
+
+            <div className="space-y-2">
+              <label className="block text-xs text-gray-600">Topic Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Data Structures – Stack & Queue"
+                value={newQuestion.topicName}
+                onChange={(e) => setNewQuestion({ ...newQuestion, topicName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-2">Difficulty Level</label>
+                <div className="flex items-center gap-2">
+                  {['Easy','Medium','Hard'].map(level => (
+                    <label key={level} className={`px-3 py-1 rounded-lg border cursor-pointer text-sm ${newQuestion.difficulty === level ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+                      <input
+                        type="radio"
+                        name="difficulty"
+                        value={level}
+                        checked={newQuestion.difficulty === level}
+                        onChange={() => setNewQuestion(prev => ({ ...prev, difficulty: level }))}
+                        className="mr-2"
+                      />
+                      {level}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-600 mb-2">Number of Questions</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={newQuestion.numQuestions}
+                  onChange={(e) => setNewQuestion({ ...newQuestion, numQuestions: Math.max(1, Math.min(50, parseInt(e.target.value) || 1)) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="1 - 50"
+                />
+                <p className="text-xs text-gray-400 mt-1">How many questions to generate for this topic</p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-600 mb-2">Question Type to Generate</label>
+                <div className="flex items-center gap-2">
+                  {[
+                    {value: 'mcq', label: 'MCQ'},
+                    {value: 'viva', label: 'Viva'},
+                    {value: 'interview', label: 'Interview'}
+                  ].map(opt => {
+                    const selected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate.includes(opt.value)
+                    return (
+                      <label key={opt.value} className={`px-3 py-1 rounded-lg border cursor-pointer text-sm ${selected ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+                        <input
+                          type="checkbox"
+                          name="questionTypesToGenerate"
+                          value={opt.value}
+                          checked={selected}
+                          onChange={() => handleToggleQuestionType(opt.value)}
+                          className="mr-2"
+                        />
+                        {opt.label}
+                      </label>
+                    )
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Choose the format for generated questions</p>
+              </div>
+              {/* Weight distribution for selected types */}
+              <div className="sm:col-span-3 mt-3">
+                <label className="block text-xs text-gray-600 mb-2">Weight Distribution (%)</label>
+                <div className="w-full bg-gray-100 rounded-md h-4 overflow-hidden flex">
+                  <div style={{ width: `${newQuestion.topicWeights.mcq}%` }} className="bg-green-400 h-4" />
+                  <div style={{ width: `${newQuestion.topicWeights.viva}%` }} className="bg-pink-400 h-4" />
+                  <div style={{ width: `${newQuestion.topicWeights.interview}%` }} className="bg-indigo-400 h-4" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                  {['mcq','viva','interview'].map((t) => {
+                    const isSelected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate.includes(t)
+                    const othersSum = Object.keys(newQuestion.topicWeights || {}).reduce((s,k)=> k===t? s : s + (newQuestion.topicWeights[k]||0), 0)
+                    const max = isSelected ? Math.max(0, 100 - othersSum) : 0
+                    return (
+                      <div key={t} className="flex flex-col">
+                        <label className="text-xs text-gray-600 mb-1">{t.toUpperCase()}</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max={max}
+                          value={isSelected ? (newQuestion.topicWeights[t] || 0) : 0}
+                          onChange={(e) => {
+                            if (!isSelected) return
+                            const val = Math.max(0, Math.min(parseInt(e.target.value)||0, 100))
+                            setNewQuestion(prev => ({ ...prev, topicWeights: { ...prev.topicWeights, [t]: val } }))
+                          }}
+                          className={`w-full ${!isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          disabled={!isSelected}
+                        />
+                        <div className="text-xs text-gray-600 mt-1">{isSelected ? (newQuestion.topicWeights[t] || 0) : 0}%</div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Total: {(newQuestion.topicWeights.mcq||0)+(newQuestion.topicWeights.viva||0)+(newQuestion.topicWeights.interview||0)}% — remaining {100 - ((newQuestion.topicWeights.mcq||0)+(newQuestion.topicWeights.viva||0)+(newQuestion.topicWeights.interview||0))}%</p>
+              </div>
+            </div>
+
+            <p className="mt-2 text-xs text-gray-500">Questions will be generated automatically by AI during exam creation.</p>
+          </div>
+        )}
+
 
         {/* Points */}
         <div className="mb-4">
@@ -426,17 +722,35 @@ export default function QuestionBuilder({ questions, onChange }) {
           />
         </div>
 
-        {/* Media Upload */}
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Media Attachments <span className="text-gray-500 text-xs">(Optional)</span>
-          </label>
-          <div className="grid grid-cols-3 gap-3">
+        {/* Media Upload (shown only for mcq/viva/interview) */}
+        {(newQuestion.type === 'mcq' || newQuestion.type === 'viva' || newQuestion.type === 'interview') && (
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Media Attachments <span className="text-gray-500 text-xs">(Optional)</span>
+            </label>
+            <div className="grid grid-cols-3 gap-3">
             {/* Image */}
-            <div className="border border-gray-300 rounded-lg p-3">
-              <label className="flex flex-col items-center gap-2 cursor-pointer">
-                <Image className={`w-6 h-6 ${uploadingMedia === 'image' ? 'text-blue-500 animate-spin' : 'text-gray-400'}`} />
-                <span className="text-xs text-gray-600">{uploadingMedia === 'image' ? 'Uploading...' : 'Image'}</span>
+            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Image className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs text-gray-600">{uploadingMedia === 'image' ? 'Uploading...' : 'Image'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {newQuestion.media.image ? (
+                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.image.file}>{newQuestion.media.image.file}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      {uploadingMedia === 'image' ? (
+                        <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                      ) : (
+                        <span className="inline-block w-4 h-4" />
+                      )}
+                    </span>
+                  </div>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
@@ -444,26 +758,46 @@ export default function QuestionBuilder({ questions, onChange }) {
                   className="hidden"
                   disabled={uploadingMedia !== null}
                 />
+
                 {newQuestion.media.image && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-green-600 truncate max-w-[80px]" title={newQuestion.media.image.file}>{newQuestion.media.image.file}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedia('image')}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                  <div className="mt-3 flex items-start gap-3">
+                    <img src={newQuestion.media.image.url} alt="preview" className="w-36 md:w-44 h-28 md:h-32 object-cover rounded-md border border-slate-100" />
+                    <div className="flex-1 flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveMedia('image') }}
+                        className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span className="text-xs">Remove</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-              </label>
-            </div>
+            </label>
 
             {/* Video */}
-            <div className="border border-gray-300 rounded-lg p-3">
-              <label className="flex flex-col items-center gap-2 cursor-pointer">
-                <Video className={`w-6 h-6 ${uploadingMedia === 'video' ? 'text-blue-500 animate-spin' : 'text-gray-400'}`} />
-                <span className="text-xs text-gray-600">{uploadingMedia === 'video' ? 'Uploading...' : 'Video'}</span>
+            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs text-gray-600">{uploadingMedia === 'video' ? 'Uploading...' : 'Video'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {newQuestion.media.video ? (
+                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.video.file}>{newQuestion.media.video.file}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      {uploadingMedia === 'video' ? (
+                        <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                      ) : (
+                        <span className="inline-block w-4 h-4" />
+                      )}
+                    </span>
+                  </div>
+                </div>
                 <input
                   type="file"
                   accept="video/*"
@@ -471,49 +805,128 @@ export default function QuestionBuilder({ questions, onChange }) {
                   className="hidden"
                   disabled={uploadingMedia !== null}
                 />
+
                 {newQuestion.media.video && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-green-600 truncate max-w-[80px]" title={newQuestion.media.video.file}>{newQuestion.media.video.file}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedia('video')}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                  <div className="mt-3 flex items-start gap-3">
+                    <video src={newQuestion.media.video.url} controls className="w-48 md:w-56 h-32 md:h-36 object-cover rounded-md border border-slate-100" />
+                    <div className="flex-1 flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveMedia('video') }}
+                        className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span className="text-xs">Remove</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-              </label>
-            </div>
+            </label>
 
             {/* Graph/Chart */}
-            <div className="border border-gray-300 rounded-lg p-3">
-              <label className="flex flex-col items-center gap-2 cursor-pointer">
-                <FileText className={`w-6 h-6 ${uploadingMedia === 'graph' ? 'text-blue-500 animate-spin' : 'text-gray-400'}`} />
-                <span className="text-xs text-gray-600">{uploadingMedia === 'graph' ? 'Uploading...' : 'Graph/Chart'}</span>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => handleMediaUpload('graph', e.target.files[0])}
-                  className="hidden"
-                  disabled={uploadingMedia !== null}
-                />
-                {newQuestion.media.graph && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-green-600 truncate max-w-[80px]" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedia('graph')}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+              {newQuestion.type === 'interview' ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs text-gray-600">Attach File</span>
                   </div>
-                )}
-              </label>
-            </div>
+                  <div className="flex items-center gap-2">
+                    {newQuestion.media.graph ? (
+                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                    <span className="w-4 h-4 inline-flex items-center justify-center" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs text-gray-600">{uploadingMedia === 'graph' ? 'Uploading...' : 'Graph/Chart'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {newQuestion.media.graph ? (
+                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      {uploadingMedia === 'graph' ? (
+                        <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                      ) : (
+                        <span className="inline-block w-4 h-4" />
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Input: interview uses local file, others use handleMediaUpload */}
+              {newQuestion.type === 'interview' ? (
+                <>
+                  <input
+                    type="file"
+                    accept=".pdf,.xlsx,.xls,.csv"
+                    onChange={(e) => {
+                      const f = e.target.files[0]
+                      setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: f ? { file: f.name, size: f.size, type: f.type } : null } }))
+                    }}
+                    className="hidden"
+                  />
+
+                  {newQuestion.media.graph && (
+                    <div className="mt-3 flex items-start gap-3">
+                      <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
+                        <FileText className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <div className="flex-1 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: null } })) }}
+                          className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          <span className="text-xs">Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => handleMediaUpload('graph', e.target.files[0])}
+                    className="hidden"
+                    disabled={uploadingMedia !== null}
+                  />
+
+                  {newQuestion.media.graph && (
+                    <div className="mt-3 flex items-start gap-3">
+                      <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
+                        <FileText className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <div className="flex-1 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveMedia('graph') }}
+                          className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          <span className="text-xs">Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </label>
           </div>
         </div>
+      )}   {/* ✅ FIX: CLOSE CONDITIONAL HERE */}
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
@@ -531,7 +944,9 @@ export default function QuestionBuilder({ questions, onChange }) {
           )}
           <button
             type="button"
-            onClick={editingIndex !== null ? () => handleUpdateQuestion(editingIndex) : handleAddQuestion}
+            onClick={editingIndex !== null
+              ? () => handleUpdateQuestion(editingIndex)
+              : handleAddQuestion}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />

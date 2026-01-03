@@ -117,25 +117,25 @@ export default function HistoryTable({ exams = [] }) {
   }, [filtered, sortBy]);
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow border">
+    <div className="p-4">
 
       {/* ---------- HEADER: SEARCH + SORT ---------- */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         {/* Search */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search exams..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 py-2 w-64 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="pl-10 pr-4 py-2 w-full sm:w-64 border-[0.5px] border-blue-200 rounded-lg text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white"
           />
         </div>
 
         {/* Sort Menu */}
-        <div className="relative inline-flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
+        <div className="relative inline-flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="w-4 h-4 text-blue-600" />
           <select
             value={sortBy}
             onChange={(e) => {
@@ -144,7 +144,7 @@ export default function HistoryTable({ exams = [] }) {
                 setShowSubjectMenu(false);
               }
             }}
-            className="px-4 py-2 border rounded-lg text-sm cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 sm:flex-none px-3 py-2 border-[0.5px] border-blue-200 rounded-lg text-sm cursor-pointer focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white"
           >
             <option value="date">Sort by: Date</option>
             <option value="marks">Sort by: Marks</option>
@@ -157,7 +157,7 @@ export default function HistoryTable({ exams = [] }) {
             <button
               type="button"
               onClick={() => setShowSubjectMenu((prev) => !prev)}
-              className="px-3 py-2 text-sm border rounded-lg bg-white hover:bg-blue-50 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 text-sm border-[0.5px] border-blue-200 rounded-lg bg-white hover:bg-blue-50 transition-colors focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
             >
               Choose subject
             </button>
@@ -166,8 +166,8 @@ export default function HistoryTable({ exams = [] }) {
           {/* Subject dropdown menu - opens on click for easy selection */}
           {sortBy === "subject" && showSubjectMenu && (
             <div className="absolute top-full right-0 mt-2 z-50">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 w-56 max-h-64 overflow-auto">
-                <div className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Filter by Subject</div>
+              <div className="bg-white border-[0.5px] border-blue-200 rounded-lg shadow-lg p-2 w-56 max-h-64 overflow-auto">
+                <div className="text-xs font-semibold text-blue-700 uppercase mb-2 px-2">Filter by Subject</div>
                 {subjects.length > 0 ? (
                   <>
                     {subjects.map((subj) => (
@@ -189,7 +189,7 @@ export default function HistoryTable({ exams = [] }) {
                           setSubjectFilter(null);
                           setShowSubjectMenu(false);
                         }}
-                        className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded mt-1 font-medium"
+                        className="block w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded mt-1 font-medium"
                       >
                         Clear Filter
                       </button>
@@ -205,32 +205,32 @@ export default function HistoryTable({ exams = [] }) {
       </div>
 
       {/* ---------- TABLE ---------- */}
-      <div className="overflow-x-auto table-responsive history-table-wrapper">
-        <table className="min-w-full history-table">
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
           <thead>
-            <tr className="text-left border-b text-xs text-slate-500 uppercase bg-gray-50">
-              <th className="py-3 px-4 font-semibold">Sr</th>
-              <th className="py-3 px-4 font-semibold">
+            <tr className="text-left border-b border-blue-100 text-xs text-blue-700 uppercase bg-blue-50/50">
+              <th className="py-2.5 px-3 font-semibold">Sr</th>
+              <th className="py-2.5 px-3 font-semibold">
                 <div className="flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
+                  <FileText className="w-3.5 h-3.5" />
                   Exam Name
                 </div>
               </th>
-              <th className="py-3 px-4 font-semibold">Subject</th>
-              <th className="py-3 px-4 font-semibold">
+              <th className="py-2.5 px-3 font-semibold">Subject</th>
+              <th className="py-2.5 px-3 font-semibold">
                 <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
+                  <Calendar className="w-3.5 h-3.5" />
                   Date / Time Taken
                 </div>
               </th>
-              <th className="py-3 px-4 font-semibold">Status</th>
-              <th className="py-3 px-4 font-semibold">
+              <th className="py-2.5 px-3 font-semibold">Status</th>
+              <th className="py-2.5 px-3 font-semibold">
                 <div className="flex items-center gap-1">
-                  <Award className="w-3 h-3" />
+                  <Award className="w-3.5 h-3.5" />
                   Result
                 </div>
               </th>
-              <th className="py-3 px-4 text-right font-semibold">Analysis</th>
+              <th className="py-2.5 px-3 text-right font-semibold">Analysis</th>
             </tr>
           </thead>
 
@@ -251,66 +251,81 @@ export default function HistoryTable({ exams = [] }) {
                   : 'Absent'
 
               return (
-                <tr key={ex.id} className="border-t hover:bg-slate-50 text-sm">
-                  <td className="py-3 px-4" data-label="Sr">
+                <tr key={ex.id} className="border-b border-blue-50 hover:bg-blue-50/30 text-sm transition-colors">
+                  <td className="py-3 px-3 text-gray-600 font-medium" data-label="Sr">
                     {idx + 1}
                   </td>
 
-                  <td className="py-3 px-4 font-medium" data-label="Exam Name">
+                  <td className="py-3 px-3 font-medium text-gray-900" data-label="Exam Name">
                     <div className="flex items-center gap-2">
-                      <FileText className="w-3 h-3 text-slate-400" />
+                      <FileText className="w-3.5 h-3.5 text-blue-500" />
                       <span className="line-clamp-2">{ex.title}</span>
                     </div>
                   </td>
 
-                  <td className="py-3 px-4" data-label="Subject">
+                  <td className="py-3 px-3 text-gray-700" data-label="Subject">
                     {ex.subject}
                   </td>
 
-                  <td className="py-3 px-4" data-label="Date / Time Taken">
+                  <td className="py-3 px-3" data-label="Date / Time Taken">
                     <div className="flex flex-col leading-snug">
                       <span className="font-medium text-gray-900">{dateLabel}</span>
                       <span className="text-xs text-gray-500">Time taken: {timeTakenLabel}</span>
                     </div>
                   </td>
 
-                  <td className="py-3 px-4" data-label="Status">
+                  <td className="py-3 px-3" data-label="Status">
                     {status === 'Submitted' && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 text-xs font-semibold">
                         <CheckCircle2 className="w-3 h-3" />
                         Submitted
                       </span>
                     )}
                     {status === 'Pending' && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold">
                         <AlertCircle className="w-3 h-3" />
                         Pending
                       </span>
                     )}
                     {status === 'Absent' && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold">
                         <XCircle className="w-3 h-3" />
                         Absent
                       </span>
                     )}
                   </td>
 
-                  <td className="py-3 px-4" data-label="Result">
+                  <td className="py-3 px-3" data-label="Result">
                     {score != null ? (
-                      <div className="inline-flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
-                          {score}{maxScore ? ` / ${maxScore}` : ''} pts
-                        </span>
+                      <div className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-md border border-blue-200">
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-xs font-bold text-blue-700">
+                            {score}
+                          </span>
+                          {maxScore && (
+                            <span className="text-[10px] text-blue-600 font-medium">
+                              /{maxScore}
+                            </span>
+                          )}
+                        </div>
+                        <div className="h-3 w-[1px] bg-blue-300"></div>
+                        <div className="flex items-center gap-0.5">
+                          <Award className="w-2.5 h-2.5 text-blue-600" />
+                          <span className="text-[9px] text-blue-600 font-semibold">pts</span>
+                        </div>
                         {percentage != null && (
-                          <span className="text-xs text-gray-600">{percentage}%</span>
+                          <>
+                            <div className="h-3 w-[1px] bg-blue-300"></div>
+                            <span className="text-[10px] font-bold text-blue-700">{percentage}%</span>
+                          </>
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs">—</span>
+                      <span className="text-gray-400 text-xs">—</span>
                     )}
                   </td>
 
-                  <td className="py-3 px-4 text-right" data-label="Analysis">
+                  <td className="py-3 px-3 text-right" data-label="Analysis">
                     <button
                       onClick={() => {
                         if (score != null) {
@@ -326,13 +341,13 @@ export default function HistoryTable({ exams = [] }) {
                         }
                       }}
                       disabled={score == null}
-                      className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-lg transition-colors ${score != null
-                          ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer'
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${score != null
+                          ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer shadow-sm hover:shadow-md'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                         }`}
                       title={score != null ? 'View exam results' : 'Results not available yet'}
                     >
-                      <Eye className="w-3 h-3" />
+                      <Eye className="w-3.5 h-3.5" />
                       View
                     </button>
                   </td>
@@ -345,10 +360,12 @@ export default function HistoryTable({ exams = [] }) {
 
       {/* Empty State */}
       {sorted.length === 0 && (
-        <div className="text-center py-12">
-          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg font-medium mb-2">No exam history found</p>
-          <p className="text-gray-400 text-sm">
+        <div className="text-center py-12 px-4">
+          <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <FileText className="w-8 h-8 text-blue-400" />
+          </div>
+          <p className="text-gray-700 text-base font-semibold mb-2">No exam history found</p>
+          <p className="text-gray-500 text-sm">
             {search || subjectFilter
               ? "Try adjusting your search or filter criteria"
               : "Complete your first exam to see it here"}
