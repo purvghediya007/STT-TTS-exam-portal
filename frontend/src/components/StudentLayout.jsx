@@ -10,37 +10,34 @@ import {
   CheckSquare,
   FileText,
   RefreshCw,
-  LogOut
+  LogOut,
+  Menu, // For mobile structure
+  X     // For mobile structure
 } from 'lucide-react'
 import { useExams } from '../hooks/useExams'
 
-/**
- * StudentLayout - Main layout component with header and sidebar
- * Provides navigation and user profile functionality
- */
 export default function StudentLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Handle mobile structure
   const [studentName, setStudentName] = useState('Student')
   const [enrollment, setEnrollment] = useState('N/A')
   const dropdownRef = useRef(null)
 
   const { refreshExams } = useExams({ initialStatus: 'all' })
 
-  // Get user data from localStorage
+  // --- LOGIC: REMAINS EXACTLY THE SAME ---
   useEffect(() => {
     const userDataStr = localStorage.getItem('user_data')
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr)
-        // Set enrollment from userData (priority: enrollmentNumber > username)
         if (userData.enrollmentNumber) {
           setEnrollment(userData.enrollmentNumber)
         } else if (userData.username) {
           setEnrollment(userData.username)
         }
-        // Set student name from userData (use username)
         if (userData.username) {
           setStudentName(userData.username)
         }
@@ -50,56 +47,41 @@ export default function StudentLayout({ children }) {
     }
   }, [])
 
-  // Create user object with dynamic data
-  const user = {
-    name: studentName,
-    enrollment: enrollment,
-    avatarUrl: null
-  }
+  const user = { name: studentName, enrollment: enrollment, avatarUrl: null }
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowUserDropdown(false)
       }
     }
-
     if (showUserDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showUserDropdown])
 
-  // Determine active route
   const getActiveRoute = () => {
     const path = location.pathname
-    if (path.includes('/dashboard') || path === '/student' || path === '/student/') {
-      return 'dashboard'
-    }
-    if (path.includes('/upcoming')) {
-      return 'upcoming'
-    }
-    if (path.includes('/available')) {
-      return 'available'
-    }
-    if (path.includes('/history')) {
-      return 'history'
-    }
-    if (path.includes('/guidelines')) {
-      return 'guidelines'
-    }
+    if (path.includes('/dashboard') || path === '/student' || path === '/student/') return 'dashboard'
+    if (path.includes('/upcoming')) return 'upcoming'
+    if (path.includes('/available')) return 'available'
+    if (path.includes('/history')) return 'history'
+    if (path.includes('/guidelines')) return 'guidelines'
     return 'dashboard'
   }
+
+  // Check if we're on exam taking page
+  const isExamPage = location.pathname.includes('/exams/') && location.pathname.includes('/take')
 
   const activeRoute = getActiveRoute()
 
   const handleNavigation = (route) => {
     navigate(`/student/${route}`)
     setShowUserDropdown(false)
+    setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }
 
   const handleRefresh = () => {
@@ -108,66 +90,77 @@ export default function StudentLayout({ children }) {
   }
 
   const handleLogout = () => {
-    // Clear authentication data
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
     navigate('/')
   }
+  // --- END OF LOGIC ---
+
+  // Component for Nav Links to avoid repetition
+  const NavLink = ({ route, icon: Icon, label }) => (
+    <button
+      onClick={() => handleNavigation(route)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${
+        activeRoute === route ? 'bg-blue-700 text-white' : 'text-blue-100 hover:bg-blue-800'
+      }`}
+    >
+      <Icon className="w-5 h-5" />
+      <span className="font-medium">{label}</span>
+    </button>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Header */}
-      <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-        <div className="flex items-center justify-between px-6 py-4">
-          {/* Logo and Brand */}
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top Header - Hidden on exam pages */}
+      <header className={`w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 ${isExamPage ? 'hidden' : ''}`}>
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
+          
+          {/* Left Side: Mobile Menu + Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-800 rounded flex items-center justify-center text-white font-bold text-xl">
-              E
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 lg:hidden text-gray-600 hover:bg-gray-100 rounded"
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-800 rounded flex items-center justify-center text-white font-bold text-lg md:text-xl">
+                E
+              </div>
+              <span className="text-lg md:text-xl font-semibold text-gray-900">Examecho</span>
             </div>
-            <span className="text-xl font-semibold text-gray-900">Examecho</span>
           </div>
 
-          {/* User Info and Dropdown */}
+          {/* Right Side: User Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-2 md:px-3 py-2 rounded hover:bg-gray-50 transition-colors"
             >
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-600" />
+              <div className="w-7 h-7 md:w-8 md:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{user.enrollment}</span>
+              <span className="text-xs md:text-sm font-medium text-gray-700 hidden sm:inline-block">
+                {user.enrollment}
+              </span>
               <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-52 md:w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="text-sm font-semibold text-gray-900">{user.name}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Enrollment: {user.enrollment}</div>
+                  <div className="text-sm font-semibold text-gray-900 truncate">{user.name}</div>
+                  <div className="text-[10px] md:text-xs text-gray-500 mt-0.5 truncate">Enrollment: {user.enrollment}</div>
                 </div>
-                <button
-                  onClick={() => { setShowUserDropdown(false); handleNavigation('dashboard') }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  Profile
+                <button onClick={() => { setShowUserDropdown(false); handleNavigation('dashboard') }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <User className="w-4 h-4" /> Profile
                 </button>
-                <button
-                  onClick={handleRefresh}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh Data
+                <button onClick={handleRefresh} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" /> Refresh Data
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
+                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <LogOut className="w-4 h-4" /> Logout
                 </button>
               </div>
             )}
@@ -175,78 +168,46 @@ export default function StudentLayout({ children }) {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Left Navigation Sidebar */}
-        <aside className="w-64 bg-blue-900 min-h-[calc(100vh-73px)] sticky top-[73px]">
-          <nav className="p-4 space-y-1">
-            {/* Dashboard */}
-            <button
-              onClick={() => handleNavigation('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'dashboard'
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-800'
-                }`}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium">Dashboard</span>
-            </button>
-
-            {/* Upcoming Quiz */}
-            <button
-              onClick={() => handleNavigation('upcoming')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'upcoming'
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-800'
-                }`}
-            >
-              <Calendar className="w-5 h-5" />
-              <span className="font-medium">Upcoming Quiz</span>
-            </button>
-
-            {/* Available Quiz */}
-            <button
-              onClick={() => handleNavigation('available')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'available'
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-800'
-                }`}
-            >
-              <CheckSquare className="w-5 h-5" />
-              <span className="font-medium">Available Quiz</span>
-            </button>
-
-            {/* History */}
-            <button
-              onClick={() => handleNavigation('history')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'history'
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-800'
-                }`}
-            >
-              <Clock className="w-5 h-5" />
-              <span className="font-medium">History</span>
-            </button>
-
-            {/* Guidelines */}
-            <button
-              onClick={() => handleNavigation('guidelines')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'guidelines'
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-800'
-                }`}
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="font-medium">Guidelines</span>
-            </button>
+      <div className="flex flex-1 relative">
+        {/* Sidebar Navigation - Hidden on exam pages */}
+        {/* - Hidden on mobile by default, uses absolute positioning when menu is toggled */}
+        {/* - Visible and static on desktop (lg: breakpoint) */}
+        {/* - Completely hidden when on exam taking page */}
+        <aside className={`
+          ${isExamPage ? 'hidden' : ''}
+          ${isMobileMenuOpen && !isExamPage ? 'translate-x-0' : '-translate-x-full'} 
+          lg:translate-x-0 lg:static fixed inset-y-0 left-0 z-40
+          w-64 bg-blue-900 transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none
+          flex flex-col
+        `}>
+          <nav className="p-4 space-y-1 flex-1 overflow-y-auto pt-20 lg:pt-4">
+            <NavLink route="dashboard" icon={LayoutDashboard} label="Dashboard" />
+            <NavLink route="upcoming" icon={Calendar} label="Upcoming Quiz" />
+            <NavLink route="available" icon={CheckSquare} label="Available Quiz" />
+            <NavLink route="history" icon={Clock} label="History" />
+            <NavLink route="guidelines" icon={HelpCircle} label="Guidelines" />
           </nav>
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 bg-gray-50 p-8">
-          {children}
+        {/* Overlay for mobile when sidebar is open */}
+        {isMobileMenuOpen && !isExamPage && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Main Content Area - Full width on exam pages */}
+        <main className={`flex-1 ${isExamPage ? 'bg-gray-100 p-0' : 'bg-gray-50 p-4 md:p-8'} min-w-0`}>
+          {isExamPage ? (
+            children
+          ) : (
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>
   )
 }
-

@@ -106,9 +106,9 @@ app.get('/api/student/exams', (req, res) => {
           try {
             const status = getExamStatus(exam);
             return {
-              ...exam,
-              status: status
-            };
+                  ...exam,
+                  status: status
+                };
           } catch (err) {
             console.error(`Error calculating status for exam ${exam.id || index}:`, err);
             return {
@@ -125,20 +125,21 @@ app.get('/api/student/exams', (req, res) => {
       } catch (err) {
         console.error(`Error processing exam at index ${index}:`, err);
         return {
-          id: exam.id || `unknown-${index}`,
-          title: exam.title || 'Unknown Exam',
-          shortDescription: exam.shortDescription || '',
-          status: 'unknown',
-          startsAt: exam.startsAt || null,
-          endsAt: exam.endsAt || null,
-          durationMin: exam.durationMin || 0,
-          timePerQuestionSec: exam.timePerQuestionSec || null,
-          attemptsLeft: exam.attemptsLeft || 0,
-          allowedReRecords: exam.allowedReRecords || 0,
-          teacherName: exam.teacherName || 'Unknown',
-          pointsTotal: exam.pointsTotal || 0,
-          thumbnailUrl: exam.thumbnailUrl || null,
-          settingsSummary: exam.settingsSummary || {}
+              id: exam.id || `unknown-${index}`,
+              title: exam.title || 'Unknown Exam',
+              shortDescription: exam.shortDescription || '',
+              status: 'unknown',
+              startsAt: exam.startsAt || null,
+              endsAt: exam.endsAt || null,
+              durationMin: exam.durationMin || 0,
+              timePerQuestionSec: exam.timePerQuestionSec || null,
+              // Do not inject defaults here; preserve faculty-provided values or leave undefined
+            attemptsLeft: exam.attemptsLeft !== undefined ? exam.attemptsLeft : (exam.settingsSummary?.attemptsLeft !== undefined ? exam.settingsSummary.attemptsLeft : undefined),
+            allowedReRecords: exam.allowedReRecords !== undefined ? exam.allowedReRecords : (exam.settingsSummary?.allowedReRecords !== undefined ? exam.settingsSummary.allowedReRecords : undefined),
+              teacherName: exam.teacherName || 'Unknown',
+              pointsTotal: exam.pointsTotal || 0,
+              thumbnailUrl: exam.thumbnailUrl || null,
+              settingsSummary: exam.settingsSummary || {}
         };
       }
     });
@@ -203,8 +204,8 @@ app.get('/api/student/exams/:examId/summary', (req, res) => {
     instructions: exam.settingsSummary?.instructions || 'Read all questions carefully.',
     timePerQuestionSec: exam.timePerQuestionSec,
     durationMin: exam.durationMin,
-    attemptsLeft: exam.attemptsLeft,
-    allowedReRecords: exam.allowedReRecords,
+    attemptsLeft: exam.attemptsLeft !== undefined ? exam.attemptsLeft : (exam.settingsSummary?.attemptsLeft !== undefined ? exam.settingsSummary.attemptsLeft : undefined),
+    allowedReRecords: exam.allowedReRecords !== undefined ? exam.allowedReRecords : (exam.settingsSummary?.allowedReRecords !== undefined ? exam.settingsSummary.allowedReRecords : undefined),
     strictMode: exam.settingsSummary?.strictMode || false,
     otherSettings: exam.settingsSummary || {},
     questionsCount: questions.length,
@@ -351,7 +352,9 @@ app.post('/api/student/exams/:examId/submit', (req, res) => {
   // Update student exam attempts
   const studentExamIndex = db.exams.findIndex(e => e.id === req.params.examId);
   if (studentExamIndex !== -1 && db.exams[studentExamIndex].attemptsLeft > 0) {
-    db.exams[studentExamIndex].attemptsLeft -= 1;
+    if (db.exams[studentExamIndex].attemptsLeft !== undefined && db.exams[studentExamIndex].attemptsLeft > 0) {
+      db.exams[studentExamIndex].attemptsLeft -= 1;
+    }
   }
 
   writeDB(db);
@@ -381,7 +384,7 @@ app.post('/api/student/exams/:examId/start', (req, res) => {
     });
   }
 
-  if (exam.attemptsLeft <= 0) {
+  if (exam.attemptsLeft !== undefined && exam.attemptsLeft <= 0) {
     return res.status(400).json({ 
       error: 'attempts_exhausted', 
       message: 'You have no attempts left.' 
@@ -458,6 +461,18 @@ app.post('/api/faculty/exams', (req, res) => {
   const examData = req.body;
   const teacherName = examData.teacherName || 'Current Faculty';
 
+  // Map attemptsAllowed to settingsSummary.attemptsLeft if needed
+  const settingsSummary = examData.settingsSummary || { strictMode: false };
+  if (examData.attemptsAllowed !== undefined) {
+    settingsSummary.attemptsLeft = examData.attemptsAllowed;
+  }
+  if (examData.allowedReRecords !== undefined) {
+    settingsSummary.allowedReRecords = examData.allowedReRecords;
+  }
+  if (examData.strictMode !== undefined) {
+    settingsSummary.strictMode = examData.strictMode;
+  }
+
   const newExam = {
     id: `FAC-EX-${Date.now()}`,
     title: examData.title,
@@ -472,7 +487,7 @@ app.post('/api/faculty/exams', (req, res) => {
     totalStudents: 0,
     pointsTotal: examData.pointsTotal,
     teacherName,
-    settingsSummary: examData.settingsSummary || { strictMode: false }
+    settingsSummary: settingsSummary
   };
 
   db.facultyExams.push(newExam);
@@ -487,8 +502,8 @@ app.post('/api/faculty/exams', (req, res) => {
     durationMin: newExam.durationMin,
     timePerQuestionSec: newExam.timePerQuestionSec,
     status: newExam.status,
-    attemptsLeft: newExam.settingsSummary.attemptsLeft || 1,
-    allowedReRecords: newExam.settingsSummary.allowedReRecords || 0,
+    attemptsLeft: newExam.settingsSummary?.attemptsLeft !== undefined ? newExam.settingsSummary.attemptsLeft : (newExam.attemptsLeft !== undefined ? newExam.attemptsLeft : undefined),
+    allowedReRecords: newExam.settingsSummary?.allowedReRecords !== undefined ? newExam.settingsSummary.allowedReRecords : (newExam.allowedReRecords !== undefined ? newExam.allowedReRecords : undefined),
     teacherName,
     pointsTotal: newExam.pointsTotal,
     thumbnailUrl: null,
@@ -509,9 +524,23 @@ app.put('/api/faculty/exams/:examId', (req, res) => {
     return res.status(404).json({ error: 'Exam not found' });
   }
 
+  // Map attemptsAllowed to settingsSummary.attemptsLeft if needed
+  const existingSettings = db.facultyExams[examIndex].settingsSummary || { strictMode: false };
+  const settingsSummary = { ...existingSettings, ...(req.body.settingsSummary || {}) };
+  if (req.body.attemptsAllowed !== undefined) {
+    settingsSummary.attemptsLeft = req.body.attemptsAllowed;
+  }
+  if (req.body.allowedReRecords !== undefined) {
+    settingsSummary.allowedReRecords = req.body.allowedReRecords;
+  }
+  if (req.body.strictMode !== undefined) {
+    settingsSummary.strictMode = req.body.strictMode;
+  }
+
   const updatedExam = {
     ...db.facultyExams[examIndex],
     ...req.body,
+    settingsSummary: settingsSummary,
     status: getExamStatus(req.body)
   };
 
@@ -529,8 +558,8 @@ app.put('/api/faculty/exams/:examId', (req, res) => {
       durationMin: updatedExam.durationMin,
       timePerQuestionSec: updatedExam.timePerQuestionSec,
       status: updatedExam.status,
-      attemptsLeft: updatedExam.settingsSummary?.attemptsLeft || 1,
-      allowedReRecords: updatedExam.settingsSummary?.allowedReRecords || 0,
+      attemptsLeft: updatedExam.settingsSummary?.attemptsLeft !== undefined ? updatedExam.settingsSummary.attemptsLeft : (updatedExam.attemptsLeft !== undefined ? updatedExam.attemptsLeft : undefined),
+      allowedReRecords: updatedExam.settingsSummary?.allowedReRecords !== undefined ? updatedExam.settingsSummary.allowedReRecords : (updatedExam.allowedReRecords !== undefined ? updatedExam.allowedReRecords : undefined),
       teacherName: updatedExam.teacherName || db.exams[studentExamIndex].teacherName || 'Current Faculty',
       pointsTotal: updatedExam.pointsTotal,
       questions: updatedExam.questions || db.exams[studentExamIndex].questions || [],
@@ -649,6 +678,18 @@ app.post('/api/faculty/exams/drafts/:draftId/publish', (req, res) => {
   const examData = req.body;
   const teacherName = examData.teacherName || draft.teacherName || 'Current Faculty';
 
+  // Map attemptsAllowed to settingsSummary.attemptsLeft if needed
+  const settingsSummary = examData.settingsSummary || { strictMode: false };
+  if (examData.attemptsAllowed !== undefined) {
+    settingsSummary.attemptsLeft = examData.attemptsAllowed;
+  }
+  if (examData.allowedReRecords !== undefined) {
+    settingsSummary.allowedReRecords = examData.allowedReRecords;
+  }
+  if (examData.strictMode !== undefined) {
+    settingsSummary.strictMode = examData.strictMode;
+  }
+
   const newExam = {
     id: `FAC-EX-${Date.now()}`,
     title: examData.title,
@@ -664,7 +705,7 @@ app.post('/api/faculty/exams/drafts/:draftId/publish', (req, res) => {
     pointsTotal: examData.pointsTotal,
     questions: examData.questions || [],
     teacherName,
-    settingsSummary: examData.settingsSummary || { strictMode: false }
+    settingsSummary: settingsSummary
   };
 
   db.facultyExams.push(newExam);
@@ -679,8 +720,8 @@ app.post('/api/faculty/exams/drafts/:draftId/publish', (req, res) => {
     durationMin: newExam.durationMin,
     timePerQuestionSec: newExam.timePerQuestionSec,
     status: newExam.status,
-    attemptsLeft: newExam.settingsSummary.attemptsLeft || 1,
-    allowedReRecords: newExam.settingsSummary.allowedReRecords || 0,
+    attemptsLeft: newExam.settingsSummary?.attemptsLeft !== undefined ? newExam.settingsSummary.attemptsLeft : (newExam.attemptsLeft !== undefined ? newExam.attemptsLeft : undefined),
+    allowedReRecords: newExam.settingsSummary?.allowedReRecords !== undefined ? newExam.settingsSummary.allowedReRecords : (newExam.allowedReRecords !== undefined ? newExam.allowedReRecords : undefined),
     teacherName,
     pointsTotal: newExam.pointsTotal,
     questions: newExam.questions || [],

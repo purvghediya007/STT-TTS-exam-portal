@@ -18,15 +18,8 @@ export default function HistoryView() {
   const fetchSubmissions = async () => {
     setIsLoading(true)
     try {
-      if (!user?.sub) {
-        return
-      }
+      if (!user?.sub || exams.length === 0) return
 
-      if (exams.length === 0) {
-        return
-      }
-
-      // Fetch all submissions in parallel instead of one at a time
       const fetchPromises = exams.map(exam =>
         fetchAPI(`/student/exams/${exam.id}/submissions?studentId=${user.sub}`)
           .then(response => response.json())
@@ -60,13 +53,11 @@ export default function HistoryView() {
     fetchSubmissions()
   }, [exams, user?.sub])
 
-  // Get all exams with submission data
   const completedExams = useMemo(() => {
-    const result = exams.map(exam => {
+    return exams.map(exam => {
       const submission = submissions[exam.id]
-      const processed = {
+      return {
         ...exam,
-        // Map submission data to expected fields
         result: submission ? {
           score: submission.totalScore,
           maxScore: submission.maxScore
@@ -79,43 +70,60 @@ export default function HistoryView() {
         endTime: submission?.finishedAt || exam.endTime,
         pointsTotal: exam.pointsTotal || submission?.maxScore
       }
-
-      if (submission) {
-        console.log(`📋 Exam: ${exam.title}`)
-        console.log(`   Submission status: ${submission.status}`)
-        console.log(`   Mapped score: ${processed.result.score}`)
-        console.log(`   Mapped maxScore: ${processed.result.maxScore}`)
-      }
-
-      return processed
     })
-    return result
   }, [exams, submissions])
 
   return (
-    <div className="space-y-6">
-      {/* Page Header with Refresh Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Exam History</h1>
-          <p className="text-gray-600">
-            View all your completed exams, scores, and performance history
-          </p>
+    <div className="min-h-screen bg-blue-50/30">
+      <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 pt-1 pb-4 space-y-4">
+        
+        {/* Clean Header Section - Light Blue Theme */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Exam <span className="text-blue-600">History</span>
+            </h1>
+            <p className="text-sm text-gray-600 font-medium">
+              Track your progress and review detailed performance metrics
+            </p>
+          </div>
+
+          <button
+            onClick={fetchSubmissions}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all active:scale-95 font-medium text-sm shadow-sm hover:shadow-md disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Updating...' : 'Refresh'}</span>
+          </button>
         </div>
 
-        {/* Refresh Button */}
-        <button
-          onClick={fetchSubmissions}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span className="text-sm font-medium">{isLoading ? 'Refreshing...' : 'Refresh'}</span>
-        </button>
-      </div>
+        {/* History Table Container - Clean Light Blue Theme */}
+        <div className="bg-white rounded-xl border-[0.5px] border-blue-200 shadow-sm overflow-hidden">
+          {/* Internal Table Header Labeling */}
+          <div className="px-4 py-3 bg-blue-50/50 border-b border-blue-100 flex items-center justify-between">
+            <h2 className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+              Assessment Logs
+            </h2>
+            <div className="flex items-center gap-2 text-xs font-medium text-blue-600">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </div>
 
-      {/* History Table */}
-      <HistoryTable exams={completedExams} />
+          {/* Table Area */}
+          <div className="overflow-x-auto">
+            <HistoryTable exams={completedExams} />
+          </div>
+        </div>
+
+        {/* Responsive Footer Info */}
+        <div className="flex justify-center sm:justify-start">
+          <p className="text-xs text-gray-500 font-medium">
+            * Only successfully submitted attempts are displayed in this view.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
