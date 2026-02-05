@@ -195,7 +195,8 @@ npm run server:node
 
 **Infrastructure:**
 
-- Docker, Docker Compose
+
+- Docker,Docker Compose
 
 ---
 
