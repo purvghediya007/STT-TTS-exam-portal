@@ -62,6 +62,7 @@ export default function HistoryView() {
           score: submission.totalScore,
           maxScore: submission.maxScore
         } : null,
+        attemptId: submission?.attemptId || null,
         pointsAwarded: submission?.totalScore,
         totalScore: submission?.maxScore,
         percentage: submission?.percentage,

@@ -9,6 +9,7 @@ import ForgotPasswordCard from "./components/ForgotPasswordCard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import StudentExams from "./pages/StudentExams";
 import FacultyExams from "./pages/FacultyExams";
+import StudentAnalytics from "./pages/StudentAnalytics";  
 import "./App.css";
 
 function App() {
@@ -65,6 +66,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+          path="/studentAnalysis"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentAnalytics studentId={"sampleStudentId"} />
+            </ProtectedRoute>
+          }
+        />
 
           {/* Faculty routes - all nested under /faculty */}
           <Route

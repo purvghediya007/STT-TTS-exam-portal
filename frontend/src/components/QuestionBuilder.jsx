@@ -10,10 +10,10 @@ export default function QuestionBuilder({ questions, onChange }) {
   const [editingIndex, setEditingIndex] = useState(null)
   const [uploadingMedia, setUploadingMedia] = useState(null) // Track which media type is uploading
   const [newQuestion, setNewQuestion] = useState({
-    type: 'mcq', // Default to MCQ for the merged component
+    type: 'viva', // default to Viva (MCQ removed from creator)
     text: '', // Changed from 'question' to match backend
-    options: ['', '', '', ''], // MCQ field
-    correctAnswer: null, // MCQ field (index of correct option)
+    options: ['', '', '', ''], // MCQ fields are kept in state for backward-compat but not exposed in UI
+    correctAnswer: null,
     marks: 1, // Changed from 'points' to match backend
     expectedAnswer: '', // For descriptive questions
     media: {
@@ -29,7 +29,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     topicName: '',
     difficulty: 'Easy',
     numQuestions: 1,
-    questionTypesToGenerate: ['mcq'],
+    questionTypesToGenerate: ['viva'],
     topicWeights: { mcq: 0, viva: 0, interview: 0 }
   })
   
@@ -73,7 +73,7 @@ export default function QuestionBuilder({ questions, onChange }) {
 
   // Helper function to reset the state to the default new question state
   const resetNewQuestionState = () => ({
-    type: 'mcq',
+    type: 'viva',
     text: '',
     options: ['', '', '', ''],
     correctAnswer: null,
@@ -86,7 +86,8 @@ export default function QuestionBuilder({ questions, onChange }) {
     topicName: '',
     difficulty: 'Easy',
     numQuestions: 1,
-    questionTypesToGenerate: ['mcq'],
+    // no implicit selection for topic-based generation — user must choose one
+    questionTypesToGenerate: [],
     topicWeights: { mcq: 0, viva: 0, interview: 0 }
   })
 
@@ -107,35 +108,22 @@ export default function QuestionBuilder({ questions, onChange }) {
       topicName: newType === 'topic_based' ? prev.topicName : '',
       difficulty: newType === 'topic_based' ? prev.difficulty : 'Easy',
       numQuestions: newType === 'topic_based' ? prev.numQuestions : 1,
-      questionTypesToGenerate: newType === 'topic_based' ? prev.questionTypesToGenerate : ['mcq'],
+      // when switching to topic_based require the user to explicitly pick the format
+      questionTypesToGenerate: newType === 'topic_based' ? [] : ['viva'],
       topicWeights: newType === 'topic_based' ? prev.topicWeights : { mcq: 0, viva: 0, interview: 0 }
     }))
   }
 
-  // Toggle which question types will be generated for topic_based and adjust weights
+  // Select exactly one question type for topic-based generation (enforce radio-like behavior)
   const handleToggleQuestionType = (type) => {
     setNewQuestion(prev => {
-      const prevTypes = Array.isArray(prev.questionTypesToGenerate) ? prev.questionTypesToGenerate : []
-      const selected = prevTypes.includes(type)
-      const newTypes = selected ? prevTypes.filter(t => t !== type) : [...prevTypes, type]
+      // enforce a single-selection array (either [] or [type])
+      const newTypes = Array.isArray(prev.questionTypesToGenerate) && prev.questionTypesToGenerate[0] === type
+        ? [] // allow deselect
+        : [type]
 
-      // compute new weights
-      let newWeights = { ...(prev.topicWeights || { mcq: 0, viva: 0, interview: 0 }) }
-
-      if (newTypes.length === 0) {
-        newWeights = { mcq: 0, viva: 0, interview: 0 }
-      } else if (newTypes.length === 1) {
-        // single selection gets 100%
-        newWeights = { mcq: 0, viva: 0, interview: 0 }
-        newWeights[newTypes[0]] = 100
-      } else {
-        // multiple selection: per requested behavior, start selected types at 0%
-        // and keep unselected types at 0% (user will distribute manually)
-        newWeights = { mcq: 0, viva: 0, interview: 0 }
-        newTypes.forEach(t => {
-          newWeights[t] = 0
-        })
-      }
+      const newWeights = { mcq: 0, viva: 0, interview: 0 }
+      if (newTypes.length === 1) newWeights[newTypes[0]] = 100
 
       return { ...prev, questionTypesToGenerate: newTypes, topicWeights: newWeights }
     })
@@ -190,7 +178,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         topicName: newQuestion.topicName || '',
         difficulty: newQuestion.difficulty || 'Easy',
         numQuestions: newQuestion.numQuestions || 1,
-        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['mcq'],
+        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['viva'],
         topicWeights: newQuestion.topicWeights || { mcq: 0, viva: 0, interview: 0 }
       })
     }
@@ -248,7 +236,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         topicName: newQuestion.topicName || '',
         difficulty: newQuestion.difficulty || 'Easy',
         numQuestions: newQuestion.numQuestions || 1,
-        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['mcq'],
+        questionTypesToGenerate: newQuestion.questionTypesToGenerate || ['viva'],
         topicWeights: newQuestion.topicWeights || { mcq: 0, viva: 0, interview: 0 }
       })
     }
@@ -281,7 +269,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     }
 
     setNewQuestion({
-      type: question.type || 'mcq',
+      type: question.type || 'viva',
       text: question.text,
       options: options,
       correctAnswer: correctAnswer,
@@ -294,7 +282,7 @@ export default function QuestionBuilder({ questions, onChange }) {
       topicName: question.topicName || '',
       difficulty: question.difficulty || 'Easy',
       numQuestions: question.numQuestions || 1,
-      questionTypesToGenerate: question.questionTypesToGenerate || (question.questionTypeToGenerate ? [question.questionTypeToGenerate] : ['mcq']),
+      questionTypesToGenerate: question.questionTypesToGenerate || (question.questionTypeToGenerate ? [question.questionTypeToGenerate] : ['viva']),
       topicWeights: question.topicWeights || { mcq: 0, viva: 0, interview: 0 }
     })
   }
@@ -396,17 +384,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">Question Type</label>
           <div className="flex items-center gap-3 flex-wrap">
-            <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'mcq' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
-              <input
-                type="radio"
-                name="questionType"
-                value="mcq"
-                checked={newQuestion.type === 'mcq'}
-                onChange={() => handleTypeChange('mcq')}
-                className="mr-2"
-              />
-              MCQ
-            </label>
+
             <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'viva' ? 'bg-pink-100 border-pink-300 text-pink-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
               <input
                 type="radio"
@@ -453,7 +431,7 @@ export default function QuestionBuilder({ questions, onChange }) {
             </label>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            {newQuestion.type === 'mcq' && 'Students select one correct option from a list.'}
+
             {newQuestion.type === 'viva' && 'Student records a spoken/video answer.'}
             {newQuestion.type === 'interview' && 'Interview-style prompt; student records their response.'}
             {newQuestion.type === 'file_upload' && 'Faculty can upload question banks. AI processing will be handled later.'}
@@ -643,16 +621,15 @@ export default function QuestionBuilder({ questions, onChange }) {
                 <label className="block text-xs text-gray-600 mb-2">Question Type to Generate</label>
                 <div className="flex items-center gap-2">
                   {[
-                    {value: 'mcq', label: 'MCQ'},
                     {value: 'viva', label: 'Viva'},
                     {value: 'interview', label: 'Interview'}
                   ].map(opt => {
-                    const selected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate.includes(opt.value)
+                    const selected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate[0] === opt.value
                     return (
                       <label key={opt.value} className={`px-3 py-1 rounded-lg border cursor-pointer text-sm ${selected ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
                         <input
-                          type="checkbox"
-                          name="questionTypesToGenerate"
+                          type="radio"
+                          name="topicGenType"
                           value={opt.value}
                           checked={selected}
                           onChange={() => handleToggleQuestionType(opt.value)}
@@ -663,44 +640,12 @@ export default function QuestionBuilder({ questions, onChange }) {
                     )
                   })}
                 </div>
-                <p className="text-xs text-gray-400 mt-1">Choose the format for generated questions</p>
+                <p className="text-xs text-gray-400 mt-1">Choose exactly one format for generated questions (required)</p>
+                {Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate.length === 0 && (
+                  <p className="text-xs text-red-600 mt-2">Please select either <strong>Viva</strong> or <strong>Interview</strong> to generate questions.</p>
+                )}
               </div>
-              {/* Weight distribution for selected types */}
-              <div className="sm:col-span-3 mt-3">
-                <label className="block text-xs text-gray-600 mb-2">Weight Distribution (%)</label>
-                <div className="w-full bg-gray-100 rounded-md h-4 overflow-hidden flex">
-                  <div style={{ width: `${newQuestion.topicWeights.mcq}%` }} className="bg-green-400 h-4" />
-                  <div style={{ width: `${newQuestion.topicWeights.viva}%` }} className="bg-pink-400 h-4" />
-                  <div style={{ width: `${newQuestion.topicWeights.interview}%` }} className="bg-indigo-400 h-4" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                  {['mcq','viva','interview'].map((t) => {
-                    const isSelected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate.includes(t)
-                    const othersSum = Object.keys(newQuestion.topicWeights || {}).reduce((s,k)=> k===t? s : s + (newQuestion.topicWeights[k]||0), 0)
-                    const max = isSelected ? Math.max(0, 100 - othersSum) : 0
-                    return (
-                      <div key={t} className="flex flex-col">
-                        <label className="text-xs text-gray-600 mb-1">{t.toUpperCase()}</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max={max}
-                          value={isSelected ? (newQuestion.topicWeights[t] || 0) : 0}
-                          onChange={(e) => {
-                            if (!isSelected) return
-                            const val = Math.max(0, Math.min(parseInt(e.target.value)||0, 100))
-                            setNewQuestion(prev => ({ ...prev, topicWeights: { ...prev.topicWeights, [t]: val } }))
-                          }}
-                          className={`w-full ${!isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          disabled={!isSelected}
-                        />
-                        <div className="text-xs text-gray-600 mt-1">{isSelected ? (newQuestion.topicWeights[t] || 0) : 0}%</div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <p className="text-xs text-gray-400 mt-2">Total: {(newQuestion.topicWeights.mcq||0)+(newQuestion.topicWeights.viva||0)+(newQuestion.topicWeights.interview||0)}% — remaining {100 - ((newQuestion.topicWeights.mcq||0)+(newQuestion.topicWeights.viva||0)+(newQuestion.topicWeights.interview||0))}%</p>
-              </div>
+
             </div>
 
             <p className="mt-2 text-xs text-gray-500">Questions will be generated automatically by AI during exam creation.</p>
@@ -947,7 +892,8 @@ export default function QuestionBuilder({ questions, onChange }) {
             onClick={editingIndex !== null
               ? () => handleUpdateQuestion(editingIndex)
               : handleAddQuestion}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1))}
+            className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1))) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
             <Plus className="w-4 h-4" />
             {editingIndex !== null ? 'Update Question' : 'Add Question'}

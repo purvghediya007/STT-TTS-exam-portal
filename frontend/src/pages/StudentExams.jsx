@@ -8,6 +8,7 @@ import HistoryView from './HistoryView'
 import GuidelinesView from './GuidelinesView'
 import TakeExamView from './TakeExamView'
 import ExamResultsView from './ExamResultsView'
+import ExamAnalysisView from './ExamAnalysisView'
 import ExamDetailsView from './ExamDetailsView'
 
 /**
@@ -25,6 +26,7 @@ export default function StudentExams() {
         <Route path="exams/:examId/details" element={<ExamDetailsView />} />
         <Route path="exams/:examId/take" element={<TakeExamView />} />
         <Route path="exams/:examId/results" element={<ExamResultsView />} />
+        <Route path="exams/:examId/analysis" element={<ExamAnalysisView />} />
         <Route path="" element={<Navigate to="dashboard" replace />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>

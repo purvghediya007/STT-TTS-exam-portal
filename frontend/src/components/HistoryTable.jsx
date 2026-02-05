@@ -329,12 +329,15 @@ export default function HistoryTable({ exams = [] }) {
                     <button
                       onClick={() => {
                         if (score != null) {
-                          navigate(`/student/exams/${ex.id}/results`, {
+                          // Navigate to per-exam analysis page. pass attemptId and exam in state
+                          navigate(`/student/exams/${ex.id}/analysis`, {
                             state: {
-                              score: score,
-                              maxScore: maxScore,
-                              percentage: percentage
-                            }
+                              attemptId: ex.attemptId || null,
+                              exam: ex,
+                              score,
+                              maxScore,
+                              percentage,
+                            },
                           })
                         } else {
                           alert('Results are not available yet. Please wait for faculty to grade your submission.')
