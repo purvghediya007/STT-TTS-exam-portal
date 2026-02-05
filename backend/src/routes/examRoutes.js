@@ -8,6 +8,7 @@ const uploadJson = require("../middleware/uploadJson");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
 const aiQueue = require("../queues/aiQueue");
+const { generateQuestionsWithAI } = require("../services/questionGenerationService");
 const router = express.Router();
 
 // Helper to parse optional ISO date strings safely
@@ -813,6 +814,124 @@ router.get(
         attempts: resultAttempts,
       });
     } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/exams/questions_generate/generate
+ * Generate exam questions using AI Model API
+ * Requires authentication and teacher role
+ * 
+ * Sample Request:
+ * {
+ *   "topics": ["Algorithm", "Networking"],
+ *   "num_questions": 5,
+ *   "difficulty": "hard"
+ * }
+ * 
+ * Sample Response:
+ * {
+ *   "topics": {
+ *     "Algorithm": {
+ *       "question 1": "...",
+ *       "question 2": "..."
+ *     },
+ *     "Networking": {
+ *       "question 1": "...",
+ *       "question 2": "..."
+ *     }
+ *   }
+ * }
+ */
+router.post(
+  "/questions_generate/generate",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      console.log("\n========== QUESTION GENERATION ENDPOINT CALLED ==========");
+      console.log(`📥 Raw Request Body:`, req.body);
+      console.log(`🔐 Teacher ID: ${req.user.sub}`);
+      
+      const { topics, num_questions, difficulty } = req.body;
+      console.log(`✔️ Destructured - Topics:`, topics);
+      console.log(`✔️ Destructured - Num Questions:`, num_questions);
+      console.log(`✔️ Destructured - Difficulty:`, difficulty);
+
+      // Validate request data
+      if (!topics || !Array.isArray(topics) || topics.length === 0) {
+        console.warn("⚠️ Validation failed: topics must be a non-empty array");
+        return res.status(400).json({
+          message: "Invalid request: 'topics' must be a non-empty array",
+        });
+      }
+
+      if (!num_questions || typeof num_questions !== "number" || num_questions < 1) {
+        console.warn("⚠️ Validation failed: num_questions must be a positive number");
+        return res.status(400).json({
+          message: "Invalid request: 'num_questions' must be a positive number",
+        });
+      }
+
+      if (!difficulty || typeof difficulty !== "string") {
+        console.warn("⚠️ Validation failed: difficulty must be a string");
+        return res.status(400).json({
+          message: "Invalid request: 'difficulty' must be a string",
+        });
+      }
+
+      console.log("\n✅ All validations passed");
+      console.log(`🎓 Question Generation Request from Teacher: ${req.user.sub}`);
+      console.log(`📝 Topics: ${topics.join(", ")}`);
+      console.log(`📊 Number of Questions: ${num_questions}`);
+      console.log(`🎯 Difficulty: ${difficulty}`);
+
+      // Prepare request payload
+      const requestPayload = {
+        topics,
+        num_questions,
+        difficulty,
+      };
+      console.log("\n📤 Calling AI Model API with payload:", JSON.stringify(requestPayload, null, 2));
+
+      // Call AI Model API with the request data
+      const startTime = Date.now();
+      const result = await generateQuestionsWithAI(requestPayload);
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      console.log(`⏱️ AI Model API call took: ${duration}ms`);
+      console.log(`📊 Result object:`, { success: result.success, hasError: !!result.error, statusCode: result.statusCode });
+
+      // Handle AI Model API errors
+      if (!result.success) {
+        console.error("❌ AI Model API Error Details:");
+        console.error(`   - Error Message: ${result.error}`);
+        console.error(`   - Status Code: ${result.statusCode || 500}`);
+        return res.status(result.statusCode || 500).json({
+          message: "Failed to generate questions",
+          error: result.error,
+        });
+      }
+
+      console.log("✅ Questions generated successfully");
+      console.log(`📝 Response data structure:`, {
+        type: typeof result.data,
+        keys: result.data ? Object.keys(result.data) : null,
+        topicCount: result.data?.topics ? Object.keys(result.data.topics).length : null,
+      });
+      console.log(`📄 Full response preview:`, JSON.stringify(result.data, null, 2).substring(0, 500));
+
+      // Return the AI model response directly to the frontend
+      console.log("✔️ Sending response to frontend");
+      return res.status(200).json(result.data);
+    } catch (error) {
+      console.error("\n EXCEPTION in question generation endpoint:");
+      console.error(`   - Error Message: ${error.message}`);
+      console.error(`   - Error Stack:`, error.stack);
+      console.error(`   - Full Error:`, error);
       next(error);
     }
   }

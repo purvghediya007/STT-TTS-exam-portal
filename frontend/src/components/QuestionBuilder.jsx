@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, Image, Video, FileText, X, Check, Upload } from 'lucide-react'
-import { uploadMedia, deleteMedia } from '../services/api'
+import { uploadMedia, deleteMedia, generateQuestions } from '../services/api'
 
 /**
  * QuestionBuilder - Component for building MCQ, Viva, and Interview questions
@@ -9,6 +9,7 @@ import { uploadMedia, deleteMedia } from '../services/api'
 export default function QuestionBuilder({ questions, onChange }) {
   const [editingIndex, setEditingIndex] = useState(null)
   const [uploadingMedia, setUploadingMedia] = useState(null) // Track which media type is uploading
+  const [generating, setGenerating] = useState(false)
   const [newQuestion, setNewQuestion] = useState({
     type: 'viva', // default to Viva (MCQ removed from creator)
     text: '', // Changed from 'question' to match backend
@@ -129,7 +130,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     })
   }
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async () => {
     // For file_upload and topic_based modes question text is optional
     if (newQuestion.type !== 'file_upload' && newQuestion.type !== 'topic_based' && !newQuestion.text.trim()) {
       alert('Please enter a question')
@@ -153,6 +154,60 @@ export default function QuestionBuilder({ questions, onChange }) {
       }
     }
 
+    // Topic-based generation: call backend and append returned questions
+    if (newQuestion.type === 'topic_based') {
+      if (!newQuestion.topicName || !newQuestion.questionTypesToGenerate || newQuestion.questionTypesToGenerate.length !== 1) {
+        alert('Please provide a topic name and select a question type for generation')
+        return
+      }
+
+      try {
+        setGenerating(true)
+
+        const payload = {
+          topics: [newQuestion.topicName],
+          num_questions: newQuestion.numQuestions || 1,
+          difficulty: (newQuestion.difficulty || 'Easy').toLowerCase()
+        }
+
+        const data = await generateQuestions(payload)
+        const generated = []
+
+        if (data && data.topics) {
+          Object.keys(data.topics).forEach(topicKey => {
+            const qsObj = data.topics[topicKey]
+            // qsObj is expected to be an object with question labels => question text
+            Object.keys(qsObj).forEach((k, i) => {
+              const qText = qsObj[k]
+              generated.push({
+                id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                text: String(qText || '').trim(),
+                marks: newQuestion.marks || 1,
+                expectedAnswer: '',
+                media: { ...newQuestion.media }
+              })
+            })
+          })
+        }
+
+        const updatedQuestions = [...questions, ...generated]
+        onChange(updatedQuestions)
+
+        // Reset form
+        setNewQuestion(resetNewQuestionState())
+        setEditingIndex(null)
+      } catch (error) {
+        console.error('Error generating questions:', error)
+        alert('Failed to generate questions. Please try again.')
+      } finally {
+        setGenerating(false)
+      }
+
+      return
+    }
+
+    // Non-topic based question creation (existing behavior)
     const question = {
       id: `Q${Date.now()}`,
       type: newQuestion.type,
@@ -892,11 +947,11 @@ export default function QuestionBuilder({ questions, onChange }) {
             onClick={editingIndex !== null
               ? () => handleUpdateQuestion(editingIndex)
               : handleAddQuestion}
-            disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1))}
-            className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1))) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating}
+            className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
             <Plus className="w-4 h-4" />
-            {editingIndex !== null ? 'Update Question' : 'Add Question'}
+            {editingIndex !== null ? 'Update Question' : (generating ? 'Generating...' : 'Add Question')}
           </button>
         </div>
       </div>

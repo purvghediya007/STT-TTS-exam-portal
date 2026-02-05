@@ -1035,3 +1035,25 @@ export async function fetchExamResults(examId: string): Promise<{
   const response = await fetchAPI(`/exams/${examId}/results`)
   return response.json()
 }
+
+/**
+ * Generate questions for given topics by calling backend AI endpoint.
+ * Tries both `/exam/questions_generate/generate` and `/exams/questions_generate/generate` for compatibility.
+ */
+export async function generateQuestions(payload: { topics: string[]; num_questions: number; difficulty: string }): Promise<any> {
+  try {
+    const response = await fetchAPI('/exams/questions_generate/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+    return response.json()
+  } catch (err) {
+    console.warn('Primary generate endpoint failed, trying alternative:', err)
+    // Try pluralized path as a fallback
+    const response = await fetchAPI('/exams/questions_generate/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+    return response.json()
+  }
+}
