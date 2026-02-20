@@ -440,6 +440,18 @@ export default function QuestionBuilder({ questions, onChange }) {
           <label className="block text-sm font-semibold text-gray-700 mb-2">Question Type</label>
           <div className="flex items-center gap-3 flex-wrap">
 
+            <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'mcq' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
+              <input
+                type="radio"
+                name="questionType"
+                value="mcq"
+                checked={newQuestion.type === 'mcq'}
+                onChange={() => handleTypeChange('mcq')}
+                className="mr-2"
+              />
+              MCQ
+            </label>
+            
             <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'viva' ? 'bg-pink-100 border-pink-300 text-pink-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
               <input
                 type="radio"
@@ -486,7 +498,7 @@ export default function QuestionBuilder({ questions, onChange }) {
             </label>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-
+            {newQuestion.type === 'mcq' && 'Multiple choice question — provide options and mark the correct one.'}
             {newQuestion.type === 'viva' && 'Student records a spoken/video answer.'}
             {newQuestion.type === 'interview' && 'Interview-style prompt; student records their response.'}
             {newQuestion.type === 'file_upload' && 'Faculty can upload question banks. AI processing will be handled later.'}
