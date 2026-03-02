@@ -91,7 +91,7 @@ POST /stt/transcribe
 - **Query Parameters:**
   - `lang` - Language code (default: `en`)
   - `model` - Model name (default: `whisper`)
-- **Response:** 
+- **Response:**
   ```json
   {
     "text": "Transcribed text",
@@ -144,12 +144,10 @@ POST /evaluate/answer
     "question_id": "q134",
     "score": 15,
     "strengths": [
-        "The student answered the question very well",
-        "The answer was according to the rubrics of the questions"
+      "The student answered the question very well",
+      "The answer was according to the rubrics of the questions"
     ],
-    "weakness": [
-        "Answer can be more detailed",       
-    ],
+    "weakness": ["Answer can be more detailed"],
     "justification": "Correct answer!",
     "suggested_improvement": "Try to add more depth to the answer"
   }
@@ -198,6 +196,7 @@ HF_TOKEN=your_token  # Optional
 ## 📚 Dependencies
 
 ### Core Stack
+
 - **Web Framework:** FastAPI, Uvicorn, Pydantic
 - **AI/ML:** Whisper, Transformers, LangChain
 - **Audio Processing:** Librosa, SoundFile, pydub, noisereduce
@@ -245,12 +244,12 @@ async def new_endpoint(payload: RequestModel):
 
 ## 🔧 Troubleshooting
 
-|--------------- Issue --------------|-----------------Solution--------------------|
-|------------------------------------|---------------------------------------------|
-| 📥 Model download errors          | Set `HF_TOKEN` for authenticated access      |
-| 🎵 Audio format not supported     | Convert to WAV/MP3; check MIME types         |
-| 💾 Out of memory                  | Use smaller models or increase RAM           |
-| ⚠️ Port 8000 in use               | Use different port: `docker run -p 9000:8000`|
+| --------------- Issue -------------- | -----------------Solution-------------------- |
+| ------------------------------------ | --------------------------------------------- |
+| 📥 Model download errors             | Set `HF_TOKEN` for authenticated access       |
+| 🎵 Audio format not supported        | Convert to WAV/MP3; check MIME types          |
+| 💾 Out of memory                     | Use smaller models or increase RAM            |
+| ⚠️ Port 8000 in use                  | Use different port: `docker run -p 9000:8000` |
 
 ---
 
@@ -272,4 +271,4 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-**Last Updated:** December 2025
+**Last Updated:** March 2, 2026

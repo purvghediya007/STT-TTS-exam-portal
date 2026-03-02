@@ -22,7 +22,6 @@ ExamEcho is an **intelligent examination platform** that enables **voice-based e
 STT-TTS-exam-portal/
 │
 ├── README.md                           # This file
-├── requirements.txt                    # Python dependencies (root level)
 │
 ├── backend/                            # Node.js Express backend
 │   ├── server.js                       # Express server entry point
@@ -47,26 +46,43 @@ STT-TTS-exam-portal/
 │       ├── README.md                   # FastAPI setup guide
 │       ├── app/
 │       │   ├── main.py                 # FastAPI app entry
-│       │   ├── routers/                # API endpoints
+│       │   ├── config.py               # FastAPI configuration
+│       │   ├── routers/                # API endpoints (health, stt, tts, evaluation, questions, analytics, upload)
+│       │   ├── schemas/                # Pydantic models
 │       │   ├── services/               # Core AI services
-│       │   └── schemas/                # Pydantic models
-│       └── ai_ml/                      # Machine learning modules
+│       │   └── workers/                # Background workers
+│       ├── ai_ml/                      # Machine learning modules
+│   │   │   ├── AIExceptions.py
+│   │   │   ├── AudioPreprocessor.py
+│   │   │   ├── Evaluation.py
+│   │   │   ├── MCQEvaluation.py
+│   │   │   ├── ModelCreator.py
+│   │   │   ├── QuestionsGenerator.py
+│   │   │   ├── Rubrics.py
+│   │   │   ├── Speech2Text.py
+│   │   │   └── Text2Speech.py
 │
 ├── frontend/                           # React + Vite frontend
 │   ├── package.json                    # React dependencies
 │   ├── README.md                       # Frontend setup guide
 │   ├── vite.config.js                  # Vite configuration
+│   ├── tailwind.config.js              # Tailwind CSS configuration
+│   ├── postcss.config.js               # PostCSS configuration
+│   ├── eslint.config.js                # ESLint configuration
 │   ├── index.html                      # Entry HTML
 │   ├── public/                         # Static assets
+│   ├── server/                         # Mock server for development
 │   └── src/
-│       ├── components/                 # Reusable UI components
-│       ├── pages/                      # Page components
+│       ├── api/                        # API client configuration
+│       ├── assets/                     # Static assets (images, icons)
+│       ├── components/                 # Reusable UI components (25+ components)
+│       ├── contexts/                   # React context (AuthContext)
+│       ├── hooks/                      # Custom React hooks (5+ hooks)
+│       ├── pages/                      # Page components (22+ pages)
 │       ├── services/                   # API client services
-│       ├── contexts/                   # React context
-│       ├── hooks/                      # Custom React hooks
+│       ├── test/                       # Test files
 │       └── utils/                      # Utility functions
 │
-└── docs/                               # Documentation files
 ```
 
 ---
@@ -151,7 +167,6 @@ npm run server:node
 - **[Backend Setup](./backend/README.md)** – Express API, authentication, database
 - **[Frontend Setup](./frontend/README.md)** – React UI, components, styling
 - **[FastAPI Setup](./backend/fastapi_backend/README.md)** – AI services, models
-- **[Audio Files Guide](./AUDIO_FILES_QUICK_GUIDE.md)** – Audio handling & storage
 
 ---
 
@@ -195,8 +210,7 @@ npm run server:node
 
 **Infrastructure:**
 
-
-- Docker,Docker Compose
+- Docker, Docker Compose
 
 ---
 
@@ -224,4 +238,4 @@ MIT License - see LICENSE file for details
 
 ---
 
-last update 5 february 2026
+**Last Updated:** March 2, 2026

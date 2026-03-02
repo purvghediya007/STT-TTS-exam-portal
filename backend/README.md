@@ -70,6 +70,7 @@ backend/
 │   │   ├── StudentExamAttempt.js
 │   │   └── StudentAnswer.js
 │   ├── routes/
+│   │   ├── analyticsRoutes.js
 │   │   ├── authRoutes.js
 │   │   ├── examRoutes.js
 │   │   ├── facultyRoutes.js
@@ -82,16 +83,17 @@ backend/
 │   │   └── uploadJson.js
 │   ├── services/
 │   │   ├── cloudinaryService.js
+│   │   ├── evaluationService.js
 │   │   ├── localStorageService.js
-│   │   └── evaluationService.js
+│   │   ├── performanceAnalyticsService.js
+│   │   └── questionGenerationService.js
 │   ├── workers/
-│   │   ├── aiWorker.js
-│   │   ├── transcriptionWorker.js
-│   │   └── aiEvaluationWorker.js
+│   │   ├── aiEvaluationWorker.js
+│   │   └── transcriptionWorker.js
 │   ├── queues/
 │   │   ├── aiQueue.js
-│   │   ├── answersTranscriptionQueue.js
-│   │   └── answersEvaluationQueue.js
+│   │   ├── answersEvaluationQueue.js
+│   │   └── answersTranscriptionQueue.js
 │   └── utils/
 │
 ├── fastapi_backend/
@@ -135,36 +137,50 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-# ==================== SERVER ====================
+# Server
 PORT=5000
+
+# MongoDB connection
+MONGO_URI=your-mongo-uri-here
+
+# JWT secret
+JWT_SECRET=your-jwt-secret-here
+JWT_EXPIRES_IN=1h
+JWT_RESET_SECRET=your-jwt-reset-secret-here
+
+# Captcha
+CAPTCHA_EXPIRES_MS=300000
+
+# Gemini API
+GEMINI_API_KEY=your-gemini-api-key-here
+AI_PROVIDER=gemini
+AI_MODEL=gemini-2.5-flash
+
+# Optional
 NODE_ENV=development
 
-# ==================== DATABASE ====================
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/examecho?retryWrites=true&w=majority
+# Email
+MAIL_USER=your-mail-user-here
+MAIL_PASS=your-mail-pass-here
+FRONTEND_URL=http://localhost:5173
 
-# ==================== REDIS & JOB QUEUE ====================
-REDIS_URL=redis://localhost:6379
+# FastAPI
+APP_ENV=development
+APP_HOST=0.0.0.0
+APP_PORT=8000
 
-# ==================== AUTHENTICATION ====================
-JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long
-JWT_EXPIRE=7d
+# Hugging Face (optional)
+HF_TOKEN=your_huggingface_token_here
 
-# ==================== AI SERVICES ====================
-GEMINI_API_KEY=your-google-gemini-api-key
-OPENAI_API_KEY=your-openai-api-key
+# Database (optional - for PostgreSQL if used)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=stt_tts_db
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
 
-# ==================== STORAGE ====================
-CLOUDINARY_NAME=your-cloudinary-name
-CLOUDINARY_API_KEY=your-cloudinary-api-key
-CLOUDINARY_API_SECRET=your-cloudinary-secret
-LOCAL_STORAGE_PATH=./uploads
-
-# ==================== FastAPI MICROSERVICE ====================
-FASTAPI_URL=http://localhost:8000
-FASTAPI_TIMEOUT=300000
-
-# ==================== CORS ====================
-CORS_ORIGIN=http://localhost:5173,http://localhost:3000
+# Other
+DEBUG=true
 ```
 
 ---
@@ -212,6 +228,7 @@ GET    /api/exams/:id
 PUT    /api/exams/:id
 DELETE /api/exams/:id
 POST   /api/exams/:id/bulk-upload
+POST   /api/exams/:id/questions
 GET    /api/exams/:id/results
 ```
 
@@ -231,6 +248,7 @@ POST   /api/exam-attempts/:attemptId/submit
 GET    /api/faculty/dashboard
 GET    /api/faculty/students
 GET    /api/faculty/submissions
+GET    /api/faculty/exams
 ```
 
 ---
@@ -323,18 +341,26 @@ git push heroku main
 
 ## 📝 Dependencies
 
-| Package                 | Purpose            |
-| ----------------------- | ------------------ |
-| `express`               | Web framework      |
-| `mongoose`              | MongoDB ODM        |
-| `jsonwebtoken`          | JWT auth           |
-| `bcrypt`                | Password hashing   |
-| `bullmq`                | Job queue          |
-| `ioredis`               | Redis client       |
-| `@google/generative-ai` | Gemini API         |
-| `cloudinary`            | Cloud storage      |
-| `multer`                | File upload        |
-| `dotenv`                | Environment config |
+| Package                     | Purpose            |
+| --------------------------- | ------------------ |
+| `express`                   | Web framework      |
+| `mongoose`                  | MongoDB ODM        |
+| `jsonwebtoken`              | JWT auth           |
+| `bcrypt`                    | Password hashing   |
+| `bullmq`                    | Job queue          |
+| `ioredis`                   | Redis client       |
+| `@google/generative-ai`     | Gemini API         |
+| `cloudinary`                | Cloud storage      |
+| `multer`                    | File upload        |
+| `multer-storage-cloudinary` | Cloudinary storage |
+| `nodemailer`                | Email service      |
+| `openai`                    | OpenAI API         |
+| `svg-captcha`               | CAPTCHA generation |
+| `uuid`                      | UUID generation    |
+| `dotenv`                    | Environment config |
+| `axios`                     | HTTP client        |
+| `form-data`                 | Form data handling |
+| `cors`                      | CORS middleware    |
 
 ---
 
@@ -366,4 +392,4 @@ git push heroku main
 
 ---
 
-**Last Updated**: December 24, 2025
+**Last Updated**: March 2, 2026
