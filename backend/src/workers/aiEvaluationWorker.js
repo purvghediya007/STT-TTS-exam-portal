@@ -27,6 +27,10 @@ new Worker(
     try {
       const { examId, studentId, attemptId } = job.data;
 
+      // ✅ Add a small delay to ensure all answers are saved from form submission
+      console.log(`⏳ Waiting 2 seconds to ensure all answers are saved...`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // ✅ Step 1: Fetch the StudentExamAttempt
       console.log(`📂 Fetching attempt ${attemptId}...`);
       const attempt = await StudentExamAttempt.findById(attemptId);
@@ -81,7 +85,7 @@ new Worker(
         try {
           // Find the question for this answer
           const question = questions.find(
-            (q) => q._id.toString() === answer.questionId.toString()
+            (q) => q._id.toString() === answer.questionId.toString(),
           );
 
           if (!question) {
@@ -96,14 +100,25 @@ new Worker(
           // Skip MCQ answers - they're auto-evaluated
           if (question.type === "mcq") {
             console.log(`   📌 MCQ question - auto-evaluating`);
+            console.log(`   Question: ${question.text}`);
+            console.log(
+              `   Student's selectedOptionIndex: ${answer.selectedOptionIndex} (type: ${typeof answer.selectedOptionIndex})`,
+            );
 
             // Find the correct option index from options array
             const correctOptionIndex = question.options.findIndex(
-              (opt) => opt.isCorrect === true
+              (opt) => opt.isCorrect === true,
+            );
+
+            console.log(`   Correct option index: ${correctOptionIndex}`);
+            console.log(
+              `   Answer object keys: ${Object.keys(answer).join(", ")}`,
             );
 
             // Auto-evaluate MCQ
             const isCorrect = answer.selectedOptionIndex === correctOptionIndex;
+            console.log(`   Is Correct: ${isCorrect}`);
+
             answer.score = isCorrect ? question.marks : 0;
             answer.maxMarks = question.marks;
             answer.evaluationFeedback = isCorrect
@@ -118,7 +133,7 @@ new Worker(
             totalScore += answer.score;
             successCount++;
 
-            console.log(`   Score: ${answer.score}/${question.marks}`);
+            console.log(`   ✅ Score: ${answer.score}/${question.marks}`);
             continue;
           }
 
@@ -157,13 +172,13 @@ new Worker(
           successCount++;
 
           console.log(
-            `   ✅ Evaluated. Score: ${answer.score}/${question.marks}`
+            `   ✅ Evaluated. Score: ${answer.score}/${question.marks}`,
           );
           console.log(`   Feedback: ${evaluation.feedback}`);
         } catch (answerError) {
           console.error(
             `❌ Error evaluating question ${answer.questionId}:`,
-            answerError.message
+            answerError.message,
           );
 
           // Mark as failed but continue processing other answers
@@ -185,12 +200,12 @@ new Worker(
       console.log(`   ID: ${savedAttempt._id}`);
       console.log(`   Status: ${savedAttempt.status}`);
       console.log(
-        `   Total Score: ${savedAttempt.totalScore}/${savedAttempt.maxScore}`
+        `   Total Score: ${savedAttempt.totalScore}/${savedAttempt.maxScore}`,
       );
       console.log(
         `   Percentage: ${Math.round(
-          (savedAttempt.totalScore / savedAttempt.maxScore) * 100
-        )}%`
+          (savedAttempt.totalScore / savedAttempt.maxScore) * 100,
+        )}%`,
       );
       console.log(`   Success: ${successCount}/${answers.length} answers`);
 
@@ -212,7 +227,7 @@ new Worker(
       return { status: "failed", error: error.message };
     }
   },
-  { connection }
+  { connection },
 );
 
 console.log("✅ Evaluation worker listening for jobs...");

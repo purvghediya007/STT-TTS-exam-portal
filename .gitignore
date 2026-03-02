@@ -1,70 +1,121 @@
-# =========================
-# Python environment
-# =========================
-venv/
-__pycache__/
-*.pyc
-backend/fastapi_backend/.env
+# Root .gitignore for STT-TTS-exam-portal
+# Covers: Node.js Backend, Python FastAPI, React Frontend
 
-# =========================
-# HuggingFace / Transformers models
-# =========================
-.cache/
-huggingface/
+# ============================================
+# GENERAL
+# ============================================
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
 
-# =========================
-# Whisper model cache
-# =========================
-.whisper/
-
-# =========================
-# Audio files
-# =========================
-*.wav
-*.mp3
-*.ogg
-*.webm
-
-# =========================
-# FastAPI temp uploads
-# =========================
-tmp/
-*.tmp
-
-# =========================
-# Node / Backend
-# =========================
-backend/node_modules/
-backend/.env
-backend/uploads/
-
-# =========================
-# Backend backup
-# =========================
-backend_old/
-
-# =========================
-# Logs
-# =========================
-*.log
-backend/logs/
-
-# =========================
-# VS Code
-# =========================
+# IDE
 .vscode/
-# Backend ignored files
-backend/node_modules/
-backend/.env
-
-# Backend backup (do not commit)
-backend_old/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
 # Logs
+logs/
 *.log
-backend/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Frontend node modules
-frontend/node_modules/
-
+# ============================================
+# NODE.JS (Backend & Frontend)
+# ============================================
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tgz
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.npm
+.yarn-integrity
+
+# Testing
+coverage/
+.nyc_output/
+
+# ============================================
+# PYTHON (FastAPI)
+# ============================================
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# ============================================
+# PROJECT SPECIFIC
+# ============================================
+# Uploads (user generated content)
+backend/uploads/
+!backend/uploads/.gitkeep
+
+# Generated audio files
+backend/fastapi_backend/generated_audio/
+!backend/fastapi_backend/generated_audio/.gitkeep
+
+# Qoder/AI specific
+.qoder/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp

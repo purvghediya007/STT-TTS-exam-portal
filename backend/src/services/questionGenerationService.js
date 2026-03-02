@@ -29,13 +29,16 @@ const generateQuestionsWithAI = async (requestData) => {
     };
   } catch (error) {
     console.error("❌ AI Model API Error:", error.message);
-    
+
     let errorMessage = "Failed to generate questions";
     let statusCode = 500;
 
     if (error.response) {
       // API returned an error response
-      errorMessage = error.response.data?.message || error.response.statusText || errorMessage;
+      errorMessage =
+        error.response.data?.message ||
+        error.response.statusText ||
+        errorMessage;
       statusCode = error.response.status || 500;
     } else if (error.request) {
       // Request was made but no response received

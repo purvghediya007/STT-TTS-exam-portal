@@ -85,7 +85,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
                     if (mounted) setResolvedSrc(alt)
                     return
                   }
-                } catch (_) {}
+                } catch (_) { }
               }
             }
           } catch (e) {
@@ -115,7 +115,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
                     if (mounted) setResolvedSrc(alt)
                     return
                   }
-                } catch (_) {}
+                } catch (_) { }
               }
 
               // Last resort: still expose the blob so the user can download it (some players accept blobs even if type is unknown)
@@ -135,7 +135,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
               if (mounted) setResolvedSrc(alt)
               return
             }
-          } catch (_) {}
+          } catch (_) { }
 
           if (mounted) setError('Audio not available or not supported by your browser')
         } finally {
@@ -179,7 +179,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
           if (rafRef.current) cancelAnimationFrame(rafRef.current)
         } else {
           if (a.src !== resolvedSrc) a.src = resolvedSrc
-          try { a.load() } catch (_) {}
+          try { a.load() } catch (_) { }
           await a.play()
           setPlaying(true)
           const loop = () => {
@@ -372,85 +372,68 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
                 <div className="text-3xl font-bold text-blue-600 mb-2">{data.examWise?.[0]?.percentage ?? 0}%</div>
                 <ExamChart data={data.examWise} />
               </div>
-
               <div>
-  
+
               </div>
             </div>
           </div>
 
-          {/* Questions list */}
-          <div className="bg-white rounded-xl p-6 shadow">
-            <h2 className="text-lg font-semibold mb-4">Question-wise Analysis</h2>
-            <div className="space-y-4">
-              {((data.questions || []).filter(q => !activeType || (q.type || 'other') === activeType)).map((q, i) => (
-                <div key={i} className="p-4 border border-blue-50 rounded-md">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-700 font-medium">Q{i + 1}. {q.instruction || q.text}</div>
-                      {/* audio playback: prefer recordingUrls, otherwise detect URLs in answerText */}
-                      {(() => {
-                        // Prefer local uploads path and do NOT show raw links.
-                        const audioCandidates = []
-                        if (q.recordingUrls && q.recordingUrls.length) {
-                          q.recordingUrls.forEach(u => {
-                            if (!u) return
-                            const hasUploads = u.includes('/uploads/answers/') || u.includes('uploads/answers')
-                            const looksLikeAudio = /\.(mp3|wav|ogg|m4a|webm)$/i.test(u)
-                            if (hasUploads || looksLikeAudio) audioCandidates.push(u)
-                          })
-                        }
-                        if (!audioCandidates.length && q.answerText) {
-                          const m = q.answerText.match(/\/uploads\/answers\/[A-Za-z0-9_\-./]+/g) || []
-                          if (m.length) audioCandidates.push(...m)
-                        }
+          {/* Detailed Feedback Section */}
+          {(data.questions || []).length > 0 && (
+            <div className="bg-white rounded-xl p-6 shadow">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span>📋</span>
+                Detailed Feedback & Evaluation
+              </h2>
 
-                        if (audioCandidates.length) {
-                          // Prefer absolute URLs; otherwise route via proxy/backend
-                          const raw = audioCandidates[0]
-                          const src = raw.startsWith('http://') || raw.startsWith('https://') ? raw : resolveUploadUrl(raw)
-                          return (
-                            <div className="mt-3">
-                              <AudioPlayerButton src={src} />
-                            </div>
-                          )
-                        }
-
-                        // fallback: show text answer only (no links)
-                        return q.answerText ? <div className="text-sm text-gray-500 mt-2">Your answer: <span className="font-medium text-gray-700">{q.answerText}</span></div> : null
-                      })()}
-                      {typeof q.selectedOptionIndex !== 'undefined' && (
-                        <div className="text-xs text-gray-500 mt-1">Selected option: {q.selectedOptionIndex}</div>
-                      )}
-                    </div>
-
-                    <div className="flex-shrink-0 text-right">
-                      <div className="text-sm text-gray-500">Score</div>
-                      <div className="text-lg font-bold text-blue-700">{q.score ?? '-'} / {q.maxMarks ?? '-'}</div>
-                    </div>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {(data.questions || []).filter(q => (q.score || 0) === (q.maxMarks || 0)).length}
                   </div>
-
-                  {q.feedback && (
-                    <div className="mt-3 bg-blue-50 rounded p-3 text-sm text-gray-700">Feedback: {q.feedback}</div>
-                  )}
-
-                  {/* small progress bar */}
-                  <div className="mt-3">
-                    <div className="w-full bg-gray-100 h-2 rounded-full">
-                      <div style={{ width: `${q.maxMarks ? Math.round(((q.score || 0) / q.maxMarks) * 100) : 0}%` }} className="h-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400" />
-                    </div>
-                  </div>
+                  <div className="text-xs text-green-700">Correct</div>
                 </div>
-              ))}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {(data.questions || []).filter(q => (q.score || 0) !== (q.maxMarks || 0) && q.feedback).length}
+                  </div>
+                  <div className="text-xs text-red-700">Incorrect</div>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-gray-600">
+                    {(data.questions || []).filter(q => !q.feedback || q.feedback.includes('skipped')).length}
+                  </div>
+                  <div className="text-xs text-gray-700">Skipped</div>
+                </div>
+              </div>
 
-              {(data.questions || []).length === 0 && (
-                <div className="text-sm text-gray-500">No question level data available for this attempt.</div>
+              {/* MCQ-specific feedback */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <span className="text-purple-600">MCQ Questions</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                    {(data.questions || []).filter(q => q.type === 'mcq').length}
+                  </span>
+                </h3>
+                <FeedbackCards questions={(data.questions || []).filter(q => q.type === 'mcq')} />
+              </div>
+
+              {/* Other question types feedback */}
+              {(data.questions || []).filter(q => q.type !== 'mcq').length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="text-blue-600">Other Questions</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                      {(data.questions || []).filter(q => q.type !== 'mcq').length}
+                    </span>
+                  </h3>
+                  <FeedbackCards questions={(data.questions || []).filter(q => q.type !== 'mcq')} />
+                </div>
               )}
             </div>
-          </div>
+          )}
         </div>
-
-        
       </div>
     </div>
   )

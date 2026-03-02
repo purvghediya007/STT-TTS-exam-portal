@@ -25,22 +25,18 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 app.use(express.json());
 
 // Simple log to see requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  //console.log(`${req.method} ${req.url}`);
   next();
 });
 
-
 // ✅ ADDED: serve local uploads
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "../uploads"))
-);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes
 app.use("/api/auth", authRoutes);

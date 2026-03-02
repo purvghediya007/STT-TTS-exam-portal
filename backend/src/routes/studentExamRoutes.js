@@ -152,7 +152,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -188,7 +188,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -218,7 +218,7 @@ router.get(
         .sort({ startedAt: -1 })
         .populate(
           "examId",
-          "title examCode startTime endTime durationMinutes pointsTotal"
+          "title examCode startTime endTime durationMinutes pointsTotal",
         );
 
       const submissions = attempts.map((attempt) => ({
@@ -240,7 +240,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -285,7 +285,7 @@ router.post(
         req.file.buffer,
         examId,
         studentId,
-        questionId
+        questionId,
       );
 
       if (!saveResult.success) {
@@ -299,10 +299,10 @@ router.post(
       // Update the StudentAnswer with the recording URL
       console.log(`\n💾 Updating StudentAnswer...`);
       console.log(
-        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`
+        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`,
       );
       console.log(
-        `   Update: { examId: "${examId}", studentId: "${studentId}", recordingUrl }`
+        `   Update: { examId: "${examId}", studentId: "${studentId}", recordingUrl }`,
       );
 
       try {
@@ -314,12 +314,12 @@ router.post(
             recordingUrls: [saveResult.url],
             answerText: `[Audio recording: ${saveResult.url}]`,
           },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         if (!answer) {
           console.error(
-            `❌ Failed to create/update StudentAnswer - returned null`
+            `❌ Failed to create/update StudentAnswer - returned null`,
           );
           return res.status(500).json({
             message: "Failed to save answer to database",
@@ -329,7 +329,7 @@ router.post(
 
         console.log(`✅ StudentAnswer saved with ID: ${answer._id}`);
         console.log(
-          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`
+          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`,
         );
         console.log(`✅ Audio file URL: ${saveResult.url}\n`);
 
@@ -353,7 +353,7 @@ router.post(
       console.error("❌ Error uploading audio:", error.message);
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -389,7 +389,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -441,7 +441,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -522,7 +522,7 @@ router.post(
 
       // Compute deadline: min(now + duration, exam.endTime)
       const deadlineByDuration = new Date(
-        now.getTime() + exam.durationMinutes * 60 * 1000
+        now.getTime() + exam.durationMinutes * 60 * 1000,
       );
       const deadlineAt =
         deadlineByDuration < exam.endTime ? deadlineByDuration : exam.endTime;
@@ -544,7 +544,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -600,7 +600,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -630,7 +630,7 @@ router.post(
         "Answers from body:",
         typeof answers,
         answers ? Object.keys(answers).length : 0,
-        "questions"
+        "questions",
       );
 
       // Parse JSON if answers came as FormData field
@@ -653,7 +653,7 @@ router.post(
       console.log("Received attemptId:", attemptId);
       console.log(
         "Is valid MongoDB ID format:",
-        /^[0-9a-f]{24}$/.test(attemptId)
+        /^[0-9a-f]{24}$/.test(attemptId),
       );
 
       // Verify the attempt belongs to this student and exam
@@ -670,11 +670,11 @@ router.post(
           status: "in_progress",
         });
         console.log(
-          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`
+          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`,
         );
         if (!attempt) {
           console.log(
-            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`
+            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`,
           );
           return res.status(400).json({
             message:
@@ -690,7 +690,7 @@ router.post(
 
       if (attempt.studentId.toString() !== studentId) {
         console.log(
-          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`
+          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`,
         );
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -723,7 +723,7 @@ router.post(
       console.log(
         `✅ Attempt not expired. Processing ${
           answers ? answers.length : 0
-        } answers...`
+        } answers...`,
       );
 
       // Store mediaAnswers as StudentAnswers if provided
@@ -738,7 +738,7 @@ router.post(
             await StudentAnswer.findOneAndUpdate(
               { attemptId: attempt._id, questionId: q._id },
               { answerText: mediaAnswer },
-              { upsert: true }
+              { upsert: true },
             );
           }
         }
@@ -766,7 +766,7 @@ router.post(
           if (answer.selectedOptionIndex !== undefined) {
             answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
             console.log(
-              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`
+              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`,
             );
           }
 
@@ -774,33 +774,33 @@ router.post(
           if (answer.answerText) {
             answerUpdate.answerText = answer.answerText;
             console.log(
-              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`
+              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`,
             );
           }
 
           // For audio/interview answers - process uploaded files and store local URLs
           const audioFile = req.files?.find(
-            (f) => f.fieldname === `audio_${answer.questionId}`
+            (f) => f.fieldname === `audio_${answer.questionId}`,
           );
           if (audioFile) {
             console.log(
-              `    🎤 Found audio file for question ${answer.questionId}, saving...`
+              `    🎤 Found audio file for question ${answer.questionId}, saving...`,
             );
             const saveResult = saveAnswerAudio(
               audioFile.buffer,
               examId,
               studentId,
-              answer.questionId
+              answer.questionId,
             );
 
             if (saveResult.success) {
               answerUpdate.recordingUrls = [saveResult.url];
               console.log(
-                `    ✅ Stored audio for question ${answer.questionId}: ${saveResult.url}`
+                `    ✅ Stored audio for question ${answer.questionId}: ${saveResult.url}`,
               );
             } else {
               console.error(
-                `    ❌ Failed to save audio for question ${answer.questionId}: ${saveResult.error}`
+                `    ❌ Failed to save audio for question ${answer.questionId}: ${saveResult.error}`,
               );
             }
           }
@@ -811,11 +811,11 @@ router.post(
           ) {
             answerUpdate.recordingUrls = answer.recordingUrls;
             console.log(
-              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
+              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`,
             );
           } else {
             console.log(
-              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`
+              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`,
             );
           }
 
@@ -823,7 +823,7 @@ router.post(
           await StudentAnswer.findOneAndUpdate(
             { attemptId: attempt._id, questionId: answer.questionId },
             answerUpdate,
-            { upsert: true }
+            { upsert: true },
           );
           console.log(`    ✅ Saved to DB`);
         }
@@ -857,15 +857,15 @@ router.post(
               delay: 2000,
             },
             delay: 10000, // Wait 10 seconds before processing - gives time for audio uploads
-          }
+          },
         );
         console.log(
-          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`
+          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`,
         );
       } catch (queueError) {
         console.error(
           `⚠️ Failed to queue transcription job (non-critical):`,
-          queueError.message
+          queueError.message,
         );
         // Don't fail the submission if queue fails
       }
@@ -884,7 +884,7 @@ router.post(
       console.error("Stack:", error.stack);
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1023,7 +1023,7 @@ router.post(
         if (q.type === "mcq") {
           // Find the correct option index
           const correctOptionIndex = q.options.findIndex(
-            (opt) => opt.isCorrect === true
+            (opt) => opt.isCorrect === true,
           );
 
           const { score: mcqScore, feedback: mcqFeedback } = evaluateMCQAnswer({
@@ -1094,7 +1094,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1134,7 +1134,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1171,7 +1171,7 @@ router.get(
 
       const attempt = await StudentExamAttempt.findById(attemptId).populate(
         "examId",
-        "title examCode startTime endTime durationMinutes"
+        "title examCode startTime endTime durationMinutes",
       );
 
       if (!attempt) {
@@ -1187,7 +1187,10 @@ router.get(
       // Fetch all answers + question data
       const answers = await StudentAnswer.find({
         attemptId: attempt._id,
-      }).populate("questionId", "text marks instruction order");
+      }).populate(
+        "questionId",
+        "text marks instruction order type options expectedAnswer",
+      );
 
       const questions = answers.map((a) => {
         const q = a.questionId;
@@ -1197,7 +1200,12 @@ router.get(
           marks: q?.marks,
           order: q?.order,
           instruction: q?.instruction,
+          type: q?.type,
+          options: q?.options,
+          expectedAnswer: q?.expectedAnswer,
           answerText: a.answerText,
+          recordingUrls: a.recordingUrls,
+          selectedOptionIndex: a.selectedOptionIndex,
           score: a.score,
           maxMarks: a.maxMarks,
           feedback: a.evaluationFeedback,
@@ -1227,7 +1235,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;
