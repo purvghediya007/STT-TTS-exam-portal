@@ -5,6 +5,22 @@ const baseUserFields = require("./baseUserFields");
 const teacherSchema = new mongoose.Schema(
   {
     ...baseUserFields,
+    // 🟢 FACULTY FIELDS
+    department: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    designation: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    qualification: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   {
     collection: "Register_info_teacher",

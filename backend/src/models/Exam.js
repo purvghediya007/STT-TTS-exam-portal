@@ -38,6 +38,20 @@ const examSchema = new mongoose.Schema(
       default: "draft", // new exam is draft until teacher sets time + launches
     },
     // scheduling: set LATER when launching exam
+
+
+    // 🟢 NEW FIELDS (SAFE ADDITION)
+    branches: {
+      type: [String],
+      default: [], // empty = all branches allowed
+    },
+
+    semesters: {
+      type: [Number],
+      default: [], // empty = all semesters allowed
+    },
+
+    
     startTime: {
       type: Date,
     },

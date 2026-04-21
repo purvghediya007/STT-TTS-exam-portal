@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, AlertCircle, Download, Search, User, Mail, Clock, CheckCircle, ChevronDown, Monitor, GraduationCap, Calendar } from 'lucide-react'
-import { fetchExamResults } from '../services/api'
+import { ArrowLeft, AlertCircle, Download, Search, User, Mail, Clock, CheckCircle, ChevronDown, Monitor, GraduationCap, Calendar, Edit2, Save, X, Loader } from 'lucide-react'
+import { fetchExamResults, updateAnswerScore } from '../services/api'
 
 /**
  * ExamSubmissionsView - Enhanced Responsive Page for faculty to review student results
@@ -15,6 +15,8 @@ export default function ExamSubmissionsView() {
     const [selectedSubmission, setSelectedSubmission] = useState(null)
     const [expandedAnswers, setExpandedAnswers] = useState({})
     const [searchTerm, setSearchTerm] = useState('')
+    const [editingScore, setEditingScore] = useState(null) // { answerId, value, submissionIndex, answerIndex }
+    const [savingScore, setSavingScore] = useState(false)
 
     // Load submissions
     useEffect(() => {
@@ -50,14 +52,14 @@ export default function ExamSubmissionsView() {
 
     const exportToCSV = () => {
         if (!submissions || !submissions.attempts) return;
-        
+
         const headers = ["Student Name", "Email", "Score", "Max Score", "Percentage", "Status", "Duration (min)"];
         const rows = submissions.attempts.map(sub => {
-            const duration = sub.startedAt && sub.finishedAt 
-                ? Math.round((new Date(sub.finishedAt) - new Date(sub.startedAt)) / 60000) 
+            const duration = sub.startedAt && sub.finishedAt
+                ? Math.round((new Date(sub.finishedAt) - new Date(sub.startedAt)) / 60000)
                 : 'N/A';
             const percentage = sub.maxScore ? ((sub.totalScore / sub.maxScore) * 100).toFixed(1) : 0;
-            
+
             return [
                 sub.student?.username || 'Unknown',
                 sub.student?.email || 'N/A',
@@ -69,12 +71,12 @@ export default function ExamSubmissionsView() {
             ];
         });
 
-        const csvContent = "data:text/csv;charset=utf-8," 
+        const csvContent = "data:text/csv;charset=utf-8,"
             + [headers, ...rows].map(e => {
                 const row = e.map(field => `"${field}"`);
                 return row.join(",");
             }).join("\n");
-        
+
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -82,6 +84,49 @@ export default function ExamSubmissionsView() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    const handleEditScore = (answerId, currentScore, submissionIndex, answerIndex) => {
+        setEditingScore({
+            answerId,
+            value: currentScore,
+            submissionIndex,
+            answerIndex
+        })
+    }
+
+    const handleSaveScore = async () => {
+        if (!editingScore) return
+
+        try {
+            setSavingScore(true)
+            const response = await updateAnswerScore(editingScore.answerId, editingScore.value)
+
+            // Update local state with new answer score and attempt total score
+            setSubmissions(prev => {
+                const updated = { ...prev }
+                const answer = updated.attempts[editingScore.submissionIndex].answers[editingScore.answerIndex]
+                answer.score = editingScore.value
+
+                // Update attempt total score if provided
+                if (response.attempt) {
+                    updated.attempts[editingScore.submissionIndex].totalScore = response.attempt.totalScore
+                }
+
+                return updated
+            })
+
+            setEditingScore(null)
+        } catch (err) {
+            console.error('Error updating score:', err)
+            alert('Failed to update score: ' + (err?.message || 'Unknown error'))
+        } finally {
+            setSavingScore(false)
+        }
+    }
+
+    const handleCancelEdit = () => {
+        setEditingScore(null)
     }
 
     if (loading) {
@@ -118,7 +163,7 @@ export default function ExamSubmissionsView() {
     }
 
     const exam = submissions.exam
-    const attempts = (submissions.attempts || []).filter(a => 
+    const attempts = (submissions.attempts || []).filter(a =>
         a.student?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.student?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -145,7 +190,7 @@ export default function ExamSubmissionsView() {
                 {/* Header Card */}
                 <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-10 mb-8 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[5rem] -z-10"></div>
-                    
+
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-4">
@@ -161,13 +206,13 @@ export default function ExamSubmissionsView() {
                                 {exam.title}
                             </h1>
                             <p className="text-slate-500 max-w-2xl">
-                                Detailed analysis and individual student responses for the selected examination. 
+                                Detailed analysis and individual student responses for the selected examination.
                                 Use the export tool for offline grading or record keeping.
                             </p>
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <button 
+                            <button
                                 onClick={exportToCSV}
                                 className="flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95 font-bold text-sm"
                             >
@@ -202,7 +247,7 @@ export default function ExamSubmissionsView() {
                 <div className="sticky top-4 z-20 mb-8">
                     <div className="relative group max-w-2xl">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                        <input 
+                        <input
                             type="text"
                             placeholder="Find a student by name or email address..."
                             className="w-full pl-12 pr-6 py-4 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-md shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 font-medium"
@@ -231,8 +276,8 @@ export default function ExamSubmissionsView() {
                         </div>
                     ) : (
                         attempts.map((submission, index) => (
-                            <div 
-                                key={submission.attemptId || index} 
+                            <div
+                                key={submission.attemptId || index}
                                 className={`bg-white rounded-3xl border transition-all duration-300 ${selectedSubmission === index ? 'border-blue-200 shadow-xl shadow-blue-500/5 ring-1 ring-blue-50' : 'border-slate-200 hover:border-slate-300 shadow-sm'}`}
                             >
                                 {/* Row Trigger */}
@@ -263,11 +308,10 @@ export default function ExamSubmissionsView() {
                                                 <span className="text-slate-300 font-medium text-sm">/ {submission.maxScore || 0}</span>
                                             </p>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-3">
-                                            <div className={`hidden sm:block px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border ${
-                                                submission.status === 'evaluated' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100'
-                                            }`}>
+                                            <div className={`hidden sm:block px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border ${submission.status === 'evaluated' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100'
+                                                }`}>
                                                 {submission.status}
                                             </div>
                                             <div className={`p-2 rounded-full transition-transform duration-300 ${selectedSubmission === index ? 'rotate-180 bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
@@ -306,7 +350,7 @@ export default function ExamSubmissionsView() {
                                                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Responses Detail</h4>
                                                 <div className="h-px flex-1 bg-slate-100"></div>
                                             </div>
-                                            
+
                                             {submission.answers && submission.answers.length > 0 ? (
                                                 submission.answers.map((answer, answerIndex) => {
                                                     const isExpanded = expandedAnswers[`${index}-${answerIndex}`];
@@ -336,19 +380,26 @@ export default function ExamSubmissionsView() {
 
                                                             {isExpanded && (
                                                                 <div className="px-5 pb-6 pt-2 space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                                    <div className="p-5 bg-white rounded-xl border border-slate-100 shadow-inner">
-                                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Student Answer</p>
-                                                                        <div className="text-slate-700 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                                                                            {answer.type === 'mcq' 
-                                                                                ? (answer.selectedOptionIndex !== null && answer.options?.[answer.selectedOptionIndex] 
-                                                                                    ? <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold border border-blue-100">
-                                                                                        <CheckCircle className="w-4 h-4" /> {answer.options[answer.selectedOptionIndex].text}
-                                                                                      </span>
-                                                                                    : <span className="italic text-slate-400">No option selected</span>)
-                                                                                : (answer.answerText || <span className="italic text-slate-400">No text provided</span>)
-                                                                            }
+                                                                    {answer.transcribedText && (
+                                                                        <div className="p-5 bg-emerald-50/50 rounded-xl border border-emerald-100 relative">
+                                                                            <div className="flex items-center gap-2 mb-3">
+                                                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Transcribed Text (from audio)</p>
+                                                                                {answer.sttStatus === 'completed' && (
+                                                                                    <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold text-white bg-emerald-500 rounded-full">
+                                                                                        ✓ Processed
+                                                                                    </span>
+                                                                                )}
+                                                                                {answer.sttStatus === 'failed' && (
+                                                                                    <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full">
+                                                                                        ✕ Failed
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <p className="text-emerald-900 text-sm leading-relaxed whitespace-pre-wrap">
+                                                                                {answer.transcribedText}
+                                                                            </p>
                                                                         </div>
-                                                                    </div>
+                                                                    )}
 
                                                                     {answer.feedback && (
                                                                         <div className="p-5 bg-indigo-50/50 rounded-xl border border-indigo-100 relative">
@@ -363,11 +414,54 @@ export default function ExamSubmissionsView() {
                                                                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                                                             {answer.evaluatedAt ? `Processed: ${new Date(answer.evaluatedAt).toLocaleDateString()}` : 'Evaluation Pending'}
                                                                         </span>
-                                                                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                                                                        <div className="flex items-center gap-3 self-end sm:self-auto">
                                                                             <span className="text-xs font-black text-slate-400 uppercase">Points Awarded:</span>
-                                                                            <span className="px-4 py-1.5 bg-slate-900 text-white text-sm font-black rounded-xl">
-                                                                                {answer.score || 0} pts
-                                                                            </span>
+                                                                            {editingScore?.answerId === answer._id ? (
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        min="0"
+                                                                                        max={answer.maxMarks}
+                                                                                        value={editingScore.value}
+                                                                                        onChange={(e) => setEditingScore({
+                                                                                            ...editingScore,
+                                                                                            value: parseFloat(e.target.value) || 0
+                                                                                        })}
+                                                                                        className="w-16 px-2 py-1 border border-blue-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                        disabled={savingScore}
+                                                                                    />
+                                                                                    <span className="text-xs text-slate-500">/ {answer.maxMarks}</span>
+                                                                                    <button
+                                                                                        onClick={handleSaveScore}
+                                                                                        disabled={savingScore}
+                                                                                        className="p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                                        title="Save score"
+                                                                                    >
+                                                                                        {savingScore ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={handleCancelEdit}
+                                                                                        disabled={savingScore}
+                                                                                        className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                                        title="Cancel"
+                                                                                    >
+                                                                                        <X className="w-4 h-4" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="px-4 py-1.5 bg-slate-900 text-white text-sm font-black rounded-xl">
+                                                                                        {answer.score || 0} pts
+                                                                                    </span>
+                                                                                    <button
+                                                                                        onClick={() => handleEditScore(answer._id, answer.score || 0, index, answerIndex)}
+                                                                                        className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                                                                                        title="Edit score"
+                                                                                    >
+                                                                                        <Edit2 className="w-4 h-4" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>

@@ -7,6 +7,9 @@ const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
+
+const Student = require("../models/Student");
+
 const {
   evaluateAnswerWithAI,
   evaluateMCQAnswer,
@@ -101,8 +104,31 @@ router.get(
       const studentId = req.user.sub;
 
       // Build filter for published exams only (students can't see draft or archived)
-      const filter = { status: "published" };
+      // const filter = { status: "published" };
+      const student = await Student.findById(studentId);
 
+      const studentBranch = student?.branch || null;
+      const studentSemester = student?.semester || null;
+
+      const filter = {
+        status: "published",
+        $and: [
+          {
+            $or: [
+              { branches: { $exists: false } },
+              { branches: { $size: 0 } },
+              { branches: { $in: [studentBranch] } },
+            ],
+          },
+          {
+            $or: [
+              { semesters: { $exists: false } },
+              { semesters: { $size: 0 } },
+              { semesters: { $in: [studentSemester] } },
+            ],
+          },
+        ],
+      };
       if (status && status !== "all") {
         const now = new Date();
         if (status === "upcoming") {
@@ -167,6 +193,7 @@ router.get(
   async (req, res, next) => {
     try {
       const { examId } = req.params;
+      const studentId = req.user.sub;
 
       const exam = await Exam.findOne({
         _id: examId,
@@ -177,6 +204,20 @@ router.get(
         return res
           .status(404)
           .json({ message: "Exam not found or not published" });
+      }
+
+      // Check if student has access to this exam based on branch and semester
+      const student = await Student.findById(studentId);
+      const studentBranch = student?.branch || null;
+      const studentSemester = student?.semester || null;
+
+      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
+      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+
+      if (!branchMatch || !semesterMatch) {
+        return res
+          .status(403)
+          .json({ message: "You do not have access to this exam" });
       }
 
       const questionCount = await Question.countDocuments({ examId });
@@ -368,6 +409,7 @@ router.get(
   async (req, res, next) => {
     try {
       const { examId } = req.params;
+      const studentId = req.user.sub;
 
       const exam = await Exam.findOne({
         _id: examId,
@@ -378,6 +420,20 @@ router.get(
         return res
           .status(404)
           .json({ message: "Exam not found or not published" });
+      }
+
+      // Check if student has access to this exam based on branch and semester
+      const student = await Student.findById(studentId);
+      const studentBranch = student?.branch || null;
+      const studentSemester = student?.semester || null;
+
+      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
+      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+
+      if (!branchMatch || !semesterMatch) {
+        return res
+          .status(403)
+          .json({ message: "You do not have access to this exam" });
       }
 
       const questions = await Question.find({ examId }).sort({ order: 1 });
@@ -406,11 +462,35 @@ router.get(
       const studentId = req.user.sub;
 
       // Exams that are published and whose start/end window includes now
-      const exams = await Exam.find({
-        status: "published",
-        startTime: { $lte: now },
-        endTime: { $gte: now },
-      })
+      // const exams = await Exam.find({
+      //   status: "published",
+      //   startTime: { $lte: now },
+      //   endTime: { $gte: now },
+      // })
+
+      const student = await Student.findById(studentId);
+
+        const exams = await Exam.find({
+          status: "published",
+          startTime: { $lte: now },
+          endTime: { $gte: now },
+          $and: [
+            {
+              $or: [
+                { branches: { $exists: false } },
+                { branches: { $size: 0 } },
+                { branches: { $in: [student.branch] } },
+              ],
+            },
+            {
+              $or: [
+                { semesters: { $exists: false } },
+                { semesters: { $size: 0 } },
+                { semesters: { $in: [student.semester] } },
+              ],
+            },
+          ],
+        })
         .sort({ startTime: 1 })
         .select("title description examCode startTime endTime durationMinutes");
 
@@ -465,6 +545,20 @@ router.post(
 
       if (exam.status !== "published") {
         return res.status(400).json({ message: "Exam is not published" });
+      }
+
+      // Check if student has access to this exam based on branch and semester
+      const student = await Student.findById(studentId);
+      const studentBranch = student?.branch || null;
+      const studentSemester = student?.semester || null;
+
+      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
+      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+
+      if (!branchMatch || !semesterMatch) {
+        return res
+          .status(403)
+          .json({ message: "You do not have access to this exam" });
       }
 
       if (!exam.startTime || !exam.endTime || !exam.durationMinutes) {

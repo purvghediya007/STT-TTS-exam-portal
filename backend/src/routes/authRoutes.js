@@ -12,6 +12,7 @@ const Student = require("../models/Student");
 const Admin = require("../models/Admin");
 const generateToken = require("../utils/generateToken");
 const { createCaptcha, verifyCaptcha } = require("../utils/captchaStore");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -85,7 +86,8 @@ router.get("/captcha", (req, res) => {
 // Body: { role: "Teacher"|"Student", email, username, password, enrollmentNumber (optional for students) }
 router.post("/register", async (req, res, next) => {
   try {
-    let { role, email, username, password, enrollmentNumber } = req.body;
+    let { role, email, username, password, enrollmentNumber ,branch,semester,} = req.body;
+    
     console.log(
       `Registration attempt: role=${role}, email=${email}, username=${username}`
     );
@@ -141,6 +143,9 @@ router.post("/register", async (req, res, next) => {
     // Add enrollmentNumber for students if provided
     if (normalizedRole === "student" && enrollmentNumber) {
       userDocData.enrollmentNumber = enrollmentNumber;
+        // 🔥 NEW ADDITION
+      userDocData.branch = branch || "";
+      userDocData.semester = semester || null;
     }
 
     const userDoc = await Model.create(userDocData);
@@ -370,6 +375,61 @@ router.post("/reset-password", async (req, res) => {
     res.json({ message: "Password updated successfully." });
   } catch (err) {
     res.status(400).json({ message: "Invalid or expired token." });
+  }
+});
+
+// ======== GET /api/auth/profile =========
+router.get("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { sub: userId, role } = req.user;
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(404).json({ message: "User role invalid" });
+
+    const user = await Model.findById(userId).select("-passwordHash");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    return res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
+});
+
+// ======== PUT /api/auth/profile =========
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { sub: userId, role } = req.user;
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(404).json({ message: "User role invalid" });
+
+    const allowedUpdates = [
+      "bio", "phone", "profileImage", 
+      "department", "designation", "qualification", // Teacher
+      "address", "dateOfBirth", "branch", "semester", "username" // Enrollment cannot be changed usually
+    ];
+
+    const updates = {};
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
+    const user = await Model.findByIdAndUpdate(
+      userId, 
+      { $set: updates }, 
+      { new: true, runValidators: true }
+    ).select("-passwordHash");
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return res.status(500).json({ message: "Error updating profile", error: error.message });
   }
 });
 

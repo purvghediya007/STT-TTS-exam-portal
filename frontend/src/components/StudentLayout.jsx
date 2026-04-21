@@ -23,6 +23,7 @@ export default function StudentLayout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Handle mobile structure
   const [studentName, setStudentName] = useState('Student')
   const [enrollment, setEnrollment] = useState('N/A')
+  const [profileImage, setProfileImage] = useState(null)
   const dropdownRef = useRef(null)
 
   const { refreshExams } = useExams({ initialStatus: 'all' })
@@ -41,13 +42,20 @@ export default function StudentLayout({ children }) {
         if (userData.username) {
           setStudentName(userData.username)
         }
+        if (userData.profileImage) {
+          setProfileImage(userData.profileImage)
+        }
       } catch (e) {
         console.error('Failed to parse user data:', e)
       }
     }
   }, [])
 
-  const user = { name: studentName, enrollment: enrollment, avatarUrl: null }
+  const user = { 
+    name: studentName, 
+    enrollment: enrollment, 
+    avatarUrl: profileImage 
+  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -137,8 +145,12 @@ export default function StudentLayout({ children }) {
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               className="flex items-center gap-2 px-2 md:px-3 py-2 rounded hover:bg-gray-50 transition-colors"
             >
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+              <div className="w-7 h-7 md:w-8 md:h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+                )}
               </div>
               <span className="text-xs md:text-sm font-medium text-gray-700 hidden sm:inline-block">
                 {user.enrollment}
@@ -152,7 +164,7 @@ export default function StudentLayout({ children }) {
                   <div className="text-sm font-semibold text-gray-900 truncate">{user.name}</div>
                   <div className="text-[10px] md:text-xs text-gray-500 mt-0.5 truncate">Enrollment: {user.enrollment}</div>
                 </div>
-                <button onClick={() => { setShowUserDropdown(false); handleNavigation('dashboard') }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <button onClick={() => { setShowUserDropdown(false); handleNavigation('profile') }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                   <User className="w-4 h-4" /> Profile
                 </button>
                 <button onClick={handleRefresh} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">

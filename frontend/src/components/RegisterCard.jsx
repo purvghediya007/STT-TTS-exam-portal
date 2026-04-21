@@ -10,7 +10,12 @@ const initialState = {
   enrollmentNumber: '',
   password: '',
   confirmPassword: '',
+  branch: '',
+  semester: null,
 }
+
+const availableBranches = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'BT', 'CHE']
+const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
 export default function RegisterCard() {
   const navigate = useNavigate()
@@ -51,9 +56,17 @@ export default function RegisterCard() {
         password: form.password,
       }
 
-      // Add enrollmentNumber for students
-      if (form.role === 'student' && form.enrollmentNumber) {
-        requestBody.enrollmentNumber = form.enrollmentNumber
+      // Add enrollmentNumber, branch, and semester for students
+      if (form.role === 'student') {
+        if (form.enrollmentNumber) {
+          requestBody.enrollmentNumber = form.enrollmentNumber
+        }
+        if (form.branch) {
+          requestBody.branch = form.branch
+        }
+        if (form.semester) {
+          requestBody.semester = form.semester
+        }
       }
 
       const response = await fetch('/api/auth/register', {
@@ -120,7 +133,7 @@ export default function RegisterCard() {
       <header className="card-copy">
         <p className="eyebrow">Create an account</p>
         <h1>Sign up</h1>
-        <p>Register with your {isStudent ? 'email and enrollment number' : 'email and faculty ID'}.</p>
+        <p>Register with your {isStudent ? 'email, enrollment number, branch, and semester' : 'email and faculty ID'}.</p>
       </header>
 
       <form className="login-form" onSubmit={handleSubmit}>
@@ -162,16 +175,88 @@ export default function RegisterCard() {
         </label>
 
         {isStudent && (
-          <label className="input-field">
-            <span>Enrollment Number</span>
-            <input
-              type="text"
-              placeholder="e.g. 20XX123456"
-              value={form.enrollmentNumber}
-              onChange={(e) => update('enrollmentNumber', e.target.value)}
-              disabled={isLoading}
-            />
-          </label>
+          <>
+            <label className="input-field">
+              <span>Enrollment Number</span>
+              <input
+                type="text"
+                placeholder="e.g. 20XX123456"
+                value={form.enrollmentNumber}
+                onChange={(e) => update('enrollmentNumber', e.target.value)}
+                disabled={isLoading}
+              />
+            </label>
+
+            {/* Branch Selection */}
+            <label className="input-field">
+              <span>Select Branch</span>
+              <select
+                value={form.branch}
+                onChange={(e) => update('branch', e.target.value)}
+                disabled={isLoading}
+                required
+                className="input"
+                style={{
+                  borderRadius: '18px',
+                  border: '1px solid var(--border)',
+                  padding: '0.95rem 1.1rem',
+                  fontSize: '1rem',
+                  color: 'var(--text)',
+                  backgroundColor: 'var(--surface-glow)',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/csvg%3e")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.95rem center',
+                  backgroundSize: '20px',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                <option value="" disabled>-- Select Branch --</option>
+                {availableBranches.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Semester Selection */}
+            <label className="input-field">
+              <span>Select Semester</span>
+              <select
+                value={form.semester || ''}
+                onChange={(e) => update('semester', e.target.value ? Number(e.target.value) : null)}
+                disabled={isLoading}
+                required
+                className="input"
+                style={{
+                  borderRadius: '18px',
+                  border: '1px solid var(--border)',
+                  padding: '0.95rem 1.1rem',
+                  fontSize: '1rem',
+                  color: 'var(--text)',
+                  backgroundColor: 'var(--surface-glow)',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/csvg%3e")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.95rem center',
+                  backgroundSize: '20px',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                <option value="" disabled>-- Select Semester --</option>
+                {availableSemesters.map((semester) => (
+                  <option key={semester} value={semester}>
+                    Semester {semester}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
         )}
 
         <label className="input-field">

@@ -28,6 +28,21 @@ const baseUserFields = {
     type: Date,
     default: Date.now,
   },
+  // 🟢 NEW PROFILE FIELDS
+  profileImage: {
+    type: String,
+    default: "",
+  },
+  bio: {
+    type: String,
+    trim: true,
+    default: "",
+  },
+  phone: {
+    type: String,
+    trim: true,
+    default: "",
+  },
 };
 
 module.exports = baseUserFields;

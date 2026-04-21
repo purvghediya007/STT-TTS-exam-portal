@@ -8,7 +8,9 @@ const uploadJson = require("../middleware/uploadJson");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentAnswer = require("../models/StudentAnswer");
 const aiQueue = require("../queues/aiQueue");
-const { generateQuestionsWithAI } = require("../services/questionGenerationService");
+const {
+  generateQuestionsWithAI,
+} = require("../services/questionGenerationService");
 const router = express.Router();
 
 // Helper to parse optional ISO date strings safely
@@ -69,6 +71,8 @@ router.post(
         startsAt,
         endsAt,
         durationMin,
+        branches,
+        semesters,
       } = req.body;
 
       if (!title || !examCode) {
@@ -114,6 +118,9 @@ router.post(
           reRecordAllowed: settings?.reRecordAllowed ?? 1,
           ttsVoice: settings?.ttsVoice ?? "en_us_female",
         },
+
+        branches: Array.isArray(branches) ? branches : [],
+        semesters: Array.isArray(semesters) ? semesters : [],
       });
 
       return res.status(201).json({
@@ -123,7 +130,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // GET /api/exams/my
@@ -151,14 +158,14 @@ router.get(
             ...transformed,
             submissionCount: submissionCount,
           };
-        })
+        }),
       );
 
       return res.status(200).json({ exams: transformedExams });
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // GET /api/exams/:id
@@ -171,7 +178,7 @@ router.get(
     try {
       const exam = await Exam.findById(req.params.id).populate(
         "teacherId",
-        "name email username"
+        "name email username",
       );
 
       if (!exam) {
@@ -189,7 +196,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // PUT /api/exams/:id
@@ -253,7 +260,7 @@ router.put(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -372,7 +379,7 @@ router.post(
         {
           attempts: 5,
           backoff: { type: "exponential", delay: 5000 },
-        }
+        },
       );
 
       return res.status(201).json({
@@ -382,7 +389,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // ================= BULK IMPORT =================
@@ -483,7 +490,7 @@ router.post(
           {
             attempts: 5,
             backoff: { type: "exponential", delay: 5000 },
-          }
+          },
         );
       }
 
@@ -495,7 +502,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // GET /api/exams/:examId/questions
@@ -522,7 +529,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // PUT /api/exams/:examId/questions/:questionId
@@ -606,7 +613,7 @@ router.put(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // DELETE /api/exams/:examId/questions/:questionId
@@ -641,7 +648,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -706,7 +713,7 @@ router.patch(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 // ---------- TEACHER: EXAM RESULTS (ALL STUDENTS) ----------
 // GET /api/exams/:examId/results
@@ -764,6 +771,7 @@ router.get(
         }
         const q = ans.questionId;
         answersByAttempt.get(key).push({
+          _id: ans._id,
           questionId: q?._id,
           text: q?.text,
           type: q?.type,
@@ -772,11 +780,13 @@ router.get(
           instruction: q?.instruction,
           options: q?.type === "mcq" ? q?.options : undefined,
           answerText: ans.answerText,
+          transcribedText: ans.transcribedText,
           selectedOptionIndex: ans.selectedOptionIndex,
           score: ans.score,
           maxMarks: ans.maxMarks,
           feedback: ans.evaluationFeedback,
           evaluatedAt: ans.evaluatedAt,
+          sttStatus: ans.sttStatus,
         });
       }
 
@@ -816,21 +826,21 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 /**
  * POST /api/exams/questions_generate/generate
  * Generate exam questions using AI Model API
  * Requires authentication and teacher role
- * 
+ *
  * Sample Request:
  * {
  *   "topics": ["Algorithm", "Networking"],
  *   "num_questions": 5,
  *   "difficulty": "hard"
  * }
- * 
+ *
  * Sample Response:
  * {
  *   "topics": {
@@ -851,10 +861,12 @@ router.post(
   requireRole("teacher"),
   async (req, res, next) => {
     try {
-      console.log("\n========== QUESTION GENERATION ENDPOINT CALLED ==========");
+      console.log(
+        "\n========== QUESTION GENERATION ENDPOINT CALLED ==========",
+      );
       console.log(`📥 Raw Request Body:`, req.body);
       console.log(`🔐 Teacher ID: ${req.user.sub}`);
-      
+
       const { topics, num_questions, difficulty } = req.body;
       console.log(`✔️ Destructured - Topics:`, topics);
       console.log(`✔️ Destructured - Num Questions:`, num_questions);
@@ -868,8 +880,14 @@ router.post(
         });
       }
 
-      if (!num_questions || typeof num_questions !== "number" || num_questions < 1) {
-        console.warn("⚠️ Validation failed: num_questions must be a positive number");
+      if (
+        !num_questions ||
+        typeof num_questions !== "number" ||
+        num_questions < 1
+      ) {
+        console.warn(
+          "⚠️ Validation failed: num_questions must be a positive number",
+        );
         return res.status(400).json({
           message: "Invalid request: 'num_questions' must be a positive number",
         });
@@ -883,7 +901,9 @@ router.post(
       }
 
       console.log("\n✅ All validations passed");
-      console.log(`🎓 Question Generation Request from Teacher: ${req.user.sub}`);
+      console.log(
+        `🎓 Question Generation Request from Teacher: ${req.user.sub}`,
+      );
       console.log(`📝 Topics: ${topics.join(", ")}`);
       console.log(`📊 Number of Questions: ${num_questions}`);
       console.log(`🎯 Difficulty: ${difficulty}`);
@@ -894,16 +914,23 @@ router.post(
         num_questions,
         difficulty,
       };
-      console.log("\n📤 Calling AI Model API with payload:", JSON.stringify(requestPayload, null, 2));
+      console.log(
+        "\n📤 Calling AI Model API with payload:",
+        JSON.stringify(requestPayload, null, 2),
+      );
 
       // Call AI Model API with the request data
       const startTime = Date.now();
       const result = await generateQuestionsWithAI(requestPayload);
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       console.log(`⏱️ AI Model API call took: ${duration}ms`);
-      console.log(`📊 Result object:`, { success: result.success, hasError: !!result.error, statusCode: result.statusCode });
+      console.log(`📊 Result object:`, {
+        success: result.success,
+        hasError: !!result.error,
+        statusCode: result.statusCode,
+      });
 
       // Handle AI Model API errors
       if (!result.success) {
@@ -920,9 +947,14 @@ router.post(
       console.log(`📝 Response data structure:`, {
         type: typeof result.data,
         keys: result.data ? Object.keys(result.data) : null,
-        topicCount: result.data?.topics ? Object.keys(result.data.topics).length : null,
+        topicCount: result.data?.topics
+          ? Object.keys(result.data.topics).length
+          : null,
       });
-      console.log(`📄 Full response preview:`, JSON.stringify(result.data, null, 2).substring(0, 500));
+      console.log(
+        `📄 Full response preview:`,
+        JSON.stringify(result.data, null, 2).substring(0, 500),
+      );
 
       // Return the AI model response directly to the frontend
       console.log("✔️ Sending response to frontend");
@@ -934,7 +966,101 @@ router.post(
       console.error(`   - Full Error:`, error);
       next(error);
     }
-  }
+  },
+);
+
+/**
+ * PUT /api/student-answers/:answerId/score
+ * Update score for a student answer (teacher grading)
+ */
+router.put(
+  "/student-answers/:answerId/score",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { answerId } = req.params;
+      const { score } = req.body;
+      const teacherId = req.user.sub;
+
+      // Validate score
+      if (score == null || typeof score !== "number" || score < 0) {
+        return res.status(400).json({
+          message: "score must be a non-negative number",
+        });
+      }
+
+      // Find the answer
+      const answer = await StudentAnswer.findById(answerId);
+      if (!answer) {
+        return res.status(404).json({ message: "Answer not found" });
+      }
+
+      // Verify exam belongs to this teacher
+      const exam = await Exam.findById(answer.examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({
+          message: "Forbidden: You cannot modify scores for this exam",
+        });
+      }
+
+      // Validate score doesn't exceed max marks
+      if (score > answer.maxMarks) {
+        return res.status(400).json({
+          message: `score cannot exceed maxMarks (${answer.maxMarks})`,
+        });
+      }
+
+      // Update the score
+      const updatedAnswer = await StudentAnswer.findByIdAndUpdate(
+        answerId,
+        {
+          score: score,
+          evaluatedAt: new Date(),
+        },
+        { new: true },
+      );
+
+      console.log(
+        `✅ Score updated for answer ${answerId}: ${score}/${answer.maxMarks}`,
+      );
+
+      // Recalculate total score for the attempt
+      const allAnswers = await StudentAnswer.find({
+        attemptId: answer.attemptId,
+      });
+      const totalScore = allAnswers.reduce(
+        (sum, ans) => sum + (ans.score || 0),
+        0,
+      );
+
+      // Update the attempt with new total score
+      const attempt = await StudentExamAttempt.findByIdAndUpdate(
+        answer.attemptId,
+        { totalScore },
+        { new: true },
+      );
+
+      console.log(`✅ Attempt total score recalculated: ${totalScore}`);
+
+      return res.status(200).json({
+        message: "Score updated successfully",
+        answer: updatedAnswer,
+        attempt: {
+          attemptId: attempt._id,
+          totalScore: attempt.totalScore,
+          maxScore: attempt.maxScore,
+        },
+      });
+    } catch (error) {
+      console.error("Error updating answer score:", error);
+      next(error);
+    }
+  },
 );
 
 module.exports = router;

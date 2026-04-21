@@ -10,6 +10,30 @@ const studentSchema = new mongoose.Schema(
       sparse: true,
       trim: true,
     },
+
+    // 🟢 NEW FIELDS (SAFE ADDITION)
+    branch: {
+      type: String,
+      trim: true,
+      default: "", // empty means not assigned yet
+    },
+
+    semester: {
+      type: Number,
+      default: null, // null = not assigned yet
+    },
+
+    // 🟢 PROFILE FIELDS
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+
   },
   {
     collection: "Register_info_student",

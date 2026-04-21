@@ -28,7 +28,7 @@ export async function fetchAPI(
   options: RequestInit = {}
 ): Promise<Response> {
   const url = `${API_BASE_URL}${endpoint}`
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -186,12 +186,12 @@ export async function fetchExams(params: {
   try {
     const response = await fetchAPI(`/student/exams?${queryParams}`)
     const data = await response.json()
-    
+
     // Ensure response has the expected structure
     if (!data || typeof data !== 'object') {
       throw new Error('Invalid response format')
     }
-    
+
     return {
       exams: Array.isArray(data.exams) ? data.exams : [],
       page: data.page || 1,
@@ -487,7 +487,7 @@ export async function fetchFacultyExams(params: {
 
     const response = await fetchAPI(`/exams/my?${queryParams}`)
     const data = await response.json()
-    
+
     return {
       exams: data.exams || [],
       page: params.page || 1,
@@ -518,7 +518,7 @@ export async function fetchFacultyStats(): Promise<FacultyStats> {
     // Calculate stats from localStorage exams
     const storedExams = localStorage.getItem('faculty_exams')
     const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
-    
+
     const now = new Date()
     const stats = {
       totalExams: exams.length,
@@ -536,11 +536,11 @@ export async function fetchFacultyStats(): Promise<FacultyStats> {
         return now >= ends
       }).length,
       totalStudents: exams.reduce((sum, e) => sum + (e.totalStudents || 0), 0),
-      avgSubmissions: exams.length > 0 
+      avgSubmissions: exams.length > 0
         ? Math.round(exams.reduce((sum, e) => sum + (e.submissionCount || 0), 0) / exams.length)
         : 0
     }
-    
+
     return stats
   }
 }
@@ -594,7 +594,7 @@ export async function createExam(examData: {
       totalStudents: 0,
       pointsTotal: examData.pointsTotal,
     }
-    
+
     // Save to localStorage
     try {
       const storedExams = localStorage.getItem('faculty_exams')
@@ -604,7 +604,7 @@ export async function createExam(examData: {
     } catch (e) {
       // Ignore localStorage errors
     }
-    
+
     return newExam
   }
 }
@@ -628,7 +628,7 @@ export async function updateExam(
     const storedExams = localStorage.getItem('faculty_exams')
     const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
     const index = exams.findIndex(e => e.id === examId)
-    
+
     if (index !== -1) {
       exams[index] = { ...exams[index], ...examData }
       // Update status based on dates
@@ -673,6 +673,8 @@ export async function createDraftExam(draftData: {
   shortDescription: string
   instructions?: string | null
   teacherName: string
+  branches?: string[]
+  semesters?: number[]
   questions?: Question[]
 }): Promise<DraftExam> {
   try {
@@ -694,7 +696,7 @@ export async function createDraftExam(draftData: {
       createdAt: new Date().toISOString(),
       teacherName: draftData.teacherName
     }
-    
+
     try {
       const storedDrafts = localStorage.getItem('faculty_drafts')
       const drafts = storedDrafts ? JSON.parse(storedDrafts) : []
@@ -703,7 +705,7 @@ export async function createDraftExam(draftData: {
     } catch (e) {
       // Ignore localStorage errors
     }
-    
+
     return newDraft
   }
 }
@@ -723,23 +725,23 @@ export async function updateDraftExam(
     return response.json()
   } catch (err: any) {
     console.warn('API update draft failed, trying localStorage fallback:', err)
-    
+
     // If it's a 413 error (payload too large), try to sync from server first
     if (err.status === 413) {
       console.warn('Payload too large, attempting to sync from server first')
       try {
         const draftsResponse = await fetchAPI('/faculty/exams/drafts')
         const serverDrafts = await draftsResponse.json()
-        const serverDraft = Array.isArray(serverDrafts) 
+        const serverDraft = Array.isArray(serverDrafts)
           ? serverDrafts.find((d: DraftExam) => d.id === draftId)
           : null
-        
+
         if (serverDraft) {
           // Merge with server draft
           const storedDrafts = localStorage.getItem('faculty_drafts')
           const drafts = storedDrafts ? JSON.parse(storedDrafts) : []
           const index = drafts.findIndex((d: DraftExam) => d.id === draftId)
-          
+
           const updatedDraft = { ...serverDraft, ...draftData }
           if (index !== -1) {
             drafts[index] = updatedDraft
@@ -753,19 +755,19 @@ export async function updateDraftExam(
         console.warn('Failed to sync from server:', syncErr)
       }
     }
-    
+
     // Fallback to localStorage only
     const storedDrafts = localStorage.getItem('faculty_drafts')
     const drafts = storedDrafts ? JSON.parse(storedDrafts) : []
     const index = drafts.findIndex((d: DraftExam) => d.id === draftId)
-    
+
     if (index !== -1) {
       const updatedDraft = { ...drafts[index], ...draftData }
       drafts[index] = updatedDraft
       localStorage.setItem('faculty_drafts', JSON.stringify(drafts))
       return updatedDraft
     }
-    
+
     // If still not found, throw a more descriptive error
     throw new Error(`Draft not found: ${draftId}. The draft may have been deleted or the server may need to be restarted.`)
   }
@@ -786,6 +788,8 @@ export async function publishDraftExam(
     timePerQuestionSec?: number | null
     pointsTotal: number
     questions: Question[]
+    branches?: string[]
+    semesters?: number[]
     settingsSummary: Record<string, unknown>
   }
 ): Promise<FacultyExam> {
@@ -795,7 +799,7 @@ export async function publishDraftExam(
       body: JSON.stringify(examData),
     })
     const newExam = await response.json()
-    
+
     // Remove draft from localStorage
     try {
       const storedDrafts = localStorage.getItem('faculty_drafts')
@@ -805,7 +809,7 @@ export async function publishDraftExam(
     } catch (e) {
       // Ignore
     }
-    
+
     return newExam
   } catch (err) {
     console.warn('API publish draft failed, creating exam locally:', err)
@@ -836,14 +840,14 @@ export async function publishDraftExam(
       questions: examData.questions,
       settingsSummary: examData.settingsSummary || { strictMode: false }
     }
-    
+
     // Save to localStorage
     try {
       const storedExams = localStorage.getItem('faculty_exams')
       const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
       exams.push(newExam)
       localStorage.setItem('faculty_exams', JSON.stringify(exams))
-      
+
       // Remove draft
       const storedDrafts = localStorage.getItem('faculty_drafts')
       const drafts = storedDrafts ? JSON.parse(storedDrafts) : []
@@ -852,7 +856,7 @@ export async function publishDraftExam(
     } catch (e) {
       // Ignore
     }
-    
+
     return newExam
   }
 }
@@ -1056,4 +1060,34 @@ export async function generateQuestions(payload: { topics: string[]; num_questio
     })
     return response.json()
   }
+}
+
+/**
+ * Fetch current user profile
+ */
+export async function fetchProfile(): Promise<any> {
+  const response = await fetchAPI('/auth/profile')
+  return response.json()
+}
+
+/**
+ * Update current user profile
+ */
+export async function updateProfile(profileData: any): Promise<any> {
+  const response = await fetchAPI('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profileData),
+  })
+  return response.json()
+}
+/**
+ * Update student answer score
+ * PUT /api/exams/student-answers/:answerId/score
+ */
+export async function updateAnswerScore(answerId: string, score: number): Promise<any> {
+  const response = await fetchAPI(`/exams/student-answers/${answerId}/score`, {
+    method: 'PUT',
+    body: JSON.stringify({ score }),
+  })
+  return response.json()
 }

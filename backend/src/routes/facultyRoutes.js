@@ -275,6 +275,8 @@ router.post(
         title,
         shortDescription,
         instructions,
+        branches,
+        semesters,
         questions = [],
       } = req.body;
       const teacherId = req.user.sub;
@@ -294,6 +296,8 @@ router.post(
         teacherId,
         status: "draft",
         questions,
+        branches: Array.isArray(branches) ? branches : [],
+        semesters: Array.isArray(semesters) ? semesters : [],
         settings: {
           thinkTimeSeconds: 10,
           answerTimeSeconds: 60,
@@ -384,6 +388,8 @@ router.put(
         settings,
         shortDescription,
         instructions,
+        branches,
+        semesters,
       } = req.body;
       if (title) draft.title = title;
       if (shortDescription) draft.shortDescription = shortDescription;
@@ -392,6 +398,8 @@ router.put(
       if (instructions) draft.instructions = instructions;
       if (questions) draft.questions = questions;
       if (settings) draft.settings = { ...draft.settings, ...settings };
+      if (Array.isArray(branches)) draft.branches = branches;
+      if (Array.isArray(semesters)) draft.semesters = semesters;
 
       await draft.save();
 
@@ -460,6 +468,8 @@ router.post(
         pointsTotal,
         settingsSummary,
         questions,
+        branches,
+        semesters,
       } = req.body;
 
       console.log("=== PUBLISH EXAM ===");
@@ -510,6 +520,14 @@ router.post(
       draft.pointsTotal = pointsTotal;
       if (settingsSummary) {
         draft.settings = { ...draft.settings, ...settingsSummary };
+      }
+      
+      // 🟢 Save branches and semesters
+      if (Array.isArray(branches)) {
+        draft.branches = branches;
+      }
+      if (Array.isArray(semesters)) {
+        draft.semesters = semesters;
       }
 
       await draft.save();

@@ -20,8 +20,14 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
   const [basicInfo, setBasicInfo] = useState({
     title: initialDraft?.title || initialExam?.title || '',
     shortDescription: initialDraft?.shortDescription || initialExam?.shortDescription || '',
-    instructions: initialDraft?.instructions || initialExam?.instructions || ''
+    instructions: initialDraft?.instructions || initialExam?.instructions || '',
+    branches: initialDraft?.branches || initialExam?.branches || [],
+    semesters: initialDraft?.semesters || initialExam?.semesters || []
   })
+
+  // Available options for branches and semesters
+  const availableBranches = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'BT', 'CHE']
+  const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
   // Step 2: Questions - Load from draft/exam if available
   const [questions, setQuestions] = useState(initialDraft?.questions || initialExam?.questions || [])
@@ -83,6 +89,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         title: basicInfo.title.trim(),
         shortDescription: basicInfo.shortDescription.trim(),
         instructions: basicInfo.instructions.trim() || null,
+        branches: basicInfo.branches,
+        semesters: basicInfo.semesters,
         teacherName,
         status: 'draft',
         questions: [],
@@ -189,6 +197,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       const examData = {
         ...basicInfo,
         ...timeSettings,
+        branches: basicInfo.branches,
+        semesters: basicInfo.semesters,
         questions,
         startsAt: new Date(timeSettings.startsAt).toISOString(),
         endsAt: new Date(timeSettings.endsAt).toISOString(),
@@ -338,6 +348,123 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Detailed instructions for students..."
                     />
+                  </div>
+
+                  {/* Branch Selection */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                        Select Applicable Branches
+                      </label>
+                      <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                        Leave empty for All Branches
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {availableBranches.map((branch) => (
+                        <label
+                          key={branch}
+                          className="flex items-center gap-2 p-3 transition-all duration-200 cursor-pointer"
+                          style={{
+                            border: basicInfo.branches.includes(branch) 
+                              ? '2px solid var(--accent)' 
+                              : '1px solid var(--border)',
+                            borderRadius: '18px',
+                            backgroundColor: basicInfo.branches.includes(branch) 
+                              ? 'var(--accent-light)' 
+                              : 'transparent',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={basicInfo.branches.includes(branch)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setBasicInfo({
+                                  ...basicInfo,
+                                  branches: [...basicInfo.branches, branch]
+                                })
+                              } else {
+                                setBasicInfo({
+                                  ...basicInfo,
+                                  branches: basicInfo.branches.filter(b => b !== branch)
+                                })
+                              }
+                            }}
+                            className="w-4 h-4 rounded cursor-pointer"
+                            style={{ accentColor: 'var(--accent)' }}
+                          />
+                          <span className="text-sm font-medium" style={{ 
+                            color: basicInfo.branches.includes(branch) ? 'var(--accent)' : 'var(--text)'
+                          }}>
+                            {branch}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
+                      {basicInfo.branches.length === 0 
+                        ? '✓ All branches will have access' 
+                        : `✓ Selected: ${basicInfo.branches.join(', ')}`}
+                    </p>
+                  </div>
+
+                  {/* Semester Selection */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                        Select Applicable Semesters
+                      </label>
+                      <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                        Leave empty for All Semesters
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+                      {availableSemesters.map((semester) => (
+                        <label
+                          key={semester}
+                          className="flex items-center gap-2 p-2 transition-all duration-200 cursor-pointer font-medium min-h-[2.5rem]"
+                          style={{
+                            border: basicInfo.semesters.includes(semester) 
+                              ? '2px solid var(--accent-strong)' 
+                              : '1px solid var(--border)',
+                            borderRadius: '18px',
+                            backgroundColor: basicInfo.semesters.includes(semester) 
+                              ? 'rgba(124, 58, 237, 0.12)' 
+                              : 'transparent',
+                            color: basicInfo.semesters.includes(semester) 
+                              ? 'var(--accent-strong)' 
+                              : 'var(--text)',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={basicInfo.semesters.includes(semester)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setBasicInfo({
+                                  ...basicInfo,
+                                  semesters: [...basicInfo.semesters, semester].sort((a, b) => a - b)
+                                })
+                              } else {
+                                setBasicInfo({
+                                  ...basicInfo,
+                                  semesters: basicInfo.semesters.filter(s => s !== semester)
+                                })
+                              }
+                            }}
+                            className="w-4 h-4 rounded cursor-pointer flex-shrink-0"
+                            style={{ accentColor: 'var(--accent-strong)' }}
+                          />
+                          <span className="text-sm">{semester}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
+                      {basicInfo.semesters.length === 0 
+                        ? '✓ All semesters will have access' 
+                        : `✓ Selected: Semester ${basicInfo.semesters.join(', ')}`}
+                    </p>
                   </div>
                 </div>
               </div>
