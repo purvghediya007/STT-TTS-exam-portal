@@ -13,8 +13,23 @@ const initialState = {
   branch: '',
   semester: null,
 }
+const availableBranches = [
+  'IT',
+  'CE',
+  'COE',
+  'CSE (DS)',
+  'ECE',
+  'EIE',
+  'EE',
+  'ICT',
+  'AM',
+  'CHE',
+  'IC',
+  'ME',
+  'PE',
+  'SH'
+];
 
-const availableBranches = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'BT', 'CHE']
 const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
 export default function RegisterCard() {

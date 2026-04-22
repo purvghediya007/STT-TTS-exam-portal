@@ -26,7 +26,22 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
   })
 
   // Available options for branches and semesters
-  const availableBranches = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'BT', 'CHE']
+  const availableBranches = [
+  'IT',
+  'CE',
+  'COE',
+  'CSE (DS)',
+  'ECE',
+  'EIE',
+  'EE',
+  'ICT',
+  'AM',
+  'CHE',
+  'IC',
+  'ME',
+  'PE',
+  'SH'
+];
   const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
   // Step 2: Questions - Load from draft/exam if available
@@ -38,7 +53,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     endsAt: initialExam?.endsAt ? new Date(initialExam.endsAt).toISOString().slice(0, 16) : '',
     durationMin: initialExam?.durationMin || 60,
     timePerQuestionSec: initialExam?.timePerQuestionSec || null,
-    pointsTotal: initialExam?.pointsTotal || (questions.length > 0 ? questions.reduce((sum, q) => sum + (q.points || 1), 0) : 100),
+    pointsTotal: initialExam?.pointsTotal || (questions.length > 0 ? questions.reduce((sum, q) => sum + (q.marks || 1), 0) : 100),
     attemptsLeft: initialExam?.attemptsLeft || 1,
     allowedReRecords: initialExam?.allowedReRecords || 0,
     strictMode: initialExam?.strictMode || false
@@ -183,7 +198,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     if (questions.length === 0) {
       newErrors.questions = 'Please add at least one question'
     } else {
-      const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0)
+      const totalPoints = questions.reduce((sum, q) => sum + (q.marks || 1), 0)
       if (totalPoints < 1) {
         newErrors.pointsTotal = 'Total marks must be at least 1'
       }

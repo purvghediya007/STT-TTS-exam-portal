@@ -21,17 +21,26 @@ export default function DashboardView() {
   const classifyExam = (exam) => {
     if (!exam) return 'unknown'
     const now = new Date()
-    if (exam.status === 'finished') return 'submitted'
-    if (!exam.startsAt || !exam.endsAt) {
-      if (exam.status === 'live') return 'available'
-      if (exam.status === 'upcoming') return 'upcoming'
-      return 'unknown'
+
+    // 1. Check if the user has completed or attempted this exam
+    const finishStatuses = ['submitted', 'transcribed', 'evaluated', 'expired']
+    if (exam.attemptStatus && finishStatuses.includes(exam.attemptStatus)) {
+      return 'submitted'
     }
-    const starts = new Date(exam.startsAt)
-    const ends = new Date(exam.endsAt)
-    if (!isNaN(starts.getTime()) && now < starts) return 'upcoming'
-    if (!isNaN(starts.getTime()) && !isNaN(ends.getTime()) && now >= starts && now < ends) return 'available'
-    if (!isNaN(ends.getTime()) && now >= ends) return 'submitted'
+
+    // 2. Otherwise it has not been submitted by the user. Determine if it's upcoming, available, or missed.
+    if (exam.startsAt && exam.endsAt) {
+      const starts = new Date(exam.startsAt)
+      const ends = new Date(exam.endsAt)
+      if (!isNaN(starts.getTime()) && now < starts) return 'upcoming'
+      if (!isNaN(starts.getTime()) && !isNaN(ends.getTime()) && now >= starts && now < ends) return 'available'
+      if (!isNaN(ends.getTime()) && now >= ends) return 'missed'
+    }
+
+    if (exam.status === 'live') return 'available'
+    if (exam.status === 'upcoming') return 'upcoming'
+    if (exam.status === 'finished') return 'missed' // If no endsAt but it's finished and not attempted, it is missed.
+
     return 'unknown'
   }
 
@@ -42,6 +51,7 @@ export default function DashboardView() {
     
     const upcoming = exams.filter(e => classifyExam(e) === 'upcoming')
     const available = exams.filter(e => classifyExam(e) === 'available')
+    // Only count exams that the student actually submitted/attempted
     const submitted = exams.filter(e => classifyExam(e) === 'submitted')
 
     const scores = submitted

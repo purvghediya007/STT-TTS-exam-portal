@@ -760,31 +760,38 @@ export default function FacultyExamsList() {
                       </div>
                     </div>
 
-                    <div className="px-5 py-4 border-t border-gray-100 flex items-center gap-2 bg-white">
-                      {(status === 'finished' || status === 'live') && (
-                        <button
-                          onClick={() => handleViewSubmissions(exam)}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-                        >
-                          <Eye className="w-4 h-4" /> Submissions
+                    <div className="px-5 py-4 border-t border-gray-100 bg-white">
+                      <div className="flex items-center gap-2 mb-3">
+                        {(status === 'finished' || status === 'live') && (
+                          <button
+                            onClick={() => handleViewSubmissions(exam)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                          >
+                            <Eye className="w-4 h-4" /> Submissions
+                          </button>
+                        )}
+                        {status !== 'live' && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(exam)}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(exam.id)}
+                              disabled={deletingId === exam.id}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 border border-transparent hover:border-red-100"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {status === 'finished' && (
+                        <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                          Publish Result
                         </button>
-                      )}
-                      {status !== 'live' && (
-                        <>
-                          <button
-                            onClick={() => handleEdit(exam)}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            <Edit className="w-4 h-4" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(exam.id)}
-                            disabled={deletingId === exam.id}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 border border-transparent hover:border-red-100"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
                       )}
                     </div>
                   </div>

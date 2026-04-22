@@ -166,6 +166,10 @@ router.get(
         return {
           ...transformExamForFrontend(exam.toObject()),
           attemptStatus: attempt ? attempt.status : null,
+          score: attempt ? attempt.totalScore : null,
+          maxScore: attempt ? attempt.maxScore : null,
+          attempted: !!attempt,
+          studentAttempt: attempt ? attempt : null,
         };
       });
 
