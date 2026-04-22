@@ -54,7 +54,17 @@ export default function HistoryView() {
   }, [exams, user?.sub])
 
   const completedExams = useMemo(() => {
-    return exams.map(exam => {
+    return exams
+      .filter(exam => {
+        const finishStatuses = ['submitted', 'transcribed', 'evaluated', 'expired']
+        const sub = submissions[exam.id]
+        
+        const hasFinishedAttempt = exam.attemptStatus && finishStatuses.includes(exam.attemptStatus)
+        const hasFinishedSubmission = sub && finishStatuses.includes(sub.status)
+        
+        return hasFinishedAttempt || hasFinishedSubmission
+      })
+      .map(exam => {
       const submission = submissions[exam.id]
       return {
         ...exam,

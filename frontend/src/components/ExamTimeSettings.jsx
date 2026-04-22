@@ -24,7 +24,7 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
   // Auto-calculate total points from questions
   useEffect(() => {
     if (questions && questions.length > 0) {
-      const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0)
+      const totalPoints = questions.reduce((sum, q) => sum + (q.marks || 1), 0)
       if (totalPoints !== timeSettings.pointsTotal) {
         onChange({ ...timeSettings, pointsTotal: totalPoints })
       }
