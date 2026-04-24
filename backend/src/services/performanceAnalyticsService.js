@@ -15,15 +15,6 @@ const round = (value, decimals = 0) => {
   return Math.round(value * factor) / factor;
 };
 
-const getWeekLabel = (dateValue) => {
-  const date = new Date(dateValue);
-  const day = date.getUTCDay();
-  const diff = date.getUTCDate() - day + (day === 0 ? -6 : 1);
-  date.setUTCDate(diff);
-  date.setUTCHours(0, 0, 0, 0);
-  return date.toISOString().slice(0, 10);
-};
-
 /**
  * Get performance status based on average score
  * @param {number} averageScore - Average percentage score
@@ -129,103 +120,6 @@ const getExamPerformance = async (teacherId) => {
     .sort((a, b) => b.averageScore - a.averageScore);
 };
 
-const getTimeAndGrowthMetrics = async (teacherId) => {
-  const { exams, attempts } = await getTeacherExamsAndAttempts(teacherId);
-  const examMap = new Map(exams.map((exam) => [String(exam._id), exam]));
-  const byExam = new Map();
-  const weekly = new Map();
-  const examProgress = new Map();
-
-  for (const attempt of attempts) {
-    const examId = String(attempt.examId);
-    const exam = examMap.get(examId) || {};
-    const percentage = attempt.maxScore > 0 ? (attempt.totalScore / attempt.maxScore) * 100 : 0;
-
-    const completionMs =
-      attempt.finishedAt && attempt.startedAt
-        ? new Date(attempt.finishedAt) - new Date(attempt.startedAt)
-        : null;
-
-    // By exam completion
-    const examEntry = byExam.get(examId) || {
-      examId,
-      examName: exam.title || "Untitled Exam",
-      examCode: exam.examCode || "",
-      scoreSum: 0,
-      maxSum: 0,
-      completionSumMs: 0,
-      completionCount: 0,
-      attemptCount: 0,
-    };
-    examEntry.scoreSum += attempt.totalScore;
-    examEntry.maxSum += attempt.maxScore;
-    examEntry.attemptCount += 1;
-    if (completionMs !== null && completionMs >= 0) {
-      examEntry.completionSumMs += completionMs;
-      examEntry.completionCount += 1;
-    }
-    byExam.set(examId, examEntry);
-
-    // Weekly metric
-    const date = attempt.finishedAt || attempt.createdAt;
-    if (date) {
-      const week = getWeekLabel(date);
-      const weekEntry = weekly.get(week) || { total: 0, count: 0 };
-      weekEntry.total += percentage;
-      weekEntry.count += 1;
-      weekly.set(week, weekEntry);
-    }
-
-    // Growth by exam
-    const growthEntry = examProgress.get(examId) || {
-      examId,
-      examName: exam.title || "Untitled Exam",
-      startTime: exam.startTime || new Date(0),
-      scoreSum: 0,
-      maxSum: 0,
-      count: 0,
-    };
-    growthEntry.scoreSum += attempt.totalScore;
-    growthEntry.maxSum += attempt.maxScore;
-    growthEntry.count += 1;
-    examProgress.set(examId, growthEntry);
-  }
-
-  const byExamArray = Array.from(byExam.values()).map((entry) => ({
-    examId: entry.examId,
-    examName: entry.examName,
-    examCode: entry.examCode,
-    averageScore: entry.maxSum > 0 ? round((entry.scoreSum / entry.maxSum) * 100, 2) : 0,
-    avgCompletionMinutes:
-      entry.completionCount > 0 ? round(entry.completionSumMs / entry.completionCount / 60000, 1) : null,
-    attempts: entry.attemptCount,
-  }));
-
-  const weeklyArray = Array.from(weekly.entries())
-    .map(([week, entry]) => ({
-      week,
-      averageCompletionScore: round(entry.total / entry.count, 2),
-      attempts: entry.count,
-    }))
-    .sort((a, b) => a.week.localeCompare(b.week));
-
-  const examPerformance = Array.from(examProgress.values())
-    .map((entry) => ({
-      examId: entry.examId,
-      examName: entry.examName,
-      averageScore: entry.maxSum > 0 ? round((entry.scoreSum / entry.maxSum) * 100, 2) : 0,
-      attempts: entry.count,
-      startTime: entry.startTime,
-    }))
-    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-
-  return {
-    byExam: byExamArray,
-    weekly: weeklyArray,
-    examPerformance,
-  };
-};
-
 const getQuestionDifficulty = async (teacherId) => {
   const teacherObjectId = new mongoose.Types.ObjectId(teacherId);
   return StudentAnswer.aggregate([
@@ -270,7 +164,6 @@ const getQuestionDifficulty = async (teacherId) => {
         examId: "$question.examId",
         text: "$question.text",
         type: "$question.type",
-        topic: "$question.topic",
         avgScore: {
           $round: [
             { $multiply: [{ $divide: ["$scoreSum", "$maxSum"] }, 100] },
@@ -487,24 +380,12 @@ const getSemesterOverview = async (teacherId) => {
     }
 
     const examMetrics = await getExamPerformance(teacherId);
-    const completionMetrics = await getTimeAndGrowthMetrics(teacherId);
     const questionDifficulty = await getQuestionDifficulty(teacherId);
-    const topicWeakness = await getTopicWeakness(teacherId);
-    const growthTrend = {
-      weekly: completionMetrics.weekly,
-      examPerformance: completionMetrics.examPerformance,
-    };
 
     return {
       semesterData,
       examMetrics,
-      completionMetrics: {
-        weekly: completionMetrics.weekly,
-        byExam: completionMetrics.byExam,
-      },
       questionDifficulty,
-      topicWeakness,
-      growthTrend,
     };
   } catch (error) {
     console.error("Error in getSemesterOverview:", error);
