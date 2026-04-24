@@ -901,6 +901,47 @@ export async function deleteDraftExam(draftId: string): Promise<void> {
 }
 
 /**
+ * Get evaluation status for an exam
+ */
+export async function getExamEvaluationStatus(examId: string): Promise<{
+  allEvaluated: boolean
+  totalAttempts: number
+  evaluatedAttempts: number
+  pendingAttempts: number
+  resultsPublished: boolean
+  message: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/evaluation-status`)
+    return response.json()
+  } catch (err) {
+    console.error('Error fetching evaluation status:', err)
+    throw err
+  }
+}
+
+/**
+ * Publish results for an exam
+ */
+export async function publishExamResults(examId: string): Promise<{
+  success: boolean
+  message: string
+  resultsPublished: boolean
+  resultPublishedAt?: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/publish-results`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+    return response.json()
+  } catch (err) {
+    console.error('Error publishing results:', err)
+    throw err
+  }
+}
+
+/**
  * Student API types
  */
 export interface Student {
