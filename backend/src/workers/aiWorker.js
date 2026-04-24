@@ -1,4 +1,3 @@
-
 const path = require("path");
 require("dotenv").config({
   path: path.resolve(__dirname, "../../.env"),
@@ -6,11 +5,12 @@ require("dotenv").config({
 
 const { Worker } = require("bullmq");
 const axios = require("axios");
-const fs = require("fs");
 
 const Question = require("../models/Question");
 const connection = require("../config/redis");
 const connectDB = require("../config/db");
+const { s3Client, generateTTSAudioKey, getS3Url } = require("../config/s3");
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
 
 // ✅ Connect MongoDB for worker process
 connectDB();
@@ -70,21 +70,44 @@ new Worker(
 
           const audioBuffer = Buffer.from(ttsRes.data);
 
-          // ===== SAVE AUDIO LOCALLY =====
-          const audioDir = path.join(__dirname, "../../uploads/audio");
-          if (!fs.existsSync(audioDir)) {
-            fs.mkdirSync(audioDir, { recursive: true });
+          // ===== UPLOAD TO S3 =====
+          try {
+            const s3Key = generateTTSAudioKey(
+              question.examId.toString(),
+              question._id.toString()
+            );
+            const bucketName = process.env.AWS_S3_BUCKET_NAME;
+            const region = process.env.AWS_S3_REGION || "us-east-1";
+
+            console.log(`📤 Uploading TTS audio to S3: ${s3Key}`);
+            console.log(`🪣 Bucket: ${bucketName}, Region: ${region}`);
+
+            const putCommand = new PutObjectCommand({
+              Bucket: bucketName,
+              Key: s3Key,
+              Body: audioBuffer,
+              ContentType: "audio/mpeg",
+            });
+
+            await s3Client.send(putCommand);
+            console.log("✅ TTS audio uploaded to S3");
+
+            // Generate S3 URL using helper function
+            const s3Url = getS3Url(s3Key);
+
+            question.ttsGenerated = true;
+            question.ttsAudioUrl = s3Url;
+            question.aiStatus.audio = "done";
+
+            console.log("✅ TTS URL saved:", s3Url);
+          } catch (s3Error) {
+            console.error("❌ Failed to upload TTS to S3:", s3Error.message);
+            console.error("   Code:", s3Error.code);
+            console.error("   StatusCode:", s3Error.$metadata?.httpStatusCode);
+            question.aiStatus.audio = "failed";
+            question.aiRetryCount.audio += 1;
+            question.aiError.audio = `S3 upload failed: ${s3Error.message}`;
           }
-
-          const fileName = `tts_${question._id}.mp3`;
-          const filePath = path.join(audioDir, fileName);
-          fs.writeFileSync(filePath, audioBuffer);
-
-          question.ttsGenerated = true;
-          question.ttsAudioUrl = `/uploads/audio/${fileName}`;
-          question.aiStatus.audio = "done";
-
-          console.log("✅ Audio saved:", filePath);
         } catch (err) {
           console.error("❌ TTS failed:", err.message);
           question.aiStatus.audio = "failed";

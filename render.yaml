@@ -1,0 +1,140 @@
+services:
+  # Main Backend API Service
+  - type: web
+    name: examecho-backend
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGO_URI
+        sync: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: JWT_RESET_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        sync: true
+      - key: AWS_S3_ACCESS_KEY_ID
+        sync: true
+      - key: AWS_S3_SECRET_ACCESS_KEY
+        sync: true
+      - key: AWS_S3_BUCKET_NAME
+        sync: true
+      - key: AWS_S3_REGION
+        sync: true
+      - key: GEMINI_API_KEY
+        sync: true
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_MODEL
+        value: gemini-2.5-flash
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: true
+      - key: CLOUDINARY_API_KEY
+        sync: true
+      - key: CLOUDINARY_API_SECRET
+        sync: true
+      - key: MAIL_USER
+        sync: true
+      - key: MAIL_PASS
+        sync: true
+      - key: FRONTEND_URL
+        sync: true
+      - key: CAPTCHA_EXPIRES_MS
+        value: "300000"
+
+  # AI Worker Service (TTS & Rubrics)
+  - type: worker
+    name: examecho-ai-worker
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/workers/aiWorker.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: true
+      - key: REDIS_URL
+        sync: true
+      - key: AWS_S3_ACCESS_KEY_ID
+        sync: true
+      - key: AWS_S3_SECRET_ACCESS_KEY
+        sync: true
+      - key: AWS_S3_BUCKET_NAME
+        sync: true
+      - key: AWS_S3_REGION
+        sync: true
+      - key: GEMINI_API_KEY
+        sync: true
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_MODEL
+        value: gemini-2.5-flash
+
+  # Transcription Worker Service (STT)
+  - type: worker
+    name: examecho-transcription-worker
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/workers/transcriptionWorker.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: true
+      - key: REDIS_URL
+        sync: true
+      - key: AWS_S3_ACCESS_KEY_ID
+        sync: true
+      - key: AWS_S3_SECRET_ACCESS_KEY
+        sync: true
+      - key: AWS_S3_BUCKET_NAME
+        sync: true
+      - key: AWS_S3_REGION
+        sync: true
+
+  # Evaluation Worker Service (AI Grading)
+  - type: worker
+    name: examecho-evaluation-worker
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/workers/aiEvaluationWorker.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: true
+      - key: REDIS_URL
+        sync: true
+      - key: GEMINI_API_KEY
+        sync: true
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_MODEL
+        value: gemini-2.5-flash

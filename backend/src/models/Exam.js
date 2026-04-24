@@ -39,7 +39,6 @@ const examSchema = new mongoose.Schema(
     },
     // scheduling: set LATER when launching exam
 
-
     // 🟢 NEW FIELDS (SAFE ADDITION)
     branches: {
       type: [String],
@@ -51,7 +50,6 @@ const examSchema = new mongoose.Schema(
       default: [], // empty = all semesters allowed
     },
 
-    
     startTime: {
       type: Date,
     },
@@ -107,6 +105,15 @@ const examSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    // Results publication status
+    resultsPublished: {
+      type: Boolean,
+      default: false,
+    },
+    resultPublishedAt: {
+      type: Date,
+      default: null,
+    },
     // default settings for all questions of this exam (can override per question if needed)
     settings: {
       thinkTimeSeconds: {
@@ -127,7 +134,7 @@ const examSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Exam = mongoose.model("Exam", examSchema);
