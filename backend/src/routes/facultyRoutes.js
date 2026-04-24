@@ -668,22 +668,69 @@ router.get(
       const skip = (pageNum - 1) * limitNum;
 
       const students = await Student.find(query)
-        .select("_id username email enrollmentNumber role createdAt")
+        .select("_id username email enrollmentNumber branch role createdAt")
         .skip(skip)
         .limit(limitNum)
         .sort({ createdAt: -1 });
 
       const total = await Student.countDocuments(query);
 
+      const studentIds = students.map((student) => student._id);
+      const statsByStudent = await StudentExamAttempt.aggregate([
+        {
+          $match: {
+            studentId: { $in: studentIds },
+            totalScore: { $ne: null },
+            maxScore: { $gt: 0 },
+          },
+        },
+        {
+          $group: {
+            _id: "$studentId",
+            examCount: { $addToSet: "$examId" },
+            scoreSum: { $sum: "$totalScore" },
+            maxSum: { $sum: "$maxScore" },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            examCount: { $size: "$examCount" },
+            averageScore: {
+              $cond: [
+                { $gt: ["$maxSum", 0] },
+                { $multiply: [{ $divide: ["$scoreSum", "$maxSum"] }, 100] },
+                0,
+              ],
+            },
+          },
+        },
+      ]);
+
+      const statsMap = statsByStudent.reduce((map, item) => {
+        map[item._id.toString()] = item
+        return map
+      }, {})
+
       // Transform students for frontend
-      const transformedStudents = students.map((student) => ({
-        id: student._id,
-        username: student.username,
-        email: student.email,
-        enrollmentNumber: student.enrollmentNumber,
-        role: student.role,
-        joinedDate: student.createdAt,
-      }));
+      const transformedStudents = students.map((student) => {
+        const stats = statsMap[student._id.toString()] || {
+          examCount: 0,
+          averageScore: 0,
+        }
+
+        return {
+          id: student._id,
+          username: student.username,
+          email: student.email,
+          enrollmentNumber: student.enrollmentNumber,
+          department: student.branch || '',
+          examCount: stats.examCount,
+          averageScore: Math.round(stats.averageScore || 0),
+          role: student.role,
+          joinedDate: student.createdAt,
+        }
+      });
 
       return res.status(200).json({
         students: transformedStudents,

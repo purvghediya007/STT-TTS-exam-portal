@@ -288,6 +288,77 @@ router.get(
   },
 );
 
+// ---------- 0.56) GET EXAM SCOREBOARD FOR STUDENT ----------
+// GET /api/student/exams/:examId/scoreboard
+router.get(
+  "/exams/:examId/scoreboard",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const currentStudentId = req.user.sub;
+
+      const exam = await Exam.findById(examId).select(
+        "title examCode startTime endTime durationMinutes pointsTotal",
+      );
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      const attempts = await StudentExamAttempt.find({
+        examId,
+        status: { $in: ["submitted", "transcribed", "evaluated", "expired"] },
+        totalScore: { $ne: null },
+        maxScore: { $ne: null },
+      })
+        .sort({ totalScore: -1, maxScore: -1, finishedAt: 1, startedAt: 1 })
+        .populate("studentId", "username email enrollmentNumber");
+
+      const entries = attempts.map((attempt, index) => {
+        const student = attempt.studentId;
+        const percentage = attempt.maxScore
+          ? Math.round((attempt.totalScore / attempt.maxScore) * 100)
+          : 0;
+
+        return {
+          rank: index + 1,
+          studentId: student?._id || attempt.studentId,
+          studentName: student?.username || "Unknown Student",
+          enrollmentNumber: student?.enrollmentNumber || "-",
+          score: attempt.totalScore,
+          maxScore: attempt.maxScore,
+          percentage,
+          status: attempt.status,
+          finishedAt: attempt.finishedAt,
+        };
+      });
+
+      const currentUserEntry = entries.find(
+        (entry) => entry.studentId?.toString() === currentStudentId?.toString(),
+      );
+
+      return res.status(200).json({
+        exam: {
+          id: exam._id,
+          title: exam.title,
+          examCode: exam.examCode,
+          startTime: exam.startTime,
+          endTime: exam.endTime,
+          durationMinutes: exam.durationMinutes,
+          pointsTotal: exam.pointsTotal,
+        },
+        totalAttempts: entries.length,
+        currentUserRank: currentUserEntry?.rank || null,
+        currentUserScore: currentUserEntry?.score ?? null,
+        currentUserPercentage: currentUserEntry?.percentage ?? null,
+        entries,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 //
 // ---------- SIMPLE AUDIO UPLOAD ----------
 // POST /api/student/exams/:examId/upload-audio
