@@ -10,7 +10,8 @@ const facultyRoutes = require("./routes/facultyRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const studentExamRoutes = require("./routes/studentExamRoutes");
-const analyticsRoutes = require("../routes/analytics.routes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+const studentAnalyticsRoutes = require("./routes/studentAnalyticsRoutes");
 const path = require("path");
 
 dotenv.config();
@@ -57,8 +58,10 @@ app.use("/api/faculty", facultyRoutes);
 
 // Student exam flow
 app.use("/api/student", studentExamRoutes);
-// Analytics endpoints (served from backend/routes)
-app.use("/api/analytics", analyticsRoutes);
+
+// Analytics endpoints
+app.use("/api/faculty/analytics", analyticsRoutes);
+app.use("/api/analytics", studentAnalyticsRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
