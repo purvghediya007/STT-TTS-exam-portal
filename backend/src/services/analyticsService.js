@@ -5,15 +5,6 @@ const Question = require("../models/Question");
 
 const PASS_PERCENTAGE = 0.5;
 
-const getWeekLabel = (dateValue) => {
-  const date = new Date(dateValue);
-  const dayOfWeek = date.getUTCDay();
-  const diff = date.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-  date.setUTCDate(diff);
-  date.setUTCHours(0, 0, 0, 0);
-  return date.toISOString().slice(0, 10);
-};
-
 exports.buildAnalytics = async (studentId) => {
   if (!mongoose.Types.ObjectId.isValid(studentId)) {
     return {
@@ -30,12 +21,6 @@ exports.buildAnalytics = async (studentId) => {
         { date: new Date().toISOString(), percentage: 70 },
         { date: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(), percentage: 68 },
       ],
-      weeklyProgress: [
-        { week: new Date().toISOString().slice(0, 10), averagePercentage: 70 },
-      ],
-      topicWeakness: [
-        { topic: "General", avgScore: 62, passRate: 55, difficultyIndex: 68 },
-      ],
       aiFeedback: ["Demonstration data: no real studentId provided"],
     };
   }
@@ -44,16 +29,12 @@ exports.buildAnalytics = async (studentId) => {
   const examWise = await examWisePerformance(id);
   const typeWise = await questionTypeAnalysis(id);
   const progress = await progressOverTime(id);
-  const weeklyProgress = buildWeeklyProgress(progress);
-  const topicWeakness = await studentTopicWeakness(id);
   const aiFeedback = generateAIFeedback(typeWise, examWise);
 
   return {
     examWise,
     typeWise,
     progress,
-    weeklyProgress,
-    topicWeakness,
     aiFeedback,
   };
 };
@@ -145,105 +126,6 @@ async function progressOverTime(studentId) {
       },
     },
     { $sort: { date: 1 } },
-  ]);
-}
-
-function buildWeeklyProgress(progress) {
-  const weekly = new Map();
-  progress.forEach((entry) => {
-    if (!entry.date) return;
-    const week = getWeekLabel(entry.date);
-    const existing = weekly.get(week) || { sum: 0, count: 0 };
-    existing.sum += entry.percentage || 0;
-    existing.count += 1;
-    weekly.set(week, existing);
-  });
-
-  return Array.from(weekly.entries())
-    .map(([week, data]) => ({
-      week,
-      averagePercentage: Math.round(data.sum / data.count),
-    }))
-    .sort((a, b) => a.week.localeCompare(b.week));
-}
-
-async function studentTopicWeakness(studentId) {
-  return StudentAnswer.aggregate([
-    {
-      $match: {
-        studentId,
-        evaluationStatus: "completed",
-        score: { $ne: null },
-        maxMarks: { $gt: 0 },
-      },
-    },
-    {
-      $lookup: {
-        from: "questions",
-        localField: "questionId",
-        foreignField: "_id",
-        as: "question",
-      },
-    },
-    { $unwind: "$question" },
-    {
-      $match: {
-        "question.topic": { $exists: true, $ne: "" },
-      },
-    },
-    {
-      $group: {
-        _id: "$question.topic",
-        score: { $sum: "$score" },
-        maxScore: { $sum: "$maxMarks" },
-        passCount: {
-          $sum: {
-            $cond: [
-              { $gte: [{ $divide: ["$score", "$maxMarks"] }, PASS_PERCENTAGE] },
-              1,
-              0,
-            ],
-          },
-        },
-        totalCount: { $sum: 1 },
-      },
-    },
-    {
-      $project: {
-        topic: "$_id",
-        avgScore: {
-          $round: [{ $multiply: [{ $divide: ["$score", "$maxScore"] }, 100] }, 2],
-        },
-        passRate: {
-          $round: [
-            { $multiply: [{ $divide: ["$passCount", "$totalCount"] }, 100] },
-            2,
-          ],
-        },
-        difficultyIndex: {
-          $round: [
-            {
-              $multiply: [
-                {
-                  $subtract: [
-                    1,
-                    {
-                      $add: [
-                        { $multiply: [{ $divide: [{ $divide: ["$score", "$maxScore"] }, 1] }, 0.6] },
-                        { $multiply: [{ $divide: ["$passCount", "$totalCount"] }, 0.4] },
-                      ],
-                    },
-                  ],
-                },
-                100,
-              ],
-            },
-            0,
-          ],
-        },
-      },
-    },
-    { $sort: { avgScore: 1 } },
   ]);
 }
 
