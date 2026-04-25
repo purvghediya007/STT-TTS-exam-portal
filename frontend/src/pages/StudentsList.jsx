@@ -20,9 +20,8 @@ export default function StudentsList() {
       username: 'John Doe',
       email: 'john.doe@example.com',
       department: 'Computer Science',
-      year: 3,
       examCount: 5,
-      avgScore: 85
+      averageScore: 85
     },
     {
       id: 'STU002',
@@ -30,9 +29,8 @@ export default function StudentsList() {
       username: 'Jane Smith',
       email: 'jane.smith@example.com',
       department: 'Computer Science',
-      year: 2,
       examCount: 3,
-      avgScore: 92
+      averageScore: 92
     },
     {
       id: 'STU003',
@@ -40,9 +38,8 @@ export default function StudentsList() {
       username: 'Bob Johnson',
       email: 'bob.johnson@example.com',
       department: 'Information Technology',
-      year: 4,
       examCount: 8,
-      avgScore: 78
+      averageScore: 78
     }
   ]
 
@@ -148,7 +145,6 @@ export default function StudentsList() {
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Student</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Enrollment</th>
                   <th className="hidden lg:table-cell px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Department</th>
-                  <th className="hidden sm:table-cell px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Year</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Exams</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Avg Score</th>
                   <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
@@ -172,16 +168,15 @@ export default function StudentsList() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-xs font-mono text-gray-600">{student.enrollmentNumber}</td>
-                    <td className="hidden lg:table-cell px-6 py-4 text-sm text-gray-600">{student.department || '—'}</td>
-                    <td className="hidden sm:table-cell px-6 py-4 text-sm text-gray-600">{student.year || '—'}</td>
+                    <td className="hidden lg:table-cell px-6 py-4 text-sm text-gray-600">{student.department || student.branch || '—'}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-bold">
-                        {student.examCount || 0}
+                        {student.examCount ?? 0}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-green-50 text-green-700 text-xs font-bold border border-green-100">
-                        {student.avgScore}%
+                        {student.averageScore ?? student.avgScore ?? 0}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

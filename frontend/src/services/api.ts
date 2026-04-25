@@ -926,6 +926,35 @@ export interface StudentExamSubmission {
   attempts: number
 }
 
+export interface ExamScoreboardEntry {
+  rank: number
+  studentId: string
+  studentName: string
+  enrollmentNumber: string
+  score: number
+  maxScore: number
+  percentage: number
+  status: string
+  finishedAt: string | null
+}
+
+export interface ExamScoreboardResponse {
+  exam: {
+    id: string
+    title: string
+    examCode: string
+    startTime: string
+    endTime: string
+    durationMinutes: number
+    pointsTotal?: number
+  }
+  totalAttempts: number
+  currentUserRank: number | null
+  currentUserScore: number | null
+  currentUserPercentage: number | null
+  entries: ExamScoreboardEntry[]
+}
+
 export interface StudentDetails extends Student {
   examSubmissions: StudentExamSubmission[]
   stats: {
@@ -990,6 +1019,14 @@ export async function fetchExamSubmissions(examId: string): Promise<{
   total: number
 }> {
   const response = await fetchAPI(`/faculty/exams/${examId}/submissions`)
+  return response.json()
+}
+
+/**
+ * Fetch classroom scoreboard for a student exam
+ */
+export async function fetchExamScoreboard(examId: string): Promise<ExamScoreboardResponse> {
+  const response = await fetchAPI(`/student/exams/${examId}/scoreboard`)
   return response.json()
 }
 

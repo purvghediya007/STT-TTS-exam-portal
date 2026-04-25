@@ -7,6 +7,7 @@ import StudentsList from './StudentsList'
 import StudentDetails from './StudentDetails'
 import ExamSubmissionsView from './ExamSubmissionsView'
 import FacultyAnalyticsDashboard from './FacultyAnalyticsDashboard'
+import FacultyExamAnalytics from './FacultyExamAnalytics'
 import ProfileView from './ProfileView'
 
 /**
@@ -22,6 +23,7 @@ export default function FacultyExams() {
         <Route path="students" element={<StudentsList />} />
         <Route path="students/:studentId" element={<StudentDetails />} />
         <Route path="analytics" element={<FacultyAnalyticsDashboard />} />
+        <Route path="analytics/:examId" element={<FacultyExamAnalytics />} />
         <Route path="profile" element={<ProfileView />} />
         <Route path="settings" element={<div className="p-8"><h1 className="text-2xl font-bold">Settings</h1><p className="text-gray-600 mt-2">Settings page coming soon...</p></div>} />
         <Route path="" element={<Navigate to="dashboard" replace />} />
