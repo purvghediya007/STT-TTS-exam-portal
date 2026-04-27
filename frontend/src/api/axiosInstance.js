@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Production API URL - directly hardcoded to avoid Vercel env variable issues
-const API_URL = "https://stt-tts-exam-portal.onrender.com/api";
+// API URL from environment variables - fallback to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -19,7 +19,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
