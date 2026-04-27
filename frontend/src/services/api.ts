@@ -1,10 +1,9 @@
 /**
  * API service layer for student exams
- * TODO: Replace getAuthHeaders() with your actual auth implementation
- * TODO: Update API_BASE_URL to your FastAPI backend URL
+ * Uses VITE_API_URL environment variable set in Vercel/development
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 /**
  * Get authentication headers
