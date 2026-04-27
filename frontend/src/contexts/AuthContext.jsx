@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import api from '../api/axiosInstance'
 
 const AuthContext = createContext(null)
 
@@ -40,22 +41,16 @@ export function AuthProvider({ children }) {
         setIsLoading(true)
 
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    password,
-                    captchaId,
-                    captchaValue,
-                }),
+            const response = await api.post('/auth/login', {
+                username,
+                password,
+                captchaId,
+                captchaValue,
             })
 
-            const data = await response.json()
+            const data = response.data
 
-            if (!response.ok) {
+            if (!response.status || response.status < 200 || response.status >= 300) {
                 throw new Error(data.message || 'Login failed')
             }
 
@@ -96,22 +91,16 @@ export function AuthProvider({ children }) {
             // Normalize role
             const apiRole = role === 'student' ? 'Student' : 'Teacher'
 
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    role: apiRole,
-                    username,
-                    email,
-                    password,
-                }),
+            const response = await api.post('/auth/register', {
+                role: apiRole,
+                username,
+                email,
+                password,
             })
 
-            const data = await response.json()
+            const data = response.data
 
-            if (!response.ok) {
+            if (!response.status || response.status < 200 || response.status >= 300) {
                 throw new Error(data.message || 'Registration failed')
             }
 
