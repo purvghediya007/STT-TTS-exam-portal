@@ -1,7 +1,9 @@
 // src/app.js
+const dotenv = require("dotenv");
+dotenv.config(); // ✅ Load environment variables FIRST
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
@@ -14,7 +16,6 @@ const analyticsRoutes = require("./routes/analyticsRoutes");
 const studentAnalyticsRoutes = require("./routes/studentAnalyticsRoutes");
 const path = require("path");
 
-dotenv.config();
 connectDB();
 
 const app = express();
@@ -26,7 +27,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
 app.use(express.json());
 
@@ -36,7 +37,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ ADDED: serve local uploads
+// LEGACY: Serve local uploads for backward compatibility with old submissions
+// New audio uploads go directly to S3 - see backend/src/config/s3.js
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes

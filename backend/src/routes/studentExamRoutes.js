@@ -1,6 +1,5 @@
 // src/routes/studentExamRoutes.js
 const express = require("express");
-const multer = require("multer");
 const Exam = require("../models/Exam");
 const Question = require("../models/Question");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
@@ -15,31 +14,17 @@ const {
   evaluateMCQAnswer,
 } = require("../services/evaluationService");
 const {
-  saveAnswerAudio,
-  getAnswerAudioUrl,
-} = require("../services/localStorageService");
+  generatePresignedUploadUrl,
+  generateAnswerAudioKey,
+  generatePresignedDownloadUrl,
+  BUCKET_NAME,
+} = require("../config/s3");
 const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
 
 const router = express.Router();
 
-// Configure multer for audio file uploads (in-memory storage for processing)
-const audioUpload = multer({
-  storage: multer.memoryStorage(),
-  fileFilter: (req, file, cb) => {
-    const allowedMimes = ["audio/webm", "audio/wav", "audio/mpeg", "audio/ogg"];
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Audio type ${file.mimetype} is not allowed`));
-    }
-  },
-  limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB limit for audio
-  },
-});
-
 // Map question to student-safe view (no expectedAnswer, no sensitive fields)
-const mapQuestionForStudent = (q) => {
+const mapQuestionForStudent = async (q) => {
   const base = {
     _id: q._id, // MongoDB ID - required by frontend
     id: q._id, // Also return as 'id' for compatibility
@@ -51,7 +36,6 @@ const mapQuestionForStudent = (q) => {
     instruction: q.instruction,
     media: q.media,
     order: q.order,
-    ttsAudioUrl: q.ttsAudioUrl,
     requiresAudio: q.requiresAudio,
   };
 
@@ -61,6 +45,43 @@ const mapQuestionForStudent = (q) => {
       text: opt.text,
       // Don't expose isCorrect to student
     }));
+  }
+
+  // Generate pre-signed URL for TTS audio if it exists
+  if (q.ttsAudioUrl) {
+    try {
+      // Extract S3 key from URL
+      // URL format: https://s3.region.amazonaws.com/bucket-name/key
+      const urlObj = new URL(q.ttsAudioUrl);
+      let pathname = urlObj.pathname;
+
+      // Remove leading slash
+      if (pathname.startsWith("/")) {
+        pathname = pathname.substring(1);
+      }
+
+      // For path-style URLs (s3.region.amazonaws.com/bucket/key)
+      // Remove the bucket name prefix
+      let s3Key;
+      if (pathname.startsWith(BUCKET_NAME + "/")) {
+        s3Key = pathname.substring(BUCKET_NAME.length + 1);
+      } else {
+        s3Key = pathname;
+      }
+
+      // Generate pre-signed URL (valid for 1 hour)
+      const presignedUrl = await generatePresignedDownloadUrl(s3Key);
+      base.ttsAudioUrl = presignedUrl;
+    } catch (error) {
+      console.error(
+        `❌ Failed to generate presigned URL for TTS audio:`,
+        error.message
+      );
+      // Fallback to original URL (might not work if S3 is private)
+      base.ttsAudioUrl = q.ttsAudioUrl;
+    }
+  } else {
+    base.ttsAudioUrl = null;
   }
 
   return base;
@@ -163,11 +184,13 @@ router.get(
       // Transform exams for frontend
       const transformedExams = exams.map((exam) => {
         const attempt = attemptsByExam.get(exam._id.toString());
+        // Only show score/maxScore if results are published by faculty
+        const showResults = exam.resultsPublished === true;
         return {
           ...transformExamForFrontend(exam.toObject()),
           attemptStatus: attempt ? attempt.status : null,
-          score: attempt ? attempt.totalScore : null,
-          maxScore: attempt ? attempt.maxScore : null,
+          score: showResults && attempt ? attempt.totalScore : null,
+          maxScore: showResults && attempt ? attempt.maxScore : null,
           attempted: !!attempt,
           studentAttempt: attempt ? attempt : null,
         };
@@ -182,7 +205,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -215,8 +238,14 @@ router.get(
       const studentBranch = student?.branch || null;
       const studentSemester = student?.semester || null;
 
-      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
-      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+      const branchMatch =
+        !exam.branches ||
+        exam.branches.length === 0 ||
+        exam.branches.includes(studentBranch);
+      const semesterMatch =
+        !exam.semesters ||
+        exam.semesters.length === 0 ||
+        exam.semesters.includes(studentSemester);
 
       if (!branchMatch || !semesterMatch) {
         return res
@@ -233,7 +262,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -263,29 +292,33 @@ router.get(
         .sort({ startedAt: -1 })
         .populate(
           "examId",
-          "title examCode startTime endTime durationMinutes pointsTotal",
+          "title examCode startTime endTime durationMinutes pointsTotal resultsPublished"
         );
 
-      const submissions = attempts.map((attempt) => ({
-        attemptId: attempt._id,
-        examId: attempt.examId?._id,
-        studentId: attempt.studentId,
-        status: attempt.status,
-        startedAt: attempt.startedAt,
-        finishedAt: attempt.finishedAt,
-        totalScore: attempt.totalScore,
-        maxScore: attempt.maxScore,
-        percentage:
-          attempt.maxScore > 0
-            ? Math.round((attempt.totalScore / attempt.maxScore) * 100)
-            : 0,
-      }));
+      const submissions = attempts.map((attempt) => {
+        // Only show score/maxScore/percentage if results are published by faculty
+        const showResults = attempt.examId?.resultsPublished === true;
+        return {
+          attemptId: attempt._id,
+          examId: attempt.examId?._id,
+          studentId: attempt.studentId,
+          status: attempt.status,
+          startedAt: attempt.startedAt,
+          finishedAt: attempt.finishedAt,
+          totalScore: showResults ? attempt.totalScore : null,
+          maxScore: showResults ? attempt.maxScore : null,
+          percentage:
+            showResults && attempt.maxScore > 0
+              ? Math.round((attempt.totalScore / attempt.maxScore) * 100)
+              : 0,
+        };
+      });
 
       return res.status(200).json({ submissions });
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 // ---------- 0.56) GET EXAM SCOREBOARD FOR STUDENT ----------
@@ -360,66 +393,123 @@ router.get(
 );
 
 //
-// ---------- SIMPLE AUDIO UPLOAD ----------
+// ---------- GENERATE S3 PRE-SIGNED URL ----------
+// POST /api/student/exams/:examId/s3-presigned-url
+// Generate a pre-signed URL for direct S3 upload
+// Body: { attemptId, questionId }
+// Returns: { presignedUrl, s3Key }
+//
+router.post(
+  "/exams/:examId/s3-presigned-url",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const { attemptId, questionId } = req.body;
+      const studentId = req.user.sub;
+
+      // Validation
+      if (!attemptId || !questionId) {
+        return res.status(400).json({
+          message: "attemptId and questionId are required",
+        });
+      }
+
+      // Verify attempt belongs to student
+      const attempt = await StudentExamAttempt.findById(attemptId);
+      if (!attempt) {
+        return res.status(404).json({ message: "Attempt not found" });
+      }
+
+      if (attempt.studentId.toString() !== studentId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      if (attempt.examId.toString() !== examId) {
+        return res.status(400).json({
+          message: "Attempt does not belong to this exam",
+        });
+      }
+
+      // Generate S3 key
+      const s3Key = generateAnswerAudioKey(examId, attemptId, questionId);
+
+      // Generate pre-signed URL
+      const presignedUrl = await generatePresignedUploadUrl(
+        s3Key,
+        "audio/webm"
+      );
+
+      return res.status(200).json({
+        success: true,
+        presignedUrl,
+        s3Key,
+        message: "Pre-signed URL generated successfully",
+      });
+    } catch (error) {
+      console.error("Error generating pre-signed URL:", error.message);
+      res.status(500).json({
+        message: "Failed to generate pre-signed URL",
+        error: error.message,
+      });
+    }
+  }
+);
+
+//
+// ---------- STORE AUDIO URL ----------
 // POST /api/student/exams/:examId/upload-audio
-// Simple endpoint to receive and save audio files for exam answers
-// Body: FormData with:
-//   - audio: audio file
-//   - questionId: question ID
-//   - attemptId: attempt ID
+// DEPRECATED: Now accepts S3 URLs from frontend instead of file uploads
+// Body: { audioUrl, questionId, attemptId }
+// Stores the S3 URL in StudentAnswer
 //
 router.post(
   "/exams/:examId/upload-audio",
   authMiddleware,
   requireRole("student"),
-  audioUpload.single("audio"),
   async (req, res, next) => {
     try {
       const { examId } = req.params;
-      const { questionId, attemptId } = req.body;
+      const { questionId, attemptId, audioUrl, s3Key } = req.body;
       const studentId = req.user.sub;
 
-      console.log(`\n📤 AUDIO UPLOAD ENDPOINT CALLED`);
+      console.log(`\n📤 AUDIO URL STORAGE ENDPOINT CALLED`);
       console.log(`  Exam ID: ${examId}`);
       console.log(`  Student ID: ${studentId}`);
       console.log(`  Question ID: ${questionId}`);
       console.log(`  Attempt ID: ${attemptId}`);
-      console.log(`  File received: ${req.file ? "YES" : "NO"}`);
+      console.log(`  Audio URL: ${audioUrl ? "PROVIDED" : "MISSING"}`);
+      console.log(`  S3 Key: ${s3Key ? "PROVIDED" : "MISSING"}`);
 
-      if (!req.file) {
-        return res.status(400).json({ message: "No audio file provided" });
-      }
-
-      if (!questionId || !attemptId) {
-        return res
-          .status(400)
-          .json({ message: "questionId and attemptId are required" });
-      }
-
-      // Save the audio file
-      const saveResult = saveAnswerAudio(
-        req.file.buffer,
-        examId,
-        studentId,
-        questionId,
-      );
-
-      if (!saveResult.success) {
-        console.error(`❌ Failed to save audio: ${saveResult.error}`);
-        return res.status(500).json({
-          message: "Failed to save audio",
-          error: saveResult.error,
+      if (!audioUrl) {
+        return res.status(400).json({
+          message: "audioUrl is required (S3 URL of uploaded file)",
         });
       }
 
-      // Update the StudentAnswer with the recording URL
+      if (!questionId || !attemptId) {
+        return res.status(400).json({
+          message: "questionId and attemptId are required",
+        });
+      }
+
+      // Verify attempt belongs to student
+      const attempt = await StudentExamAttempt.findById(attemptId);
+      if (!attempt) {
+        return res.status(404).json({ message: "Attempt not found" });
+      }
+
+      if (attempt.studentId.toString() !== studentId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Update the StudentAnswer with the S3 URL
       console.log(`\n💾 Updating StudentAnswer...`);
       console.log(
-        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`,
+        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`
       );
-      console.log(
-        `   Update: { examId: "${examId}", studentId: "${studentId}", recordingUrl }`,
-      );
+      console.log(`   Update: { recordingUrl: "${audioUrl}" }`);
 
       try {
         const answer = await StudentAnswer.findOneAndUpdate(
@@ -427,15 +517,16 @@ router.post(
           {
             examId, // Required field
             studentId, // Required field
-            recordingUrls: [saveResult.url],
-            answerText: `[Audio recording: ${saveResult.url}]`,
+            recordingUrls: [audioUrl], // S3 URL
+            answerText: `[Audio recording: ${audioUrl}]`,
+            s3Key: s3Key || null, // Store S3 key for later reference
           },
-          { upsert: true, new: true },
+          { upsert: true, new: true }
         );
 
         if (!answer) {
           console.error(
-            `❌ Failed to create/update StudentAnswer - returned null`,
+            `❌ Failed to create/update StudentAnswer - returned null`
           );
           return res.status(500).json({
             message: "Failed to save answer to database",
@@ -445,14 +536,14 @@ router.post(
 
         console.log(`✅ StudentAnswer saved with ID: ${answer._id}`);
         console.log(
-          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`,
+          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`
         );
-        console.log(`✅ Audio file URL: ${saveResult.url}\n`);
+        console.log(`✅ Audio S3 URL: ${audioUrl}\n`);
 
         return res.status(200).json({
           success: true,
-          url: saveResult.url,
-          message: "Audio uploaded successfully",
+          url: audioUrl,
+          message: "Audio URL stored successfully",
           answerId: answer._id,
         });
       } catch (dbError) {
@@ -466,10 +557,10 @@ router.post(
         });
       }
     } catch (error) {
-      console.error("❌ Error uploading audio:", error.message);
+      console.error("❌ Error storing audio URL:", error.message);
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -502,8 +593,14 @@ router.get(
       const studentBranch = student?.branch || null;
       const studentSemester = student?.semester || null;
 
-      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
-      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+      const branchMatch =
+        !exam.branches ||
+        exam.branches.length === 0 ||
+        exam.branches.includes(studentBranch);
+      const semesterMatch =
+        !exam.semesters ||
+        exam.semesters.length === 0 ||
+        exam.semesters.includes(studentSemester);
 
       if (!branchMatch || !semesterMatch) {
         return res
@@ -513,14 +610,16 @@ router.get(
 
       const questions = await Question.find({ examId }).sort({ order: 1 });
 
-      // Map to student-safe view
-      const studentQuestions = questions.map(mapQuestionForStudent);
+      // Map to student-safe view (async to generate presigned URLs)
+      const studentQuestions = await Promise.all(
+        questions.map(mapQuestionForStudent)
+      );
 
       return res.status(200).json({ questions: studentQuestions });
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -545,27 +644,27 @@ router.get(
 
       const student = await Student.findById(studentId);
 
-        const exams = await Exam.find({
-          status: "published",
-          startTime: { $lte: now },
-          endTime: { $gte: now },
-          $and: [
-            {
-              $or: [
-                { branches: { $exists: false } },
-                { branches: { $size: 0 } },
-                { branches: { $in: [student.branch] } },
-              ],
-            },
-            {
-              $or: [
-                { semesters: { $exists: false } },
-                { semesters: { $size: 0 } },
-                { semesters: { $in: [student.semester] } },
-              ],
-            },
-          ],
-        })
+      const exams = await Exam.find({
+        status: "published",
+        startTime: { $lte: now },
+        endTime: { $gte: now },
+        $and: [
+          {
+            $or: [
+              { branches: { $exists: false } },
+              { branches: { $size: 0 } },
+              { branches: { $in: [student.branch] } },
+            ],
+          },
+          {
+            $or: [
+              { semesters: { $exists: false } },
+              { semesters: { $size: 0 } },
+              { semesters: { $in: [student.semester] } },
+            ],
+          },
+        ],
+      })
         .sort({ startTime: 1 })
         .select("title description examCode startTime endTime durationMinutes");
 
@@ -596,7 +695,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -627,8 +726,14 @@ router.post(
       const studentBranch = student?.branch || null;
       const studentSemester = student?.semester || null;
 
-      const branchMatch = !exam.branches || exam.branches.length === 0 || exam.branches.includes(studentBranch);
-      const semesterMatch = !exam.semesters || exam.semesters.length === 0 || exam.semesters.includes(studentSemester);
+      const branchMatch =
+        !exam.branches ||
+        exam.branches.length === 0 ||
+        exam.branches.includes(studentBranch);
+      const semesterMatch =
+        !exam.semesters ||
+        exam.semesters.length === 0 ||
+        exam.semesters.includes(studentSemester);
 
       if (!branchMatch || !semesterMatch) {
         return res
@@ -691,7 +796,7 @@ router.post(
 
       // Compute deadline: min(now + duration, exam.endTime)
       const deadlineByDuration = new Date(
-        now.getTime() + exam.durationMinutes * 60 * 1000,
+        now.getTime() + exam.durationMinutes * 60 * 1000
       );
       const deadlineAt =
         deadlineByDuration < exam.endTime ? deadlineByDuration : exam.endTime;
@@ -713,7 +818,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -758,7 +863,10 @@ router.get(
         examId: attempt.examId,
       }).sort({ order: 1 });
 
-      const safeQuestions = questions.map(mapQuestionForStudent);
+      // Map to student-safe view (async to generate presigned URLs)
+      const safeQuestions = await Promise.all(
+        questions.map(mapQuestionForStudent)
+      );
 
       return res.status(200).json({
         attemptId: attempt._id,
@@ -769,7 +877,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -782,7 +890,6 @@ router.post(
   "/exams/:examId/submit",
   authMiddleware,
   requireRole("student"),
-  audioUpload.any(), // Accept any files named by question IDs
   async (req, res, next) => {
     try {
       const { examId } = req.params;
@@ -799,7 +906,7 @@ router.post(
         "Answers from body:",
         typeof answers,
         answers ? Object.keys(answers).length : 0,
-        "questions",
+        "questions"
       );
 
       // Parse JSON if answers came as FormData field
@@ -822,7 +929,7 @@ router.post(
       console.log("Received attemptId:", attemptId);
       console.log(
         "Is valid MongoDB ID format:",
-        /^[0-9a-f]{24}$/.test(attemptId),
+        /^[0-9a-f]{24}$/.test(attemptId)
       );
 
       // Verify the attempt belongs to this student and exam
@@ -839,11 +946,11 @@ router.post(
           status: "in_progress",
         });
         console.log(
-          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`,
+          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`
         );
         if (!attempt) {
           console.log(
-            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`,
+            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`
           );
           return res.status(400).json({
             message:
@@ -859,7 +966,7 @@ router.post(
 
       if (attempt.studentId.toString() !== studentId) {
         console.log(
-          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`,
+          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`
         );
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -892,7 +999,7 @@ router.post(
       console.log(
         `✅ Attempt not expired. Processing ${
           answers ? answers.length : 0
-        } answers...`,
+        } answers...`
       );
 
       // Store mediaAnswers as StudentAnswers if provided
@@ -907,7 +1014,7 @@ router.post(
             await StudentAnswer.findOneAndUpdate(
               { attemptId: attempt._id, questionId: q._id },
               { answerText: mediaAnswer },
-              { upsert: true },
+              { upsert: true }
             );
           }
         }
@@ -935,7 +1042,7 @@ router.post(
           if (answer.selectedOptionIndex !== undefined) {
             answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
             console.log(
-              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`,
+              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`
             );
           }
 
@@ -943,48 +1050,19 @@ router.post(
           if (answer.answerText) {
             answerUpdate.answerText = answer.answerText;
             console.log(
-              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`,
+              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`
             );
           }
 
-          // For audio/interview answers - process uploaded files and store local URLs
-          const audioFile = req.files?.find(
-            (f) => f.fieldname === `audio_${answer.questionId}`,
-          );
-          if (audioFile) {
-            console.log(
-              `    🎤 Found audio file for question ${answer.questionId}, saving...`,
-            );
-            const saveResult = saveAnswerAudio(
-              audioFile.buffer,
-              examId,
-              studentId,
-              answer.questionId,
-            );
-
-            if (saveResult.success) {
-              answerUpdate.recordingUrls = [saveResult.url];
-              console.log(
-                `    ✅ Stored audio for question ${answer.questionId}: ${saveResult.url}`,
-              );
-            } else {
-              console.error(
-                `    ❌ Failed to save audio for question ${answer.questionId}: ${saveResult.error}`,
-              );
-            }
-          }
-          // Also support legacy recordingUrls field (for backward compatibility)
-          else if (
-            answer.recordingUrls &&
-            Array.isArray(answer.recordingUrls)
-          ) {
+          // Support S3 recordingUrls field (audio must be uploaded directly to S3)
+          if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
             answerUpdate.recordingUrls = answer.recordingUrls;
             console.log(
-              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`,
+              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
             );
           } else {
             console.log(
-              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`,
+              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`
             );
           }
 
@@ -992,7 +1070,7 @@ router.post(
           await StudentAnswer.findOneAndUpdate(
             { attemptId: attempt._id, questionId: answer.questionId },
             answerUpdate,
-            { upsert: true },
+            { upsert: true }
           );
           console.log(`    ✅ Saved to DB`);
         }
@@ -1026,15 +1104,15 @@ router.post(
               delay: 2000,
             },
             delay: 10000, // Wait 10 seconds before processing - gives time for audio uploads
-          },
+          }
         );
         console.log(
-          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`,
+          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`
         );
       } catch (queueError) {
         console.error(
           `⚠️ Failed to queue transcription job (non-critical):`,
-          queueError.message,
+          queueError.message
         );
         // Don't fail the submission if queue fails
       }
@@ -1053,7 +1131,7 @@ router.post(
       console.error("Stack:", error.stack);
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -1073,7 +1151,6 @@ router.post(
   "/attempts/:attemptId/submit",
   authMiddleware,
   requireRole("student"),
-  audioUpload.any(),
   async (req, res, next) => {
     try {
       const { attemptId } = req.params;
@@ -1192,7 +1269,7 @@ router.post(
         if (q.type === "mcq") {
           // Find the correct option index
           const correctOptionIndex = q.options.findIndex(
-            (opt) => opt.isCorrect === true,
+            (opt) => opt.isCorrect === true
           );
 
           const { score: mcqScore, feedback: mcqFeedback } = evaluateMCQAnswer({
@@ -1263,7 +1340,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -1282,28 +1359,35 @@ router.get(
         studentId,
       })
         .sort({ startedAt: -1 })
-        .populate("examId", "title examCode startTime endTime durationMinutes");
+        .populate(
+          "examId",
+          "title examCode startTime endTime durationMinutes resultsPublished"
+        );
 
-      const result = attempts.map((a) => ({
-        attemptId: a._id,
-        examId: a.examId?._id,
-        title: a.examId?.title,
-        examCode: a.examId?.examCode,
-        startTime: a.examId?.startTime,
-        endTime: a.examId?.endTime,
-        durationMinutes: a.examId?.durationMinutes,
-        status: a.status,
-        startedAt: a.startedAt,
-        finishedAt: a.finishedAt,
-        totalScore: a.totalScore,
-        maxScore: a.maxScore,
-      }));
+      const result = attempts.map((a) => {
+        // Only show score/maxScore if results are published by faculty
+        const showResults = a.examId?.resultsPublished === true;
+        return {
+          attemptId: a._id,
+          examId: a.examId?._id,
+          title: a.examId?.title,
+          examCode: a.examId?.examCode,
+          startTime: a.examId?.startTime,
+          endTime: a.examId?.endTime,
+          durationMinutes: a.examId?.durationMinutes,
+          status: a.status,
+          startedAt: a.startedAt,
+          finishedAt: a.finishedAt,
+          totalScore: showResults ? a.totalScore : null,
+          maxScore: showResults ? a.maxScore : null,
+        };
+      });
 
       return res.status(200).json({ attempts: result });
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 //
@@ -1329,6 +1413,7 @@ router.get("/eval/test", async (req, res, next) => {
 // ---------- 7) STUDENT ATTEMPT RESULTS (DETAIL) ----------
 // GET /api/student/attempts/:attemptId/results
 // Returns exam info + all questions with student's answers, scores & feedback
+// ⚠️ IMPORTANT: Results are only visible if faculty has published them
 router.get(
   "/attempts/:attemptId/results",
   authMiddleware,
@@ -1340,7 +1425,7 @@ router.get(
 
       const attempt = await StudentExamAttempt.findById(attemptId).populate(
         "examId",
-        "title examCode startTime endTime durationMinutes",
+        "title examCode startTime endTime durationMinutes resultsPublished"
       );
 
       if (!attempt) {
@@ -1353,12 +1438,21 @@ router.get(
 
       const exam = attempt.examId;
 
+      // ✅ CHECK: Results must be published by faculty before student can view
+      if (!exam.resultsPublished) {
+        return res.status(403).json({
+          message:
+            "Results are not yet available. Waiting for faculty to publish results.",
+          resultsPublished: false,
+        });
+      }
+
       // Fetch all answers + question data
       const answers = await StudentAnswer.find({
         attemptId: attempt._id,
       }).populate(
         "questionId",
-        "text marks instruction order type options expectedAnswer",
+        "text marks instruction order type options expectedAnswer"
       );
 
       const questions = answers.map((a) => {
@@ -1404,7 +1498,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 module.exports = router;

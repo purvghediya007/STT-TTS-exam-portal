@@ -1,6 +1,6 @@
 const express = require("express");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   upload,
@@ -76,29 +76,45 @@ router.delete("/media/:publicId", authMiddleware, async (req, res) => {
 });
 
 // GET /api/upload/download?p=/uploads/answers/....
+// LEGACY ENDPOINT: For downloading old local audio files only
+// New audio uploads go directly to S3 - see /api/student/exams/:examId/s3-presigned-url
 // Securely stream a file from the uploads directory with Content-Disposition to force download.
-router.get('/download', async (req, res) => {
+router.get("/download", async (req, res) => {
   try {
-    const p = req.query.p || req.query.path
-    if (!p || typeof p !== 'string') return res.status(400).json({ message: 'path (p) query param is required' })
+    const p = req.query.p || req.query.path;
+    if (!p || typeof p !== "string")
+      return res
+        .status(400)
+        .json({ message: "path (p) query param is required" });
 
-    // Only allow downloads from the uploads/answers folder for safety
-    if (!p.startsWith('/uploads/answers/')) return res.status(400).json({ message: 'invalid path' })
+    // Only allow downloads from the uploads/answers folder for legacy files
+    if (!p.startsWith("/uploads/answers/"))
+      return res
+        .status(400)
+        .json({
+          message:
+            "invalid path - only legacy /uploads/answers/ paths supported",
+        });
 
-    const uploadsRoot = path.join(__dirname, '..', 'uploads')
-    const relative = p.replace(/^\/uploads\/?/, '')
-    const abs = path.join(uploadsRoot, relative)
+    const uploadsRoot = path.join(__dirname, "..", "uploads");
+    const relative = p.replace(/^\/uploads\/?/, "");
+    const abs = path.join(uploadsRoot, relative);
 
     // Prevent path traversal
-    if (!abs.startsWith(uploadsRoot)) return res.status(400).json({ message: 'invalid path' })
-    if (!fs.existsSync(abs)) return res.status(404).json({ message: 'file not found' })
+    if (!abs.startsWith(uploadsRoot))
+      return res.status(400).json({ message: "invalid path" });
+    if (!fs.existsSync(abs))
+      return res.status(404).json({ message: "file not found" });
 
-    res.setHeader('Content-Disposition', `attachment; filename="${path.basename(abs)}"`)
-    return res.sendFile(abs)
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${path.basename(abs)}"`,
+    );
+    return res.sendFile(abs);
   } catch (err) {
-    console.error('Download endpoint error', err)
-    return res.status(500).json({ message: 'internal error' })
+    console.error("Download endpoint error", err);
+    return res.status(500).json({ message: "internal error" });
   }
-})
+});
 
 module.exports = router;

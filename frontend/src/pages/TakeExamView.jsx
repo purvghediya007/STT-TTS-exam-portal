@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam } from '../services/api';
+import { uploadAudioToS3Complete } from '../services/s3AudioUpload';
 
 // --- No Mock Data - Fetch from Backend ---
 
@@ -798,9 +799,9 @@ const TakeExamView = () => {
 
       console.log(`✅ Exam submitted successfully. Attempt ID: ${result.submissionId}`);
 
-      // Now upload audio files if any
+      // Now upload audio files if any - DIRECT TO S3
       if (audioAnswers.length > 0) {
-        console.log(`📤 Uploading ${audioAnswers.length} audio files...`);
+        console.log(`📤 Uploading ${audioAnswers.length} audio files directly to S3...`);
         let audioUploadCount = 0;
 
         for (const audioAnswer of audioAnswers) {
@@ -817,44 +818,31 @@ const TakeExamView = () => {
               const blob = await response.blob();
               console.log(`   ✅ Blob fetched. Size: ${blob.size} bytes, Type: ${blob.type}`);
 
-              // Create FormData for this single audio file
-              const audioFormData = new FormData();
-              audioFormData.append('audio', blob, `answer_${audioAnswer.questionId}.webm`);
-              audioFormData.append('questionId', audioAnswer.questionId);
-              audioFormData.append('attemptId', result.submissionId);
-
-              console.log(`   📤 Sending to: /api/student/exams/${examId}/upload-audio`);
-              console.log(`   📋 FormData: questionId=${audioAnswer.questionId}, attemptId=${result.submissionId}`);
-
-              // Send to backend
-              const audioRes = await fetch(
-                `/api/student/exams/${examId}/upload-audio`,
-                {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
-                  },
-                  body: audioFormData,
-                }
+              // Upload directly to S3 using the complete workflow
+              const uploadResult = await uploadAudioToS3Complete(
+                examId,
+                result.submissionId,
+                audioAnswer.questionId,
+                blob
               );
 
-              console.log(`   📨 Response status: ${audioRes.status}`);
-
-              if (!audioRes.ok) {
-                const error = await audioRes.json();
-                console.error(`   ❌ Failed to upload audio for question ${audioAnswer.questionId}:`, error);
-              } else {
-                const uploadResult = await audioRes.json();
-                audioUploadCount++;
-                console.log(`   ✅ Uploaded audio for question ${audioAnswer.questionId}:`, uploadResult);
-              }
+              audioUploadCount++;
+              console.log(
+                `   ✅ Uploaded audio for question ${audioAnswer.questionId}:`,
+                uploadResult
+              );
             } catch (error) {
-              console.error(`❌ Error uploading audio for question ${audioAnswer.questionId}:`, error);
+              console.error(
+                `❌ Error uploading audio for question ${audioAnswer.questionId}:`,
+                error
+              );
             }
           }
         }
 
-        console.log(`✅ Audio upload complete: ${audioUploadCount}/${audioAnswers.length} uploaded`);
+        console.log(
+          `✅ Audio upload complete: ${audioUploadCount}/${audioAnswers.length} uploaded`
+        );
       }
 
       // Show success message

@@ -1,10 +1,9 @@
 /**
  * API service layer for student exams
- * TODO: Replace getAuthHeaders() with your actual auth implementation
- * TODO: Update API_BASE_URL to your FastAPI backend URL
+ * Uses VITE_API_URL environment variable set in Vercel/development
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 /**
  * Get authentication headers
@@ -897,6 +896,47 @@ export async function deleteDraftExam(draftId: string): Promise<void> {
     } catch (e) {
       // Ignore
     }
+  }
+}
+
+/**
+ * Get evaluation status for an exam
+ */
+export async function getExamEvaluationStatus(examId: string): Promise<{
+  allEvaluated: boolean
+  totalAttempts: number
+  evaluatedAttempts: number
+  pendingAttempts: number
+  resultsPublished: boolean
+  message: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/evaluation-status`)
+    return response.json()
+  } catch (err) {
+    console.error('Error fetching evaluation status:', err)
+    throw err
+  }
+}
+
+/**
+ * Publish results for an exam
+ */
+export async function publishExamResults(examId: string): Promise<{
+  success: boolean
+  message: string
+  resultsPublished: boolean
+  resultPublishedAt?: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/publish-results`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+    return response.json()
+  } catch (err) {
+    console.error('Error publishing results:', err)
+    throw err
   }
 }
 
