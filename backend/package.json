@@ -15,7 +15,7 @@
     "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.66.2",
-    "cloudinary": "^2.4.0",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",

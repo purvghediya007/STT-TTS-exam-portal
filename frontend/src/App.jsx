@@ -9,7 +9,8 @@ import ForgotPasswordCard from "./components/ForgotPasswordCard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import StudentExams from "./pages/StudentExams";
 import FacultyExams from "./pages/FacultyExams";
-import StudentAnalytics from "./pages/StudentAnalytics";  
+import StudentAnalytics from "./pages/StudentAnalytics"; 
+import FacultyExamAttempts from "./pages/FacultyExamAttempts"; 
 import "./App.css";
 
 function App() {
@@ -94,7 +95,10 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/faculty/exams/:examId/attempts"
+            element={<FacultyExamAttempts />}
+          />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Redirect unknown routes to login */}

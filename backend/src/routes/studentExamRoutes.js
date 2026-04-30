@@ -760,9 +760,14 @@ router.post(
       }
 
       // Check if student has remaining attempts
+      // const attemptCount = await StudentExamAttempt.countDocuments({
+      //   examId,
+      //   studentId,
+      // });
       const attemptCount = await StudentExamAttempt.countDocuments({
         examId,
         studentId,
+        status: { $ne: "reallowed" },
       });
 
       // Get allowed attempts from exam (default to 1 if not set)
@@ -774,6 +779,42 @@ router.post(
         studentId,
         status: "in_progress",
       });
+      
+      // 🔥 NEW: handle reallowed attempt (reuse existing)
+      if (!attempt) {
+        const reallowedAttempt = await StudentExamAttempt.findOne({
+          examId,
+          studentId,
+          status: "reallowed",
+        });
+
+        if (reallowedAttempt) {
+          // reset same attempt (NO new document)
+          reallowedAttempt.status = "in_progress";
+          reallowedAttempt.startedAt = new Date();
+          reallowedAttempt.finishedAt = null;
+          reallowedAttempt.totalScore = null;
+
+          await reallowedAttempt.save();
+
+          return res.status(200).json({
+            message: "Reattempt started",
+            attemptId: reallowedAttempt._id,
+            deadlineAt: reallowedAttempt.deadlineAt,
+            remainingSeconds: Math.max(
+              0,
+              Math.floor((reallowedAttempt.deadlineAt - new Date()) / 1000)
+            ),
+            durationMinutes: exam.durationMinutes,
+            exam: {
+              id: exam._id,
+              title: exam.title,
+              instructions: exam.instructions,
+              timePerQuestion: exam.timePerQuestion,
+          },
+        });
+        }
+      } 
 
       if (attempt) {
         return res.status(200).json({

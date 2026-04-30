@@ -808,6 +808,14 @@ export default function FacultyExamsList() {
                             <Eye className="w-4 h-4" /> Submissions
                           </button>
                         )}
+                        {status === 'live' && (
+                          <button
+                            onClick={() => navigate(`/faculty/exams/${exam.id}/attempts`)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Manage Attempts
+                          </button>
+                        )}
                         {status !== 'live' && (
                           <>
                             <button
