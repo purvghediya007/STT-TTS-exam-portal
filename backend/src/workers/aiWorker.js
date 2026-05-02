@@ -53,7 +53,7 @@ new Worker(
           console.log("🎧 BEFORE TTS CALL");
 
           const ttsRes = await axios.post(
-            "https://aryanshah2109-examecho.hf.space/tts/synthesize",
+            "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/tts/synthesize",
             {
               question_id: question._id.toString(),
               text: question.text,
@@ -63,7 +63,7 @@ new Worker(
             {
               timeout: 30000, // ⏱ increased
               responseType: "arraybuffer", // ✅ binary MP3
-            }
+            },
           );
 
           console.log("🎧 AFTER TTS CALL");
@@ -74,7 +74,7 @@ new Worker(
           try {
             const s3Key = generateTTSAudioKey(
               question.examId.toString(),
-              question._id.toString()
+              question._id.toString(),
             );
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
             const region = process.env.AWS_S3_REGION || "us-east-1";
@@ -149,5 +149,5 @@ new Worker(
   {
     connection,
     concurrency: 1, // already correct
-  }
+  },
 );
