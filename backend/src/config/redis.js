@@ -4,7 +4,7 @@ console.log(
   "[Redis Config] REDIS_URL:",
   process.env.REDIS_URL
     ? "SET (length: " + process.env.REDIS_URL.length + ")"
-    : "NOT SET"
+    : "NOT SET",
 );
 console.log("[Redis Config] URL value:", process.env.REDIS_URL);
 
@@ -14,12 +14,12 @@ const redisConfig = {
   tls: {
     rejectUnauthorized: false, // Required for Upstash
   },
-  connectTimeout: 15000, // 15 seconds - Upstash can be slow initially
-  commandTimeout: 10000,
+  connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 20000, // 20 seconds
+  commandTimeout: Number(process.env.REDIS_COMMAND_TIMEOUT) || 30000, // 30 seconds - increased for Upstash latency
   retryStrategy: (times) => {
     if (times > 15) {
       console.error(
-        "❌ Redis: Max retries (15) reached. Check your REDIS_URL in .env"
+        "❌ Redis: Max retries (15) reached. Check your REDIS_URL in .env",
       );
       return null; // Stop retrying
     }

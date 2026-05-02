@@ -2,8 +2,8 @@
 
 const axios = require("axios");
 
-const AI_MODEL_API_URL =  process.env.AI_MODEL_API_URL ||
-  "https://collen-handleable-miyoko.ngrok-free.dev/questions_generate/generate";
+const AI_MODEL_API_URL =
+  "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/questions/generate";
 
 /**
  * Call external AI model API to generate exam questions
