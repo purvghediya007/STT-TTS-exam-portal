@@ -134,13 +134,66 @@ export default function GuidelinesView() {
         <p className="text-sm text-gray-600 mb-3">
           If you have any questions or need assistance, please contact your instructor or the support team.
         </p>
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1.5 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-200 font-medium">
-            Email: support@quizportal.edu
-          </span>
-          <span className="px-3 py-1.5 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-200 font-medium">
-            Phone: +1 (555) 123-4567
-          </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <a
+            href="mailto:purvghediya008@gmail.com"
+            className="group rounded-2xl border border-blue-200 bg-blue-50 p-4 hover:bg-blue-100 transition shadow-sm hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                @
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Email Support</p>
+                <p className="text-sm text-blue-700">purvghediya008@gmail.com</p>
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="mailto:aryan2109shah@gmail.com"
+            className="group rounded-2xl border border-blue-200 bg-blue-50 p-4 hover:bg-blue-100 transition shadow-sm hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                @
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Email Support</p>
+                <p className="text-sm text-blue-700">aryan2109shah@gmail.com</p>
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="tel:+919879983485"
+            className="group rounded-2xl border border-blue-200 bg-blue-50 p-4 hover:bg-blue-100 transition shadow-sm hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600 text-white">
+                📞
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Call Support</p>
+                <p className="text-sm text-blue-700">+91 9879983485</p>
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="tel:+917203879169"
+            className="group rounded-2xl border border-blue-200 bg-blue-50 p-4 hover:bg-blue-100 transition shadow-sm hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600 text-white">
+                📞
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Call Support</p>
+                <p className="text-sm text-blue-700">+91 7203879169</p>
+              </div>
+            </div>
+          </a>
         </div>
       </div>
     </div>

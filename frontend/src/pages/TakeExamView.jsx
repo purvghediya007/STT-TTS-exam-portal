@@ -259,6 +259,7 @@ const TakeExamView = () => {
   const currentQuestion = questions[currentQIndex];
   const currentQState = examStatus[currentQIndex];
   const totalQuestions = questions.length;
+  const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
   const progressPercent = examStatus.length > 0
     ? Math.round((examStatus.filter(q => q.status !== 'Not Answered').length / totalQuestions) * 100)
     : 0;
@@ -524,6 +525,7 @@ const TakeExamView = () => {
           const src = currentQuestion.ttsAudioUrl.startsWith('http') ? currentQuestion.ttsAudioUrl : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
           if (audioRef.current) {
             audioRef.current.src = src;
+            audioRef.current.onended = () => setIsPlaying(false);
             await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
           }
         } else if (window.speechSynthesis) {
@@ -1253,6 +1255,12 @@ const TakeExamView = () => {
                 {formatTime(remainingTime)}
               </p>
             </div>
+            <div className="text-center">
+              <p className="text-xs lg:text-sm font-medium text-gray-500">Total Marks</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-800">
+                {totalMarks}
+              </p>
+            </div>
             <div className="hidden sm:block">
               <p className="text-xs lg:text-sm font-medium text-gray-500">Progress</p>
               <div className="w-24 lg:w-32 bg-gray-200 rounded-full h-2">
@@ -1320,48 +1328,72 @@ const TakeExamView = () => {
                   <div className="text-xl font-semibold text-gray-800 mb-6 leading-relaxed flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <span className="flex-1">{currentQuestion?.text}</span>
 
-                    <div className="flex-shrink-0">
-                      <button
-                        onClick={async () => {
-                          try {
-                            // If a generated TTS audio URL exists, play it via the shared audio element
-                            if (currentQuestion?.ttsAudioUrl) {
-                              const src = currentQuestion.ttsAudioUrl.startsWith('http')
-                                ? currentQuestion.ttsAudioUrl
-                                : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
-                              if (audioRef.current) {
-                                audioRef.current.src = src;
-                                await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
-                              }
+                    <div className="flex-shrink-0 flex gap-2">
+                      {isPlaying ? (
+                        <button
+                          onClick={() => {
+                            if (audioRef.current) {
+                              try {
+                                audioRef.current.pause();
+                                audioRef.current.currentTime = 0;
+                              } catch (e) {}
                             }
-                            // Otherwise fallback to Web Speech API (browser TTS)
-                            else if (window.speechSynthesis) {
+                            if (window.speechSynthesis) {
                               window.speechSynthesis.cancel();
-                              const utter = new SpeechSynthesisUtterance(currentQuestion?.text || '');
-                              utter.rate = 1;
-                              utter.pitch = 1;
-                              utter.onend = () => setIsPlaying(false);
-                              window.speechSynthesis.speak(utter);
-                              setIsPlaying(true);
                             }
-                          } catch (err) {
-                            console.warn('TTS play failed', err);
-                          }
-                        }}
-                        disabled={!(currentQuestion?.ttsAudioUrl || (typeof window !== 'undefined' && window.speechSynthesis))}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-full shadow-md shadow-blue-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="w-5 h-5"
+                            setIsPlaying(false);
+                          }}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-sm font-bold rounded-full shadow-md shadow-red-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 1 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-                          <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 4.5 4.5 0 0 1 0 6.364.75.75 0 0 1-1.06-1.06 3 3 0 0 0 0-4.242.75.75 0 0 1 0-1.062Z" />
-                        </svg>
-                        Listen Question
-                      </button>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" />
+                          </svg>
+                          Stop Listening
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            try {
+                              // If a generated TTS audio URL exists, play it via the shared audio element
+                              if (currentQuestion?.ttsAudioUrl) {
+                                const src = currentQuestion.ttsAudioUrl.startsWith('http')
+                                  ? currentQuestion.ttsAudioUrl
+                                  : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
+                                if (audioRef.current) {
+                                  audioRef.current.src = src;
+                                  audioRef.current.onended = () => setIsPlaying(false);
+                                  await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
+                                }
+                              }
+                              // Otherwise fallback to Web Speech API (browser TTS)
+                              else if (window.speechSynthesis) {
+                                window.speechSynthesis.cancel();
+                                const utter = new SpeechSynthesisUtterance(currentQuestion?.text || '');
+                                utter.rate = 1;
+                                utter.pitch = 1;
+                                utter.onend = () => setIsPlaying(false);
+                                window.speechSynthesis.speak(utter);
+                                setIsPlaying(true);
+                              }
+                            } catch (err) {
+                              console.warn('TTS play failed', err);
+                            }
+                          }}
+                          disabled={!(currentQuestion?.ttsAudioUrl || (typeof window !== 'undefined' && window.speechSynthesis))}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-full shadow-md shadow-blue-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 1 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
+                            <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 4.5 4.5 0 0 1 0 6.364.75.75 0 0 1-1.06-1.06 3 3 0 0 0 0-4.242.75.75 0 0 1 0-1.062Z" />
+                          </svg>
+                          Listen Question
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
