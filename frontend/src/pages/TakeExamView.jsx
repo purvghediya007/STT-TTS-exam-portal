@@ -258,6 +258,7 @@ const TakeExamView = () => {
   const currentQuestion = questions[currentQIndex];
   const currentQState = examStatus[currentQIndex];
   const totalQuestions = questions.length;
+  const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
   const progressPercent = examStatus.length > 0
     ? Math.round((examStatus.filter(q => q.status !== 'Not Answered').length / totalQuestions) * 100)
     : 0;
@@ -1264,6 +1265,12 @@ const TakeExamView = () => {
               <p className="text-xs lg:text-sm font-medium text-gray-500">Remaining Time</p>
               <p className={`text-lg lg:text-2xl font-bold ${remainingTime <= 300 ? 'text-red-500 animate-pulse' : 'text-gray-800'}`}>
                 {formatTime(remainingTime)}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs lg:text-sm font-medium text-gray-500">Total Marks</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-800">
+                {totalMarks}
               </p>
             </div>
             <div className="hidden sm:block">

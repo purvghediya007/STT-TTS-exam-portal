@@ -213,9 +213,8 @@ function LoginCard() {
               New user? Sign up
             </button>
           </div>
-          <span>
-            Need help? support@vgec.ac.in
-            @vgec.ac.in
+          <span className="text-sm text-gray-600">
+            Need help? <a href="mailto:aryan2109shah@gmail.com" className="text-blue-600 hover:underline">aryan2109shah@gmail.com</a> 
           </span>
         </div>
       </form>
