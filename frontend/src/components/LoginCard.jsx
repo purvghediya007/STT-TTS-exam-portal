@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { KeyRound, UserPlus, Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
 
 const formConfig = {
@@ -52,8 +53,8 @@ function LoginCard() {
 
   const fetchCaptcha = async () => {
     try {
-      const response = await fetch('/api/auth/captcha')
-      const data = await response.json()
+      const response = await api.get('/auth/captcha')
+      const data = response.data
       setCaptchaId(data.captchaId)
       setCaptchaSvg(data.svg)
       // Clear the captcha text input - user must enter it manually

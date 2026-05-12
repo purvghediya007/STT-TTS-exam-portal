@@ -1,10 +1,9 @@
 /**
  * API service layer for student exams
- * TODO: Replace getAuthHeaders() with your actual auth implementation
- * TODO: Update API_BASE_URL to your FastAPI backend URL
+ * Uses VITE_API_URL environment variable set in Vercel/development
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 /**
  * Get authentication headers
@@ -901,6 +900,47 @@ export async function deleteDraftExam(draftId: string): Promise<void> {
 }
 
 /**
+ * Get evaluation status for an exam
+ */
+export async function getExamEvaluationStatus(examId: string): Promise<{
+  allEvaluated: boolean
+  totalAttempts: number
+  evaluatedAttempts: number
+  pendingAttempts: number
+  resultsPublished: boolean
+  message: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/evaluation-status`)
+    return response.json()
+  } catch (err) {
+    console.error('Error fetching evaluation status:', err)
+    throw err
+  }
+}
+
+/**
+ * Publish results for an exam
+ */
+export async function publishExamResults(examId: string): Promise<{
+  success: boolean
+  message: string
+  resultsPublished: boolean
+  resultPublishedAt?: string
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/publish-results`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+    return response.json()
+  } catch (err) {
+    console.error('Error publishing results:', err)
+    throw err
+  }
+}
+
+/**
  * Student API types
  */
 export interface Student {
@@ -924,6 +964,35 @@ export interface StudentExamSubmission {
   startedAt: string
   timeSpent: number // in minutes
   attempts: number
+}
+
+export interface ExamScoreboardEntry {
+  rank: number
+  studentId: string
+  studentName: string
+  enrollmentNumber: string
+  score: number
+  maxScore: number
+  percentage: number
+  status: string
+  finishedAt: string | null
+}
+
+export interface ExamScoreboardResponse {
+  exam: {
+    id: string
+    title: string
+    examCode: string
+    startTime: string
+    endTime: string
+    durationMinutes: number
+    pointsTotal?: number
+  }
+  totalAttempts: number
+  currentUserRank: number | null
+  currentUserScore: number | null
+  currentUserPercentage: number | null
+  entries: ExamScoreboardEntry[]
 }
 
 export interface StudentDetails extends Student {
@@ -990,6 +1059,14 @@ export async function fetchExamSubmissions(examId: string): Promise<{
   total: number
 }> {
   const response = await fetchAPI(`/faculty/exams/${examId}/submissions`)
+  return response.json()
+}
+
+/**
+ * Fetch classroom scoreboard for a student exam
+ */
+export async function fetchExamScoreboard(examId: string): Promise<ExamScoreboardResponse> {
+  const response = await fetchAPI(`/student/exams/${examId}/scoreboard`)
   return response.json()
 }
 

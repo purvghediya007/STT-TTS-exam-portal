@@ -1,12 +1,11 @@
 const mongoose = require("mongoose");
+const StudentAnswer = require("../models/StudentAnswer");
+const StudentExamAttempt = require("../models/StudentExamAttempt");
+const Question = require("../models/Question");
 
-// Use the project's model files to ensure correct model names and schemas
-const StudentAnswer = require("../src/models/StudentAnswer");
-const StudentAttempt = require("../src/models/StudentExamAttempt");
+const PASS_PERCENTAGE = 0.5;
 
 exports.buildAnalytics = async (studentId) => {
-  // If studentId isn't a valid Mongo ObjectId (eg. frontend demo 'sampleStudentId'),
-  // return sensible mock data instead of throwing a server error.
   if (!mongoose.Types.ObjectId.isValid(studentId)) {
     return {
       examWise: [
@@ -27,7 +26,6 @@ exports.buildAnalytics = async (studentId) => {
   }
 
   const id = new mongoose.Types.ObjectId(studentId);
-
   const examWise = await examWisePerformance(id);
   const typeWise = await questionTypeAnalysis(id);
   const progress = await progressOverTime(id);
@@ -37,7 +35,7 @@ exports.buildAnalytics = async (studentId) => {
     examWise,
     typeWise,
     progress,
-    aiFeedback
+    aiFeedback,
   };
 };
 
@@ -48,28 +46,30 @@ async function examWisePerformance(studentId) {
       $group: {
         _id: "$examId",
         score: { $sum: "$score" },
-        maxScore: { $sum: "$maxMarks" }
-      }
+        maxScore: { $sum: "$maxMarks" },
+      },
     },
     {
       $lookup: {
         from: "exams",
         localField: "_id",
         foreignField: "_id",
-        as: "exam"
-      }
+        as: "exam",
+      },
     },
     {
       $project: {
         examName: { $arrayElemAt: ["$exam.title", 0] },
         percentage: {
-          $round: [
-            { $multiply: [{ $divide: ["$score", "$maxScore"] }, 100] },
-            2
-          ]
-        }
-      }
-    }
+          $cond: [
+            { $gt: ["$maxScore", 0] },
+            { $round: [{ $multiply: [{ $divide: ["$score", "$maxScore"] }, 100] }, 2] },
+            0,
+          ],
+        },
+      },
+    },
+    { $sort: { percentage: -1 } },
   ]);
 }
 
@@ -81,62 +81,68 @@ async function questionTypeAnalysis(studentId) {
         from: "questions",
         localField: "questionId",
         foreignField: "_id",
-        as: "question"
-      }
+        as: "question",
+      },
     },
     { $unwind: "$question" },
     {
       $group: {
         _id: "$question.type",
         score: { $sum: "$score" },
-        maxScore: { $sum: "$maxMarks" }
-      }
+        maxScore: { $sum: "$maxMarks" },
+      },
     },
     {
       $project: {
         type: "$_id",
         percentage: {
-          $round: [
-            { $multiply: [{ $divide: ["$score", "$maxScore"] }, 100] },
-            2
-          ]
-        }
-      }
-    }
+          $cond: [
+            { $gt: ["$maxScore", 0] },
+            { $round: [{ $multiply: [{ $divide: ["$score", "$maxScore"] }, 100] }, 2] },
+            0,
+          ],
+        },
+      },
+    },
   ]);
 }
 
 async function progressOverTime(studentId) {
-  return StudentAttempt.aggregate([
-    { $match: { studentId, status: "completed" } },
+  return StudentExamAttempt.aggregate([
+    {
+      $match: {
+        studentId,
+        status: { $in: ["submitted", "transcribed", "evaluated"] },
+        totalScore: { $ne: null },
+        maxScore: { $gt: 0 },
+      },
+    },
     {
       $project: {
-        date: "$createdAt",
+        date: { $ifNull: ["$finishedAt", "$createdAt"] },
         percentage: {
-          $round: [
-            { $multiply: [{ $divide: ["$totalScore", "$maxScore"] }, 100] },
-            2
-          ]
-        }
-      }
+          $round: [{ $multiply: [{ $divide: ["$totalScore", "$maxScore"] }, 100] }, 2],
+        },
+      },
     },
-    { $sort: { date: 1 } }
+    { $sort: { date: 1 } },
   ]);
 }
-
 
 function generateAIFeedback(typeWise, examWise) {
   const feedback = [];
 
-  typeWise.forEach(t => {
+  typeWise.forEach((t) => {
     if (t.percentage >= 80) {
-      feedback.push(`Excellent performance in ${t.type.toUpperCase()}`);
+      feedback.push(`Excellent performance in ${t.type?.toUpperCase() || 'Unknown'}`);
     } else if (t.percentage < 50) {
-      feedback.push(`Needs improvement in ${t.type.toUpperCase()} questions`);
+      feedback.push(`Needs improvement in ${t.type?.toUpperCase() || 'Unknown'}`);
     }
   });
 
-  const avg = examWise && examWise.length ? examWise.reduce((a, b) => a + (b.percentage || 0), 0) / examWise.length : 0;
+  const avg = examWise && examWise.length
+    ? examWise.reduce((a, b) => a + (b.percentage || 0), 0) / examWise.length
+    : 0;
 
   if (avg >= 75) {
     feedback.push("Overall performance is strong and consistent");

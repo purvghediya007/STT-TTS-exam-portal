@@ -326,33 +326,55 @@ export default function HistoryTable({ exams = [] }) {
                   </td>
 
                   <td className="py-3 px-3 text-right" data-label="Analysis">
-                    <button
-                      onClick={() => {
-                        if (score != null) {
-                          // Navigate to per-exam analysis page. pass attemptId and exam in state
-                          navigate(`/student/exams/${ex.id}/analysis`, {
-                            state: {
-                              attemptId: ex.attemptId || null,
-                              exam: ex,
-                              score,
-                              maxScore,
-                              percentage,
-                            },
-                          })
-                        } else {
-                          alert('Results are not available yet. Please wait for faculty to grade your submission.')
-                        }
-                      }}
-                      disabled={score == null}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${score != null
-                          ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer shadow-sm hover:shadow-md'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                        }`}
-                      title={score != null ? 'View exam results' : 'Results not available yet'}
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      View
-                    </button>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          if (score != null) {
+                            // Navigate to per-exam analysis page. pass attemptId and exam in state
+                            navigate(`/student/exams/${ex.id}/analysis`, {
+                              state: {
+                                attemptId: ex.attemptId || null,
+                                exam: ex,
+                                score,
+                                maxScore,
+                                percentage,
+                              },
+                            })
+                          } else {
+                            alert('Results are not available yet. Please wait for faculty to grade your submission.')
+                          }
+                        }}
+                        disabled={score == null}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${score != null
+                            ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer shadow-sm hover:shadow-md'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                          }`}
+                        title={score != null ? 'View exam results' : 'Results not available yet'}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View
+                      </button>
+
+                      {score != null && (
+                        <button
+                          onClick={() => {
+                            navigate(`/student/exams/${ex.id}/scoreboard`, {
+                              state: {
+                                examTitle: ex.title,
+                                score,
+                                maxScore,
+                                percentage,
+                              },
+                            })
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 cursor-pointer shadow-sm hover:shadow-md"
+                          title="View exam scoreboard"
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                          Scoreboard
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )

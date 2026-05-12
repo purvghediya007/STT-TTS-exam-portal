@@ -1063,4 +1063,76 @@ router.put(
   },
 );
 
+// GET /api/exams/:examId/attempts
+router.get(
+  "/:examId/attempts",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (exam.teacherId.toString() !== req.user.sub) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const attempts = await StudentExamAttempt.find({ examId })
+        .populate("studentId", "username email")
+        .sort({ startedAt: -1 });
+
+      return res.status(200).json({ attempts });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
+// PATCH /api/exams/:examId/reallow/:studentId
+router.patch(
+  "/:examId/reallow/:studentId",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId, studentId } = req.params;
+
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (exam.teacherId.toString() !== req.user.sub) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const attempt = await StudentExamAttempt.findOne({
+        examId,
+        studentId,
+      });
+
+      if (!attempt) {
+        return res.status(404).json({
+          message: "Attempt not found for this student",
+        });
+      }
+
+      // 🔥 MAIN LOGIC
+      attempt.status = "reallowed";
+      await attempt.save();
+
+      return res.status(200).json({
+        message: "Student reallowed successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 module.exports = router;

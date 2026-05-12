@@ -40,10 +40,16 @@ const studentAnswerSchema = new mongoose.Schema(
     // 🔹 Audio recordings (for viva/interview questions)
     recordingUrls: [
       {
-        type: String, // Cloudinary URL
+        type: String, // S3 URL or local URL
         trim: true,
       },
     ],
+
+    // 🔹 S3 Key for direct uploads (for reference and cleanup)
+    s3Key: {
+      type: String,
+      trim: true,
+    },
 
     // 🔹 Speech-to-Text fields
     transcribedText: {
@@ -89,7 +95,7 @@ const studentAnswerSchema = new mongoose.Schema(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Ensure one answer per question per attempt

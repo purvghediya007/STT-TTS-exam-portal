@@ -430,13 +430,13 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, Search, Filter, Calendar, Clock, Users, FileText, FileEdit } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Search, Filter, Calendar, Clock, Users, FileText, FileEdit, Loader } from 'lucide-react'
 import { useFacultyExams } from '../hooks/useFacultyExams'
 import ExamForm from '../components/ExamForm'
 import ExamCreationWizard from '../components/ExamCreationWizard'
 import { formatExamTimeRange, formatDuration } from '../utils/format'
 import StatusPill from '../components/StatusPill'
-import { fetchDraftExams, deleteDraftExam } from '../services/api'
+import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults } from '../services/api'
 
 export default function FacultyExamsList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -452,6 +452,9 @@ export default function FacultyExamsList() {
   const [drafts, setDrafts] = useState([])
   const [loadingDrafts, setLoadingDrafts] = useState(false)
   const [activeTab, setActiveTab] = useState('published')
+  const [evaluationStatus, setEvaluationStatus] = useState({})
+  const [loadingStatus, setLoadingStatus] = useState({})
+  const [publishingId, setPublishingId] = useState(null)
 
   useEffect(() => {
     if (searchParams.get('create') === 'true') {
@@ -534,6 +537,43 @@ export default function FacultyExamsList() {
     setShowWizard(false)
   }
 
+  const fetchEvaluationStatus = async (examId) => {
+    try {
+      setLoadingStatus(prev => ({ ...prev, [examId]: true }))
+      const status = await getExamEvaluationStatus(examId)
+      setEvaluationStatus(prev => ({ ...prev, [examId]: status }))
+    } catch (error) {
+      console.error('Error fetching evaluation status:', error)
+      alert('Failed to fetch evaluation status. Please try again.')
+    } finally {
+      setLoadingStatus(prev => ({ ...prev, [examId]: false }))
+    }
+  }
+
+  const handlePublishResults = async (examId) => {
+    if (!confirm('Are you sure you want to publish the results? This will make scores visible to all students.')) return
+
+    try {
+      setPublishingId(examId)
+      const response = await publishExamResults(examId)
+
+      if (response.success) {
+        alert('Results published successfully!')
+        setEvaluationStatus(prev => ({
+          ...prev,
+          [examId]: { ...prev[examId], resultsPublished: true }
+        }))
+      } else {
+        alert(response.message || 'Failed to publish results')
+      }
+    } catch (error) {
+      console.error('Error publishing results:', error)
+      alert(error?.message || 'Failed to publish results. Please try again.')
+    } finally {
+      setPublishingId(null)
+    }
+  }
+
   const classifyExam = (exam) => {
     if (!exam) return 'unknown'
     const now = new Date()
@@ -606,21 +646,19 @@ export default function FacultyExamsList() {
         <div className="flex gap-4 min-w-max">
           <button
             onClick={() => setActiveTab('published')}
-            className={`px-4 py-3 font-semibold text-sm border-b-2 transition-all ${
-              activeTab === 'published'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
-            }`}
+            className={`px-4 py-3 font-semibold text-sm border-b-2 transition-all ${activeTab === 'published'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-900'
+              }`}
           >
             Published Exams ({publishedExams.length})
           </button>
           <button
             onClick={() => setActiveTab('drafts')}
-            className={`px-4 py-3 font-semibold text-sm border-b-2 transition-all ${
-              activeTab === 'drafts'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
-            }`}
+            className={`px-4 py-3 font-semibold text-sm border-b-2 transition-all ${activeTab === 'drafts'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-900'
+              }`}
           >
             Drafts ({drafts.length})
           </button>
@@ -638,7 +676,7 @@ export default function FacultyExamsList() {
               <p className="text-gray-600 font-semibold">No drafts found</p>
               <p className="text-gray-400 text-sm mt-1">Start a new exam creation to see them here.</p>
             </div>
-            ) : (
+          ) : (
             drafts.slice().sort((a, b) => {
               const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0
               const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -717,7 +755,7 @@ export default function FacultyExamsList() {
             <div className="bg-white border border-gray-200 rounded-xl p-16 text-center">
               <FileText className="w-12 h-12 text-gray-200 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">No matches found</p>
-              <button onClick={() => {setSearchQuery(''); setFilterStatus('all')}} className="mt-2 text-blue-600 text-sm font-semibold hover:underline">Clear all filters</button>
+              <button onClick={() => { setSearchQuery(''); setFilterStatus('all') }} className="mt-2 text-blue-600 text-sm font-semibold hover:underline">Clear all filters</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -770,6 +808,14 @@ export default function FacultyExamsList() {
                             <Eye className="w-4 h-4" /> Submissions
                           </button>
                         )}
+                        {status === 'live' && (
+                          <button
+                            onClick={() => navigate(`/faculty/exams/${exam.id}/attempts`)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Manage Attempts
+                          </button>
+                        )}
                         {status !== 'live' && (
                           <>
                             <button
@@ -789,9 +835,51 @@ export default function FacultyExamsList() {
                         )}
                       </div>
                       {status === 'finished' && (
-                        <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
-                          Publish Result
-                        </button>
+                        <div className="space-y-2">
+                          {!evaluationStatus[exam.id] ? (
+                            <button
+                              onClick={() => fetchEvaluationStatus(exam.id)}
+                              disabled={loadingStatus[exam.id]}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                            >
+                              {loadingStatus[exam.id] ? (
+                                <>
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                  Checking...
+                                </>
+                              ) : (
+                                'Check Status'
+                              )}
+                            </button>
+                          ) : evaluationStatus[exam.id]?.resultsPublished ? (
+                            <button
+                              disabled
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-green-700 rounded-lg opacity-70 cursor-not-allowed"
+                            >
+                              ✓ Results Published
+                            </button>
+                          ) : evaluationStatus[exam.id]?.allEvaluated ? (
+                            <button
+                              onClick={() => handlePublishResults(exam.id)}
+                              disabled={publishingId === exam.id}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              {publishingId === exam.id ? (
+                                <>
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                  Publishing...
+                                </>
+                              ) : (
+                                'Publish Results'
+                              )}
+                            </button>
+                          ) : (
+                            <div className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                              <Loader className="w-4 h-4 animate-spin" />
+                              Answers being checked...
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader, ChevronDown } from 'lucide-react'
+import { Loader } from 'lucide-react'
+import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
 
 const initialState = {
@@ -174,17 +176,11 @@ export default function RegisterCard() {
         }
       }
 
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
+      const response = await api.post('/auth/register', requestBody)
 
-      const data = await response.json()
+      const data = response.data
 
-      if (!response.ok) {
+      if (!response.status || response.status < 200 || response.status >= 300) {
         setMessage({
           type: 'error',
           text: data.message || 'Registration failed. Please try again.'
