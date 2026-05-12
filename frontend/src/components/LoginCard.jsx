@@ -4,29 +4,17 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import logoImg from '../assets/vgec-logo.png'
 
-const roleConfig = {
-  student: {
-    title: 'VGEC Exam Control',
-    description:
-      'Login with your username OR enrollment number and password to access the exam dashboard.',
-    primaryFieldLabel: 'Username / Enrollment Number',
-    primaryPlaceholder: 'e.g. student123 or 20XX123456',
-    apiRole: 'student',
-  },
-  faculty: {
-    title: 'Faculty Control Desk',
-    description:
-      'Sign in with your faculty username or email and password to manage assessments and monitor live sessions.',
-    primaryFieldLabel: 'Username / Email',
-    primaryPlaceholder: 'e.g. prof.patel or prof.patel@vgec.ac.in',
-    apiRole: 'teacher',
-  },
+const formConfig = {
+  title: 'VGEC Exam Portal Login',
+  description:
+    'Login with your username, enrollment number, or email and password to access your dashboard.',
+  primaryFieldLabel: 'Username / Enrollment Number / Email',
+  primaryPlaceholder: 'e.g. student123, 20XX123456, or prof.patel@vgec.ac.in',
 }
 
 function LoginCard() {
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
-  const [role, setRole] = useState('student')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [captchaId, setCaptchaId] = useState('')
@@ -57,10 +45,10 @@ function LoginCard() {
     }
   }, [navigate])
 
-  // Fetch captcha when component mounts or role changes
+  // Fetch captcha when component mounts
   useEffect(() => {
     fetchCaptcha()
-  }, [role])
+  }, [])
 
   const fetchCaptcha = async () => {
     try {
@@ -95,7 +83,6 @@ function LoginCard() {
 
       console.log('Login attempt:', {
         username,
-        role,
         captchaId: captchaId.substring(0, 8) + '...',
       })
 
@@ -132,7 +119,7 @@ function LoginCard() {
   }
 
   const { title, description, primaryFieldLabel, primaryPlaceholder } =
-    roleConfig[role]
+    formConfig
 
   return (
     <div className="login-card">
@@ -142,22 +129,6 @@ function LoginCard() {
         alt="Vishwakarma Government Engineering College logo"
       />
 
-      <div className="role-toggle" role="tablist">
-        {['student', 'faculty'].map((option) => (
-          <button
-            key={option}
-            type="button"
-            className={role === option ? 'active' : ''}
-            onClick={() => setRole(option)}
-            role="tab"
-            aria-selected={role === option}
-            disabled={isLoading}
-          >
-            {option === 'student' ? 'Student' : 'Faculty'}
-          </button>
-        ))}
-      </div>
-
       <header className="card-copy">
         <p className="eyebrow">Vishwakarma Govt. Engineering College</p>
         <h1>{title}</h1>
@@ -165,26 +136,6 @@ function LoginCard() {
       </header>
 
       <form className="login-form" onSubmit={handleSubmit}>
-        {role === 'student' && (
-          <div style={{
-            padding: '8px 12px',
-            backgroundColor: '#f0f7ff',
-            borderLeft: '3px solid #0066cc',
-            borderRadius: '4px',
-            marginBottom: '16px',
-            fontSize: '13px',
-            color: '#333'
-          }}>
-            💡 <strong>Forgot your username?</strong> Use the enrollment number you registered with. If that doesn't work, you may need to re-register.
-          </div>
-        )}
-
-        {error && (
-          <div style={{ padding: '10px 12px', backgroundColor: '#fee', color: '#c00', borderRadius: '4px', marginBottom: '12px', fontSize: '14px' }}>
-            {error}
-          </div>
-        )}
-
         <label className="input-field">
           <span>{primaryFieldLabel}</span>
           <input
@@ -234,6 +185,12 @@ function LoginCard() {
           />
         </label>
 
+        {error && (
+          <div className="text-red-700 bg-red-50 rounded-md px-3 py-2 mb-3 text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <button type="submit" className="primary" disabled={isLoading}>
           {isLoading ? (
             <>
@@ -257,7 +214,7 @@ function LoginCard() {
             </button>
           </div>
           <span>
-            Need help? {role === 'student' ? 'student.support' : 'faculty.support'}
+            Need help? support@vgec.ac.in
             @vgec.ac.in
           </span>
         </div>
