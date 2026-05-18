@@ -941,6 +941,26 @@ export async function publishExamResults(examId: string): Promise<{
 }
 
 /**
+ * Start evaluation process (transcription + AI check) for all student attempts
+ */
+export async function startExamEvaluation(examId: string): Promise<{
+  success: boolean
+  message: string
+  queuedCount: number
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/start-evaluation`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+    return response.json()
+  } catch (err) {
+    console.error('Error starting exam evaluation:', err)
+    throw err
+  }
+}
+
+/**
  * Student API types
  */
 export interface Student {

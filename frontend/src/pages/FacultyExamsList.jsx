@@ -436,7 +436,7 @@ import ExamForm from '../components/ExamForm'
 import ExamCreationWizard from '../components/ExamCreationWizard'
 import { formatExamTimeRange, formatDuration } from '../utils/format'
 import StatusPill from '../components/StatusPill'
-import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults } from '../services/api'
+import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation } from '../services/api'
 
 export default function FacultyExamsList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -547,6 +547,29 @@ export default function FacultyExamsList() {
       alert('Failed to fetch evaluation status. Please try again.')
     } finally {
       setLoadingStatus(prev => ({ ...prev, [examId]: false }))
+    }
+  }
+
+  const [startingEvaluationId, setStartingEvaluationId] = useState(null)
+
+  const handleStartEvaluation = async (examId) => {
+    if (!confirm('Are you sure you want to start transcription & evaluation for all student attempts? This will process all audio answers using AI.')) return
+
+    try {
+      setStartingEvaluationId(examId)
+      const response = await startExamEvaluation(examId)
+      if (response.success) {
+        alert(response.message || 'Evaluation started successfully!')
+        const status = await getExamEvaluationStatus(examId)
+        setEvaluationStatus(prev => ({ ...prev, [examId]: status }))
+      } else {
+        alert(response.message || 'Failed to start evaluation')
+      }
+    } catch (error) {
+      console.error('Error starting evaluation:', error)
+      alert(error?.message || 'Failed to start evaluation. Please try again.')
+    } finally {
+      setStartingEvaluationId(null)
     }
   }
 
@@ -858,6 +881,21 @@ export default function FacultyExamsList() {
                             >
                               ✓ Results Published
                             </button>
+                          ) : !evaluationStatus[exam.id]?.evaluationStarted ? (
+                            <button
+                              onClick={() => handleStartEvaluation(exam.id)}
+                              disabled={startingEvaluationId === exam.id}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-md active:scale-95"
+                            >
+                              {startingEvaluationId === exam.id ? (
+                                <>
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                  Starting...
+                                </>
+                              ) : (
+                                'Start Evaluation'
+                              )}
+                            </button>
                           ) : evaluationStatus[exam.id]?.allEvaluated ? (
                             <button
                               onClick={() => handlePublishResults(exam.id)}
@@ -874,9 +912,18 @@ export default function FacultyExamsList() {
                               )}
                             </button>
                           ) : (
-                            <div className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
-                              <Loader className="w-4 h-4 animate-spin" />
-                              Answers being checked...
+                            <div className="space-y-2">
+                              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                                <Loader className="w-4 h-4 animate-spin" />
+                                Answers being checked...
+                              </div>
+                              <button
+                                onClick={() => fetchEvaluationStatus(exam.id)}
+                                disabled={loadingStatus[exam.id]}
+                                className="w-full text-center text-xs text-blue-600 hover:underline font-semibold"
+                              >
+                                {loadingStatus[exam.id] ? 'Refreshing...' : 'Refresh Status'}
+                              </button>
                             </div>
                           )}
                         </div>

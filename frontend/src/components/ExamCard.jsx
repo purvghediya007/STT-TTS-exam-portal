@@ -133,10 +133,21 @@ export default function ExamCard({ exam, onPrefetch }) {
                   <Clock className="w-4 h-4 text-sky-600" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-600 font-medium">Duration</p>
+                  <p className="text-xs text-gray-600 font-medium">Window</p>
                   <p className="text-sm font-bold text-gray-900">{formatDuration(exam.durationMin)}</p>
                 </div>
               </div>
+              {exam.slotDurationMin && (
+                <div className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-lg border-[0.5px] border-amber-200">
+                  <div className="p-1.5 bg-amber-100 rounded-md">
+                    <Timer className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 font-medium">Slot</p>
+                    <p className="text-sm font-bold text-gray-900">{formatDuration(exam.slotDurationMin)}</p>
+                  </div>
+                </div>
+              )}
               {exam.timePerQuestionSec && (
                 <div className="flex items-center gap-2 p-2.5 bg-cyan-50 rounded-lg border-[0.5px] border-cyan-200">
                   <div className="p-1.5 bg-cyan-100 rounded-md">

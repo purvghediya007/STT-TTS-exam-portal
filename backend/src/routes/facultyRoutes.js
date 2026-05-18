@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const aiQueue = require("../queues/aiQueue");
+const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
 
 const router = express.Router();
 
@@ -205,6 +206,7 @@ router.put(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
       } = req.body;
 
       if (title != null) exam.title = title;
@@ -220,6 +222,7 @@ router.put(
       if (startsAt != null) exam.startTime = new Date(startsAt);
       if (endsAt != null) exam.endTime = new Date(endsAt);
       if (durationMin != null) exam.durationMinutes = durationMin;
+      if (slotDurationMin != null) exam.slotDurationMinutes = slotDurationMin;
 
       await exam.save();
       await exam.populate("teacherId", "name email username");
@@ -465,6 +468,7 @@ router.post(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
         pointsTotal,
         settingsSummary,
         questions,
@@ -476,6 +480,7 @@ router.post(
       console.log("draftId:", draftId);
       console.log("questions received:", questions);
       console.log("questions length:", questions ? questions.length : 0);
+      console.log("slotDurationMin:", slotDurationMin);
 
       if (!startsAt || !endsAt) {
         return res
@@ -516,6 +521,7 @@ router.post(
       draft.startTime = new Date(startsAt);
       draft.endTime = new Date(endsAt);
       draft.durationMinutes = durationMin;
+      if (slotDurationMin != null) draft.slotDurationMinutes = slotDurationMin;
       draft.pointsTotal = pointsTotal;
       if (settingsSummary) {
         draft.settings = { ...draft.settings, ...settingsSummary };
@@ -888,11 +894,95 @@ router.get(
         evaluatedAttempts,
         pendingAttempts,
         resultsPublished: exam.resultsPublished || false,
+        evaluationStarted: exam.evaluationStarted || false,
         message: allEvaluated
           ? "All attempts evaluated"
           : `${pendingAttempts} attempt(s) still pending evaluation`,
       });
     } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/**
+ * POST /api/faculty/exams/:examId/start-evaluation
+ * Trigger evaluation/transcription process for all submitted attempts of a finished/live exam.
+ */
+router.post(
+  "/exams/:examId/start-evaluation",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const teacherId = req.user.sub;
+
+      // Verify exam belongs to this teacher
+      const exam = await Exam.findOne({ _id: examId, teacherId });
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      // Find all attempts for this exam with status 'submitted'
+      const attempts = await StudentExamAttempt.find({
+        examId,
+        status: "submitted",
+      });
+
+      if (attempts.length === 0) {
+        // If evaluation was already triggered, or no submitted attempts exist
+        if (exam.evaluationStarted) {
+          return res.status(200).json({
+            success: true,
+            message: "Evaluation has already been started.",
+            queuedCount: 0,
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          message: "No submitted student attempts found to evaluate.",
+        });
+      }
+
+      console.log(`🚀 Starting evaluation for ${attempts.length} attempts of exam ${examId}`);
+
+      let queuedCount = 0;
+      for (const attempt of attempts) {
+        try {
+          await answersTranscriptionQueue.add(
+            "transcribe-answers",
+            {
+              examId,
+              studentId: attempt.studentId.toString(),
+              attemptId: attempt._id.toString(),
+            },
+            {
+              attempts: 3,
+              backoff: {
+                type: "exponential",
+                delay: 2000,
+              },
+              delay: 1000, // 1 second small delay for queuing
+            }
+          );
+          queuedCount++;
+        } catch (queueError) {
+          console.error(`⚠️ Failed to queue transcription for attempt ${attempt._id}:`, queueError.message);
+        }
+      }
+
+      // Mark exam evaluation as started
+      exam.evaluationStarted = true;
+      await exam.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully triggered transcription & evaluation for ${queuedCount} student attempt(s).`,
+        queuedCount,
+      });
+    } catch (error) {
+      console.error("❌ Error starting evaluation:", error);
       next(error);
     }
   },
