@@ -36,11 +36,11 @@ function convertToMp3(audioBuffer) {
     try {
       const tempInputPath = path.join(
         __dirname,
-        `../../temp_input_${Date.now()}.webm`
+        `../../temp_input_${Date.now()}.webm`,
       );
       const tempOutputPath = path.join(
         __dirname,
-        `../../temp_output_${Date.now()}.mp3`
+        `../../temp_output_${Date.now()}.mp3`,
       );
 
       // Write input buffer to temp file
@@ -73,7 +73,7 @@ function convertToMp3(audioBuffer) {
           } catch (cleanupErr) {
             console.error(
               "⚠️ Failed to cleanup temp files:",
-              cleanupErr.message
+              cleanupErr.message,
             );
           }
           reject(new Error(`FFmpeg conversion failed: ${err.message}`));
@@ -100,17 +100,17 @@ async function transcribeAudio(audioBuffer, filename = "audio.wav") {
     formData.append("audio", audioBuffer, filename);
 
     console.log(
-      `🌐 Calling STT API: https://aryanshah2109-examecho.hf.space/stt/transcribe`
+      `🌐 Calling STT API: https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe`,
     );
     console.log(`📁 Audio filename: ${filename}`);
 
     const response = await axios.post(
-      "https://aryanshah2109-examecho.hf.space/stt/transcribe?lang=en",
+      "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe",
       formData,
       {
         headers: formData.getHeaders(),
         timeout: 60000, // 60 second timeout
-      }
+      },
     );
 
     console.log(`✅ STT API Response:`, response.data);
@@ -157,7 +157,7 @@ new Worker(
           console.log(`     - Answer ID: ${a._id}`);
           console.log(`       questionId: ${a.questionId}`);
           console.log(
-            `       recordingUrls: ${JSON.stringify(a.recordingUrls)}`
+            `       recordingUrls: ${JSON.stringify(a.recordingUrls)}`,
           );
         });
       }
@@ -263,7 +263,7 @@ new Worker(
                 audioBuffer = Buffer.concat(chunks);
 
                 console.log(
-                  `📊 Audio fetched from S3. Size: ${audioBuffer.length} bytes`
+                  `📊 Audio fetched from S3. Size: ${audioBuffer.length} bytes`,
                 );
               } else {
                 // Not an S3 URL, try regular HTTP fetch
@@ -273,17 +273,17 @@ new Worker(
                 });
                 audioBuffer = Buffer.from(response.data);
                 console.log(
-                  `📊 Audio fetched from remote URL. Size: ${audioBuffer.length} bytes`
+                  `📊 Audio fetched from remote URL. Size: ${audioBuffer.length} bytes`,
                 );
               }
             } catch (fetchError) {
               console.error(
                 `❌ Failed to fetch audio from S3:`,
-                fetchError.message
+                fetchError.message,
               );
               console.error(
                 `   Error code:`,
-                fetchError.code || fetchError.$metadata?.httpStatusCode
+                fetchError.code || fetchError.$metadata?.httpStatusCode,
               );
               answer.sttStatus = "failed";
               answer.sttError = `Failed to fetch audio from S3: ${fetchError.message}`;
@@ -307,7 +307,7 @@ new Worker(
             }
             audioBuffer = fs.readFileSync(audioPath);
             console.log(
-              `📊 Audio read from disk. Size: ${audioBuffer.length} bytes`
+              `📊 Audio read from disk. Size: ${audioBuffer.length} bytes`,
             );
           }
           // Unknown URL format
@@ -335,12 +335,12 @@ new Worker(
             try {
               finalAudioBuffer = await convertToMp3(audioBuffer);
               console.log(
-                `✅ Conversion complete. MP3 size: ${finalAudioBuffer.length} bytes`
+                `✅ Conversion complete. MP3 size: ${finalAudioBuffer.length} bytes`,
               );
             } catch (convertError) {
               console.error(
                 `❌ Failed to convert webm to mp3:`,
-                convertError.message
+                convertError.message,
               );
               answer.sttStatus = "failed";
               answer.sttError = `Audio conversion failed: ${convertError.message}`;
@@ -356,12 +356,12 @@ new Worker(
             try {
               finalAudioBuffer = await convertToMp3(audioBuffer);
               console.log(
-                `✅ Conversion complete. MP3 size: ${finalAudioBuffer.length} bytes`
+                `✅ Conversion complete. MP3 size: ${finalAudioBuffer.length} bytes`,
               );
             } catch (convertError) {
               console.error(
                 `⚠️ Conversion failed, trying original format:`,
-                convertError.message
+                convertError.message,
               );
               // Fallback to original buffer
               finalAudioBuffer = audioBuffer;
@@ -371,11 +371,11 @@ new Worker(
 
           console.log(`📁 Sending audio as: ${audioFilename}`);
           console.log(
-            `📊 Final audio buffer size: ${finalAudioBuffer.length} bytes`
+            `📊 Final audio buffer size: ${finalAudioBuffer.length} bytes`,
           );
           const transcribedText = await transcribeAudio(
             finalAudioBuffer,
-            audioFilename
+            audioFilename,
           );
 
           // ==========================================
@@ -388,7 +388,7 @@ new Worker(
               sttStatus: "completed",
               sttTimestamp: new Date(),
             },
-            { new: true }
+            { new: true },
           );
 
           if (!updatedAnswer) {
@@ -396,13 +396,13 @@ new Worker(
           }
 
           console.log(
-            `✅ Transcribed: "${transcribedText.substring(0, 100)}..."`
+            `✅ Transcribed: "${transcribedText.substring(0, 100)}..."`,
           );
           successCount++;
         } catch (answerError) {
           console.error(
             `❌ Failed to transcribe question ${answer.questionId}:`,
-            answerError.message
+            answerError.message,
           );
 
           // Mark this answer as failed but continue with others
@@ -417,7 +417,7 @@ new Worker(
       }
 
       console.log(
-        `\n📊 Transcription results: ${successCount} succeeded, ${failureCount} failed`
+        `\n📊 Transcription results: ${successCount} succeeded, ${failureCount} failed`,
       );
 
       // ✅ Step 4: Update attempt status to "transcribed"
@@ -444,7 +444,7 @@ new Worker(
               type: "exponential",
               delay: 2000,
             },
-          }
+          },
         );
         console.log(`✅ Evaluation job queued successfully`);
       } catch (queueError) {
@@ -466,7 +466,7 @@ new Worker(
       throw error; // Re-throw to trigger BullMQ retry
     }
   },
-  { connection }
+  { connection },
 );
 
 console.log("✅ Transcription worker listening for jobs...");

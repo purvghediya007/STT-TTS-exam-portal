@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader, ChevronDown } from 'lucide-react'
-import { Loader } from 'lucide-react'
 import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
 
@@ -15,6 +14,7 @@ const initialState = {
   branch: '',
   semester: null,
 }
+
 const availableBranches = [
   'IT',
   'CE',
@@ -37,8 +37,8 @@ const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 // Custom Dropdown Component
 function CustomSelect({ label, value, onChange, options, placeholder, disabled }) {
   const [isOpen, setIsOpen] = useState(false)
-  
-  const displayValue = options.find(opt => 
+
+  const displayValue = options.find(opt =>
     typeof opt === 'number' ? opt === value : opt === value
   ) || null
 

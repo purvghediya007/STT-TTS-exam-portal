@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
 const aiQueue = require("../queues/aiQueue");
+const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
 
 const router = express.Router();
 
@@ -205,6 +206,7 @@ router.put(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
       } = req.body;
 
       if (title != null) exam.title = title;
@@ -220,6 +222,7 @@ router.put(
       if (startsAt != null) exam.startTime = new Date(startsAt);
       if (endsAt != null) exam.endTime = new Date(endsAt);
       if (durationMin != null) exam.durationMinutes = durationMin;
+      if (slotDurationMin != null) exam.slotDurationMinutes = slotDurationMin;
 
       await exam.save();
       await exam.populate("teacherId", "name email username");
@@ -465,6 +468,7 @@ router.post(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
         pointsTotal,
         settingsSummary,
         questions,
@@ -476,6 +480,7 @@ router.post(
       console.log("draftId:", draftId);
       console.log("questions received:", questions);
       console.log("questions length:", questions ? questions.length : 0);
+      console.log("slotDurationMin:", slotDurationMin);
 
       if (!startsAt || !endsAt) {
         return res
@@ -516,6 +521,7 @@ router.post(
       draft.startTime = new Date(startsAt);
       draft.endTime = new Date(endsAt);
       draft.durationMinutes = durationMin;
+      if (slotDurationMin != null) draft.slotDurationMinutes = slotDurationMin;
       draft.pointsTotal = pointsTotal;
       if (settingsSummary) {
         draft.settings = { ...draft.settings, ...settingsSummary };
@@ -835,137 +841,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
-);
-
-/**
- * GET /api/faculty/exams/:examId/evaluation-status
- * Check if all student attempts for an exam are evaluated
- */
-router.get(
-  "/exams/:examId/evaluation-status",
-  authMiddleware,
-  requireRole("teacher"),
-  async (req, res, next) => {
-    try {
-      const { examId } = req.params;
-      const teacherId = req.user.sub;
-
-      // Verify exam belongs to this teacher
-      const exam = await Exam.findOne({ _id: examId, teacherId });
-      if (!exam) {
-        return res.status(404).json({ message: "Exam not found" });
-      }
-
-      // Get all attempts for this exam
-      const allAttempts = await StudentExamAttempt.find({ examId });
-
-      if (allAttempts.length === 0) {
-        return res.status(200).json({
-          allEvaluated: false,
-          totalAttempts: 0,
-          evaluatedAttempts: 0,
-          pendingAttempts: 0,
-          resultsPublished: exam.resultsPublished || false,
-          message: "No student attempts found",
-        });
-      }
-
-      // Count attempts by status
-      const evaluatedAttempts = allAttempts.filter(
-        (a) => a.status === "evaluated",
-      ).length;
-      const pendingAttempts = allAttempts.filter(
-        (a) => a.status !== "evaluated" && a.status !== "expired",
-      ).length;
-
-      const allEvaluated =
-        evaluatedAttempts === allAttempts.length && allAttempts.length > 0;
-
-      return res.status(200).json({
-        allEvaluated,
-        totalAttempts: allAttempts.length,
-        evaluatedAttempts,
-        pendingAttempts,
-        resultsPublished: exam.resultsPublished || false,
-        message: allEvaluated
-          ? "All attempts evaluated"
-          : `${pendingAttempts} attempt(s) still pending evaluation`,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * POST /api/faculty/exams/:examId/publish-results
- * Publish results for an exam (only allowed if all attempts are evaluated)
- */
-router.post(
-  "/exams/:examId/publish-results",
-  authMiddleware,
-  requireRole("teacher"),
-  async (req, res, next) => {
-    try {
-      const { examId } = req.params;
-      const teacherId = req.user.sub;
-
-      // Verify exam belongs to this teacher
-      const exam = await Exam.findOne({ _id: examId, teacherId });
-      if (!exam) {
-        return res.status(404).json({ message: "Exam not found" });
-      }
-
-      // Check if results already published
-      if (exam.resultsPublished) {
-        return res.status(200).json({
-          success: true,
-          message: "Results already published",
-          resultsPublished: true,
-          resultPublishedAt: exam.resultPublishedAt,
-        });
-      }
-
-      // Get all attempts for this exam
-      const allAttempts = await StudentExamAttempt.find({ examId });
-
-      if (allAttempts.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "No student attempts found for this exam",
-        });
-      }
-
-      // Check if all attempts are evaluated
-      const unevaluatedAttempts = allAttempts.filter(
-        (a) => a.status !== "evaluated" && a.status !== "expired",
-      );
-
-      if (unevaluatedAttempts.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Cannot publish results. ${unevaluatedAttempts.length} attempt(s) still pending evaluation.`,
-          pendingCount: unevaluatedAttempts.length,
-          totalAttempts: allAttempts.length,
-        });
-      }
-
-      // Publish results
-      exam.resultsPublished = true;
-      exam.resultPublishedAt = new Date();
-      await exam.save();
-
-      return res.status(200).json({
-        success: true,
-        message: "Results published successfully",
-        resultsPublished: true,
-        resultPublishedAt: exam.resultPublishedAt,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  }
 );
 
 module.exports = router;

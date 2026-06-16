@@ -31,6 +31,7 @@ function transformExamForFrontend(examObj) {
     startsAt: examObj.startTime,
     endsAt: examObj.endTime,
     durationMin: examObj.durationMinutes,
+    slotDurationMin: examObj.slotDurationMinutes,
     timePerQuestionSec: examObj.timePerQuestion,
     pointsTotal: examObj.pointsTotal,
     attemptsLeft: examObj.attemptsAllowed,
@@ -231,6 +232,7 @@ router.put(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
       } = req.body;
 
       // Update fields
@@ -247,6 +249,7 @@ router.put(
       if (startsAt != null) exam.startTime = new Date(startsAt);
       if (endsAt != null) exam.endTime = new Date(endsAt);
       if (durationMin != null) exam.durationMinutes = durationMin;
+      if (slotDurationMin != null) exam.slotDurationMinutes = slotDurationMin;
 
       await exam.save();
 
@@ -663,7 +666,7 @@ router.patch(
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { startTime, endTime, durationMinutes, status } = req.body;
+      const { startTime, endTime, durationMinutes, slotDurationMinutes, status } = req.body;
 
       const exam = await Exam.findById(id);
       if (!exam) {
@@ -680,6 +683,13 @@ router.patch(
         });
       }
 
+      // Validate slotDurationMinutes
+      if (!slotDurationMinutes || slotDurationMinutes <= 0) {
+        return res.status(400).json({
+          message: "slotDurationMinutes must be a positive number",
+        });
+      }
+
       const start = parseDate(startTime);
       const end = parseDate(endTime);
 
@@ -689,9 +699,20 @@ router.patch(
         });
       }
 
+      // Calculate exam window in minutes
+      const windowMinutes = Math.floor((end - start) / (1000 * 60));
+
+      // Validate slot duration doesn't exceed exam window
+      if (slotDurationMinutes > windowMinutes) {
+        return res.status(400).json({
+          message: `slotDurationMinutes (${slotDurationMinutes}) cannot exceed exam window (${windowMinutes} minutes)`,
+        });
+      }
+
       exam.startTime = start;
       exam.endTime = end;
       exam.durationMinutes = durationMinutes;
+      exam.slotDurationMinutes = slotDurationMinutes;
 
       if (status) {
         if (!["draft", "published", "archived"].includes(status)) {

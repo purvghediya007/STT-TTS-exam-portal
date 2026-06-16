@@ -21,7 +21,7 @@ export default function ExamCard({ exam, onPrefetch }) {
 
   const { formatted: countdownFormatted, expired } = useCountdown(
     exam.endsAt,
-    () => {}
+    () => { }
   )
 
   const isLive = exam.status === 'live' && !expired
@@ -60,34 +60,34 @@ export default function ExamCard({ exam, onPrefetch }) {
     <>
       <article
         className={`group relative bg-white rounded-xl border-[0.5px] border-blue-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5 focus-within:ring-1 focus-within:ring-blue-300 focus-within:ring-offset-1 ${isLive
-            ? 'border-blue-400 shadow-sm shadow-blue-100/30 bg-white'
-            : 'hover:border-blue-300 hover:bg-blue-50/20'
+          ? 'border-blue-400 shadow-sm shadow-blue-100/30 bg-white'
+          : 'hover:border-blue-300 hover:bg-blue-50/20'
           }`}
         onMouseEnter={handleMouseEnter}
         aria-labelledby={`exam-title-${exam.id}`}
       >
-        <div className={`h-0.5 w-full ${isLive 
-          ? 'bg-gradient-to-r from-blue-500 to-cyan-500' 
+        <div className={`h-0.5 w-full ${isLive
+          ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
           : exam.status === 'upcoming'
             ? 'bg-gradient-to-r from-sky-400 to-blue-400'
             : 'bg-gradient-to-r from-blue-400 to-cyan-400'
-        }`}></div>
+          }`}></div>
 
         <div className="p-5 md:p-6">
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-3">
                 <div className={`p-2.5 rounded-lg flex-shrink-0 ${isLive
-                    ? 'bg-blue-50'
-                    : exam.status === 'upcoming'
-                      ? 'bg-sky-50'
-                      : 'bg-blue-50'
+                  ? 'bg-blue-50'
+                  : exam.status === 'upcoming'
+                    ? 'bg-sky-50'
+                    : 'bg-blue-50'
                   }`}>
                   <FileText className={`w-5 h-5 ${isLive
-                      ? 'text-blue-600'
-                      : exam.status === 'upcoming'
-                        ? 'text-sky-600'
-                        : 'text-blue-600'
+                    ? 'text-blue-600'
+                    : exam.status === 'upcoming'
+                      ? 'text-sky-600'
+                      : 'text-blue-600'
                     }`} aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -133,10 +133,32 @@ export default function ExamCard({ exam, onPrefetch }) {
                   <Clock className="w-4 h-4 text-sky-600" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-600 font-medium">Duration</p>
+                  <p className="text-xs text-gray-600 font-medium">Window</p>
                   <p className="text-sm font-bold text-gray-900">{formatDuration(exam.durationMin)}</p>
                 </div>
               </div>
+              {exam.slotDurationMin && (
+                <div className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-lg border-[0.5px] border-amber-200">
+                  <div className="p-1.5 bg-amber-100 rounded-md">
+                    <Timer className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 font-medium">Slot</p>
+                    <p className="text-sm font-bold text-gray-900">{formatDuration(exam.slotDurationMin)}</p>
+                  </div>
+                </div>
+              )}
+              {exam.timePerQuestionSec && (
+                <div className="flex items-center gap-2 p-2.5 bg-cyan-50 rounded-lg border-[0.5px] border-cyan-200">
+                  <div className="p-1.5 bg-cyan-100 rounded-md">
+                    <Timer className="w-4 h-4 text-cyan-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 font-medium">Duration</p>
+                    <p className="text-sm font-bold text-gray-900">{formatDuration(exam.durationMin)}</p>
+                  </div>
+                </div>
+              )}
               {exam.timePerQuestionSec && (
                 <div className="flex items-center gap-2 p-2.5 bg-cyan-50 rounded-lg border-[0.5px] border-cyan-200">
                   <div className="p-1.5 bg-cyan-100 rounded-md">
@@ -172,11 +194,10 @@ export default function ExamCard({ exam, onPrefetch }) {
               const attemptsLeft = exam.attemptsLeft ?? exam.attempts_left ?? exam.attemptsRemaining ?? exam.attempts_remaining ?? exam.attempts ?? exam.remainingAttempts ?? null
               if (attemptsLeft !== undefined && attemptsLeft !== null) {
                 return (
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${
-                    attemptsLeft > 0 
-                      ? 'bg-green-50 text-green-700 border-green-200' 
-                      : 'bg-gray-50 text-gray-600 border-gray-200'
-                  }`}>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${attemptsLeft > 0
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}>
                     <span className="font-bold">{attemptsLeft}</span>
                     <span>{attemptsLeft === 1 ? 'attempt' : 'attempts'} {attemptsLeft > 0 ? 'left' : 'allowed'}</span>
                   </div>
@@ -189,11 +210,10 @@ export default function ExamCard({ exam, onPrefetch }) {
               const allowedReRecords = exam.allowedReRecords ?? exam.allowed_re_records ?? exam.reRecordAllowed ?? exam.re_record_allowed ?? exam.allowedReRecordsCount ?? exam.reRecordsAllowed ?? null
               if (allowedReRecords !== undefined && allowedReRecords !== null) {
                 return (
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${
-                    allowedReRecords > 0 
-                      ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                      : 'bg-gray-50 text-gray-600 border-gray-200'
-                  }`}>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${allowedReRecords > 0
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}>
                     <span className="font-bold">{allowedReRecords}</span>
                     <span>re-record{allowedReRecords !== 1 ? 's' : ''} allowed</span>
                   </div>
