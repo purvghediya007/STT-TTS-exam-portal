@@ -1,0 +1,220 @@
+[
+  {
+    "title": "Two Sum",
+    "slug": "two-sum",
+    "category": "dsa",
+    "topic": "arrays",
+    "difficulty": "easy",
+    "description": "Given an array of integers `nums` and an integer `target`, return the **indices** of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have **exactly one solution**, and you may not use the same element twice.\n\nReturn the answer sorted in ascending order as two space-separated integers.",
+    "examples": [
+      { "input": "nums = [2, 7, 11, 15], target = 9", "output": "0 1", "explanation": "Because nums[0] + nums[1] == 9, we return 0 1." },
+      { "input": "nums = [3, 2, 4], target = 6", "output": "1 2", "explanation": "Because nums[1] + nums[2] == 6, we return 1 2." }
+    ],
+    "constraints": ["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9", "Only one valid answer exists."],
+    "codeTemplates": {
+      "python": "def twoSum(nums, target):\n    # Write your code here\n    pass",
+      "javascript": "function twoSum(nums, target) {\n  // Write your code here\n}",
+      "cpp": "vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n    return {};\n}",
+      "java": "    public static int[] twoSum(int[] nums, int target) {\n        // Write your code here\n        return new int[]{};\n    }",
+      "c": "int* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    *returnSize = 2;\n    int* result = (int*)malloc(2 * sizeof(int));\n    // Write your code here\n    return result;\n}"
+    },
+    "driverCode": {
+      "python": "import sys\nn = int(input())\nnums = list(map(int, input().split()))\ntarget = int(input())\nresult = twoSum(nums, target)\nresult.sort()\nprint(result[0], result[1])",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nconst lines = [];\nrl.on('line', l => lines.push(l.trim()));\nrl.on('close', () => {\n  const n = parseInt(lines[0]);\n  const nums = lines[1].split(' ').map(Number);\n  const target = parseInt(lines[2]);\n  const result = twoSum(nums, target);\n  result.sort((a,b)=>a-b);\n  console.log(result[0] + ' ' + result[1]);\n});",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    int n; cin >> n;\n    vector<int> nums(n);\n    for(int i=0;i<n;i++) cin >> nums[i];\n    int target; cin >> target;\n    vector<int> res = twoSum(nums, target);\n    sort(res.begin(), res.end());\n    cout << res[0] << \" \" << res[1] << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        int[] nums = new int[n];\n        for(int i=0;i<n;i++) nums[i] = sc.nextInt();\n        int target = sc.nextInt();\n        int[] res = twoSum(nums, target);\n        Arrays.sort(res);\n        System.out.println(res[0] + \" \" + res[1]);\n    }\n}",
+      "c": "#include <stdio.h>\n#include <stdlib.h>\n// __STUDENT_CODE__\nint main() {\n    int n; scanf(\"%d\", &n);\n    int nums[n];\n    for(int i=0;i<n;i++) scanf(\"%d\", &nums[i]);\n    int target; scanf(\"%d\", &target);\n    int returnSize;\n    int* res = twoSum(nums, n, target, &returnSize);\n    if(res[0]>res[1]){int t=res[0];res[0]=res[1];res[1]=t;}\n    printf(\"%d %d\\n\", res[0], res[1]);\n    free(res);\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "4\n2 7 11 15\n9", "expectedOutput": "0 1", "isHidden": false },
+      { "input": "3\n3 2 4\n6", "expectedOutput": "1 2", "isHidden": false },
+      { "input": "2\n3 3\n6", "expectedOutput": "0 1", "isHidden": true },
+      { "input": "5\n1 5 3 7 2\n9", "expectedOutput": "1 3", "isHidden": true }
+    ],
+    "hints": ["Try using a hash map to store values you've seen.", "For each number, check if (target - number) exists in the map."],
+    "tags": ["hash-map", "array"],
+    "solutionCode": "def twoSum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i"
+  },
+  {
+    "title": "Reverse String",
+    "slug": "reverse-string",
+    "category": "dsa",
+    "topic": "strings",
+    "difficulty": "easy",
+    "description": "Write a function that reverses a string. The input string is given as an array of characters.\n\nYou must do this by modifying the input array **in-place** with O(1) extra memory.\n\nPrint the reversed characters space-separated.",
+    "examples": [
+      { "input": "s = ['h','e','l','l','o']", "output": "o l l e h", "explanation": "" },
+      { "input": "s = ['H','a','n','n','a','h']", "output": "h a n n a H", "explanation": "" }
+    ],
+    "constraints": ["1 <= s.length <= 10^5", "s[i] is a printable ASCII character."],
+    "codeTemplates": {
+      "python": "def reverseString(s):\n    # Modify s in-place\n    pass",
+      "javascript": "function reverseString(s) {\n  // Modify s in-place\n}",
+      "cpp": "void reverseString(vector<char>& s) {\n    // Modify s in-place\n}",
+      "java": "    public static void reverseString(char[] s) {\n        // Modify s in-place\n    }",
+      "c": "void reverseString(char* s, int sSize) {\n    // Modify s in-place\n}"
+    },
+    "driverCode": {
+      "python": "n = int(input())\ns = input().split()\nreverseString(s)\nprint(' '.join(s))",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nconst lines = [];\nrl.on('line', l => lines.push(l.trim()));\nrl.on('close', () => {\n  const n = parseInt(lines[0]);\n  const s = lines[1].split(' ');\n  reverseString(s);\n  console.log(s.join(' '));\n});",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    int n; cin >> n;\n    vector<char> s(n);\n    for(int i=0;i<n;i++) { string t; cin >> t; s[i]=t[0]; }\n    reverseString(s);\n    for(int i=0;i<n;i++) { if(i) cout << \" \"; cout << s[i]; }\n    cout << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        char[] s = new char[n];\n        for(int i=0;i<n;i++) s[i] = sc.next().charAt(0);\n        reverseString(s);\n        StringBuilder sb = new StringBuilder();\n        for(int i=0;i<n;i++) { if(i>0) sb.append(\" \"); sb.append(s[i]); }\n        System.out.println(sb);\n    }\n}",
+      "c": "#include <stdio.h>\n#include <string.h>\n// __STUDENT_CODE__\nint main() {\n    int n; scanf(\"%d\", &n);\n    char s[n]; char buf[10];\n    for(int i=0;i<n;i++) { scanf(\"%s\", buf); s[i]=buf[0]; }\n    reverseString(s, n);\n    for(int i=0;i<n;i++) { if(i) printf(\" \"); printf(\"%c\", s[i]); }\n    printf(\"\\n\");\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "5\nh e l l o", "expectedOutput": "o l l e h", "isHidden": false },
+      { "input": "6\nH a n n a h", "expectedOutput": "h a n n a H", "isHidden": false },
+      { "input": "1\nA", "expectedOutput": "A", "isHidden": true }
+    ],
+    "hints": ["Use two pointers — one at the start, one at the end.", "Swap characters and move both pointers inward."],
+    "tags": ["two-pointer", "string"],
+    "solutionCode": "def reverseString(s):\n    left, right = 0, len(s) - 1\n    while left < right:\n        s[left], s[right] = s[right], s[left]\n        left += 1\n        right -= 1"
+  },
+  {
+    "title": "Maximum Subarray",
+    "slug": "maximum-subarray",
+    "category": "dsa",
+    "topic": "arrays",
+    "difficulty": "medium",
+    "description": "Given an integer array `nums`, find the subarray with the largest sum, and return **its sum**.\n\nA **subarray** is a contiguous non-empty sequence of elements within an array.",
+    "examples": [
+      { "input": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]", "output": "6", "explanation": "The subarray [4, -1, 2, 1] has the largest sum 6." },
+      { "input": "nums = [1]", "output": "1", "explanation": "The subarray [1] has the largest sum 1." },
+      { "input": "nums = [5, 4, -1, 7, 8]", "output": "23", "explanation": "The subarray [5, 4, -1, 7, 8] has the largest sum 23." }
+    ],
+    "constraints": ["1 <= nums.length <= 10^5", "-10^4 <= nums[i] <= 10^4"],
+    "codeTemplates": {
+      "python": "def maxSubArray(nums):\n    # Write your code here\n    pass",
+      "javascript": "function maxSubArray(nums) {\n  // Write your code here\n}",
+      "cpp": "int maxSubArray(vector<int>& nums) {\n    // Write your code here\n    return 0;\n}",
+      "java": "    public static int maxSubArray(int[] nums) {\n        // Write your code here\n        return 0;\n    }",
+      "c": "int maxSubArray(int* nums, int numsSize) {\n    // Write your code here\n    return 0;\n}"
+    },
+    "driverCode": {
+      "python": "n = int(input())\nnums = list(map(int, input().split()))\nprint(maxSubArray(nums))",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nconst lines = [];\nrl.on('line', l => lines.push(l.trim()));\nrl.on('close', () => {\n  const n = parseInt(lines[0]);\n  const nums = lines[1].split(' ').map(Number);\n  console.log(maxSubArray(nums));\n});",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    int n; cin >> n;\n    vector<int> nums(n);\n    for(int i=0;i<n;i++) cin >> nums[i];\n    cout << maxSubArray(nums) << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        int[] nums = new int[n];\n        for(int i=0;i<n;i++) nums[i] = sc.nextInt();\n        System.out.println(maxSubArray(nums));\n    }\n}",
+      "c": "#include <stdio.h>\n// __STUDENT_CODE__\nint main() {\n    int n; scanf(\"%d\", &n);\n    int nums[n];\n    for(int i=0;i<n;i++) scanf(\"%d\", &nums[i]);\n    printf(\"%d\\n\", maxSubArray(nums, n));\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "9\n-2 1 -3 4 -1 2 1 -5 4", "expectedOutput": "6", "isHidden": false },
+      { "input": "1\n1", "expectedOutput": "1", "isHidden": false },
+      { "input": "5\n5 4 -1 7 8", "expectedOutput": "23", "isHidden": false },
+      { "input": "1\n-1", "expectedOutput": "-1", "isHidden": true },
+      { "input": "2\n-2 -1", "expectedOutput": "-1", "isHidden": true }
+    ],
+    "hints": ["Think about Kadane's Algorithm.", "At each index, decide: extend the current subarray or start a new one?"],
+    "tags": ["dynamic-programming", "kadane"],
+    "solutionCode": "def maxSubArray(nums):\n    maxSum = nums[0]\n    curSum = nums[0]\n    for i in range(1, len(nums)):\n        curSum = max(nums[i], curSum + nums[i])\n        maxSum = max(maxSum, curSum)\n    return maxSum"
+  },
+  {
+    "title": "Climbing Stairs",
+    "slug": "climbing-stairs",
+    "category": "dsa",
+    "topic": "dynamic_programming",
+    "difficulty": "easy",
+    "description": "You are climbing a staircase. It takes `n` steps to reach the top.\n\nEach time you can either climb **1** or **2** steps. In how many distinct ways can you climb to the top?",
+    "examples": [
+      { "input": "n = 2", "output": "2", "explanation": "1. 1 step + 1 step\n2. 2 steps" },
+      { "input": "n = 3", "output": "3", "explanation": "1. 1+1+1\n2. 1+2\n3. 2+1" }
+    ],
+    "constraints": ["1 <= n <= 45"],
+    "codeTemplates": {
+      "python": "def climbStairs(n):\n    # Write your code here\n    pass",
+      "javascript": "function climbStairs(n) {\n  // Write your code here\n}",
+      "cpp": "int climbStairs(int n) {\n    // Write your code here\n    return 0;\n}",
+      "java": "    public static int climbStairs(int n) {\n        // Write your code here\n        return 0;\n    }",
+      "c": "int climbStairs(int n) {\n    // Write your code here\n    return 0;\n}"
+    },
+    "driverCode": {
+      "python": "n = int(input())\nprint(climbStairs(n))",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nrl.on('line', line => { console.log(climbStairs(parseInt(line.trim()))); rl.close(); });",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    int n; cin >> n;\n    cout << climbStairs(n) << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        System.out.println(climbStairs(sc.nextInt()));\n    }\n}",
+      "c": "#include <stdio.h>\n// __STUDENT_CODE__\nint main() {\n    int n; scanf(\"%d\", &n);\n    printf(\"%d\\n\", climbStairs(n));\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "2", "expectedOutput": "2", "isHidden": false },
+      { "input": "3", "expectedOutput": "3", "isHidden": false },
+      { "input": "5", "expectedOutput": "8", "isHidden": true },
+      { "input": "10", "expectedOutput": "89", "isHidden": true },
+      { "input": "1", "expectedOutput": "1", "isHidden": true }
+    ],
+    "hints": ["This is like the Fibonacci sequence.", "dp[i] = dp[i-1] + dp[i-2]"],
+    "tags": ["dynamic-programming", "fibonacci"],
+    "solutionCode": "def climbStairs(n):\n    if n <= 2: return n\n    a, b = 1, 2\n    for _ in range(3, n+1):\n        a, b = b, a + b\n    return b"
+  },
+  {
+    "title": "Binary Search",
+    "slug": "binary-search",
+    "category": "dsa",
+    "topic": "searching",
+    "difficulty": "easy",
+    "description": "Given a sorted array of integers `nums` and a `target` value, return the **index** of the target if found. If not found, return **-1**.\n\nYou must write an algorithm with **O(log n)** runtime complexity.",
+    "examples": [
+      { "input": "nums = [-1, 0, 3, 5, 9, 12], target = 9", "output": "4", "explanation": "9 exists in nums and its index is 4." },
+      { "input": "nums = [-1, 0, 3, 5, 9, 12], target = 2", "output": "-1", "explanation": "2 does not exist in nums so return -1." }
+    ],
+    "constraints": ["1 <= nums.length <= 10^4", "All integers in nums are unique.", "nums is sorted in ascending order."],
+    "codeTemplates": {
+      "python": "def search(nums, target):\n    # Write your code here\n    pass",
+      "javascript": "function search(nums, target) {\n  // Write your code here\n}",
+      "cpp": "int search(vector<int>& nums, int target) {\n    // Write your code here\n    return -1;\n}",
+      "java": "    public static int search(int[] nums, int target) {\n        // Write your code here\n        return -1;\n    }",
+      "c": "int search(int* nums, int numsSize, int target) {\n    // Write your code here\n    return -1;\n}"
+    },
+    "driverCode": {
+      "python": "n = int(input())\nnums = list(map(int, input().split()))\ntarget = int(input())\nprint(search(nums, target))",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nconst lines = [];\nrl.on('line', l => lines.push(l.trim()));\nrl.on('close', () => {\n  const n = parseInt(lines[0]);\n  const nums = lines[1].split(' ').map(Number);\n  const target = parseInt(lines[2]);\n  console.log(search(nums, target));\n});",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    int n; cin >> n;\n    vector<int> nums(n);\n    for(int i=0;i<n;i++) cin >> nums[i];\n    int target; cin >> target;\n    cout << ::search(nums, target) << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        int[] nums = new int[n];\n        for(int i=0;i<n;i++) nums[i] = sc.nextInt();\n        int target = sc.nextInt();\n        System.out.println(search(nums, target));\n    }\n}",
+      "c": "#include <stdio.h>\n// __STUDENT_CODE__\nint main() {\n    int n; scanf(\"%d\", &n);\n    int nums[n];\n    for(int i=0;i<n;i++) scanf(\"%d\", &nums[i]);\n    int target; scanf(\"%d\", &target);\n    printf(\"%d\\n\", search(nums, n, target));\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "6\n-1 0 3 5 9 12\n9", "expectedOutput": "4", "isHidden": false },
+      { "input": "6\n-1 0 3 5 9 12\n2", "expectedOutput": "-1", "isHidden": false },
+      { "input": "1\n5\n5", "expectedOutput": "0", "isHidden": true },
+      { "input": "2\n2 5\n5", "expectedOutput": "1", "isHidden": true }
+    ],
+    "hints": ["Use two pointers: left and right.", "Compare the middle element with target and narrow the search range."],
+    "tags": ["binary-search"],
+    "solutionCode": "def search(nums, target):\n    left, right = 0, len(nums) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if nums[mid] == target: return mid\n        elif nums[mid] < target: left = mid + 1\n        else: right = mid - 1\n    return -1"
+  },
+  {
+    "title": "Valid Palindrome",
+    "slug": "valid-palindrome",
+    "category": "dsa",
+    "topic": "strings",
+    "difficulty": "easy",
+    "description": "A phrase is a **palindrome** if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.\n\nGiven a string `s`, return `true` if it is a palindrome, or `false` otherwise.",
+    "examples": [
+      { "input": "s = \"A man, a plan, a canal: Panama\"", "output": "true", "explanation": "\"amanaplanacanalpanama\" is a palindrome." },
+      { "input": "s = \"race a car\"", "output": "false", "explanation": "\"raceacar\" is not a palindrome." }
+    ],
+    "constraints": ["1 <= s.length <= 2 * 10^5", "s consists only of printable ASCII characters."],
+    "codeTemplates": {
+      "python": "def isPalindrome(s):\n    # Write your code here\n    pass",
+      "javascript": "function isPalindrome(s) {\n  // Write your code here\n}",
+      "cpp": "bool isPalindrome(string s) {\n    // Write your code here\n    return false;\n}",
+      "java": "    public static boolean isPalindrome(String s) {\n        // Write your code here\n        return false;\n    }",
+      "c": "int isPalindrome(char* s) {\n    // Return 1 for true, 0 for false\n    return 0;\n}"
+    },
+    "driverCode": {
+      "python": "s = input()\nprint(str(isPalindrome(s)).lower())",
+      "javascript": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nrl.on('line', line => { console.log(isPalindrome(line) ? 'true' : 'false'); rl.close(); });",
+      "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n// __STUDENT_CODE__\nint main() {\n    string s;\n    getline(cin, s);\n    cout << (isPalindrome(s) ? \"true\" : \"false\") << endl;\n    return 0;\n}",
+      "java": "import java.util.*;\npublic class Main {\n// __STUDENT_CODE__\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String s = sc.nextLine();\n        System.out.println(isPalindrome(s) ? \"true\" : \"false\");\n    }\n}",
+      "c": "#include <stdio.h>\n#include <string.h>\n#include <ctype.h>\n// __STUDENT_CODE__\nint main() {\n    char s[200001];\n    fgets(s, 200001, stdin);\n    s[strcspn(s,\"\\n\")]=0;\n    printf(\"%s\\n\", isPalindrome(s)?\"true\":\"false\");\n    return 0;\n}"
+    },
+    "testCases": [
+      { "input": "A man, a plan, a canal: Panama", "expectedOutput": "true", "isHidden": false },
+      { "input": "race a car", "expectedOutput": "false", "isHidden": false },
+      { "input": " ", "expectedOutput": "true", "isHidden": true },
+      { "input": "ab", "expectedOutput": "false", "isHidden": true }
+    ],
+    "hints": ["Filter out non-alphanumeric characters first, then convert to lowercase.", "Use two pointers to compare from both ends."],
+    "tags": ["two-pointer", "string"],
+    "solutionCode": "def isPalindrome(s):\n    filtered = ''.join(c.lower() for c in s if c.isalnum())\n    return filtered == filtered[::-1]"
+  }
+]
