@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+// import {
+//   LayoutDashboard,
+//   Calendar,
+//   Clock,
+//   HelpCircle,
+//   User,
+//   ChevronDown,
+//   CheckSquare,
+//   FileText,
+//   RefreshCw,
+//   LogOut,
+//   Menu, // For mobile structure
+//   X     // For mobile structure
+// } from 'lucide-react'
+
 import {
   LayoutDashboard,
   Calendar,
@@ -11,8 +26,9 @@ import {
   FileText,
   RefreshCw,
   LogOut,
-  Menu, // For mobile structure
-  X     // For mobile structure
+  Menu,
+  X,
+  BookOpen
 } from 'lucide-react'
 import { useExams } from '../hooks/useExams'
 
@@ -71,8 +87,19 @@ export default function StudentLayout({ children }) {
     }
   }, [showUserDropdown])
 
+  // const getActiveRoute = () => {
+  //   const path = location.pathname
+  //   if (path.includes('/dashboard') || path === '/student' || path === '/student/') return 'dashboard'
+  //   if (path.includes('/upcoming')) return 'upcoming'
+  //   if (path.includes('/available')) return 'available'
+  //   if (path.includes('/history')) return 'history'
+  //   if (path.includes('/guidelines')) return 'guidelines'
+  //   return 'dashboard'
+  // }
+
   const getActiveRoute = () => {
     const path = location.pathname
+    if (path.includes('/practice')) return 'practice'
     if (path.includes('/dashboard') || path === '/student' || path === '/student/') return 'dashboard'
     if (path.includes('/upcoming')) return 'upcoming'
     if (path.includes('/available')) return 'available'
@@ -82,8 +109,9 @@ export default function StudentLayout({ children }) {
   }
 
   // Check if we're on exam taking page
-  const isExamPage = location.pathname.includes('/exams/') && location.pathname.includes('/take')
-
+  // const isExamPage = location.pathname.includes('/exams/') && location.pathname.includes('/take')
+  // const isExamPage = (location.pathname.includes('/exams/') && location.pathname.includes('/take')) || location.pathname.includes('/practice/exam')
+  const isExamPage = (location.pathname.includes('/exams/') && location.pathname.includes('/take')) || location.pathname.includes('/practice/exam') || location.pathname.includes('/practice/coding/problem')
   const activeRoute = getActiveRoute()
 
   const handleNavigation = (route) => {
@@ -198,6 +226,7 @@ export default function StudentLayout({ children }) {
             <NavLink route="available" icon={CheckSquare} label="Available Quiz" />
             <NavLink route="history" icon={Clock} label="History" />
             <NavLink route="guidelines" icon={HelpCircle} label="Guidelines" />
+            <NavLink route="practice" icon={BookOpen} label="Practice Hub" />
           </nav>
         </aside>
 

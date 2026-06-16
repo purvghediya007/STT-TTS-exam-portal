@@ -1,0 +1,293 @@
+{
+  "topics": [
+    {
+      "key": "numbers",
+      "title": "Numbers & Number Systems",
+      "description": "Understand types of numbers, divisibility, HCF, LCM, and number properties.",
+      "subtopics": ["Types of Numbers", "Divisibility Rules", "HCF & LCM", "Remainders"],
+      "theory": "Numbers form the foundation of quantitative aptitude. Natural numbers (1,2,3...), Whole numbers (0,1,2...), Integers (...-2,-1,0,1,2...), Rational numbers (p/q where q≠0), and Irrational numbers (√2, π) together form Real Numbers.\n\n**Types:**\n- **Prime Numbers**: Divisible only by 1 and itself (2,3,5,7,11,13...)\n- **Composite Numbers**: Have more than 2 factors (4,6,8,9...)\n- **Co-prime Numbers**: Two numbers with HCF = 1 (e.g., 8 and 15)\n- **Even/Odd**: Even numbers divisible by 2; odd numbers are not.\n\n**Divisibility Rules:**\n- By 2: Last digit is even\n- By 3: Sum of digits divisible by 3\n- By 4: Last two digits divisible by 4\n- By 5: Last digit is 0 or 5\n- By 6: Divisible by both 2 and 3\n- By 8: Last three digits divisible by 8\n- By 9: Sum of digits divisible by 9\n- By 11: Difference of sum of odd-place and even-place digits is 0 or divisible by 11",
+      "formulas": [
+        "HCF × LCM = Product of two numbers",
+        "Sum of first n natural numbers = n(n+1)/2",
+        "Sum of squares of first n natural numbers = n(n+1)(2n+1)/6",
+        "Sum of cubes of first n natural numbers = [n(n+1)/2]²",
+        "Number of factors of N = (a+1)(b+1)(c+1)... where N = p^a × q^b × r^c",
+        "Sum of first n odd numbers = n²",
+        "Sum of first n even numbers = n(n+1)"
+      ],
+      "solvedExamples": [
+        {
+          "question": "Find the HCF and LCM of 12 and 18.",
+          "solution": "12 = 2² × 3\n18 = 2 × 3²\nHCF = 2¹ × 3¹ = 6 (take minimum powers)\nLCM = 2² × 3² = 36 (take maximum powers)\nVerification: HCF × LCM = 6 × 36 = 216 = 12 × 18 ✓"
+        },
+        {
+          "question": "What is the remainder when 7^256 is divided by 10?",
+          "solution": "Find the cyclicity of 7:\n7¹ = 7, 7² = 49, 7³ = 343, 7⁴ = 2401\nUnit digits cycle: 7, 9, 3, 1 (cycle of 4)\n256 ÷ 4 = 64 remainder 0\nWhen remainder is 0, take the last value in cycle = 1\nAnswer: Remainder = 1"
+        },
+        {
+          "question": "Find the sum of all factors of 120.",
+          "solution": "120 = 2³ × 3¹ × 5¹\nSum of factors = (2⁰+2¹+2²+2³)(3⁰+3¹)(5⁰+5¹)\n= (1+2+4+8)(1+3)(1+5)\n= 15 × 4 × 6 = 360"
+        }
+      ],
+      "tricks": [
+        "To check if a large number is prime, check divisibility only up to its square root.",
+        "Cyclicity shortcut: Unit digits of powers repeat in cycles — memorize cycles for 2,3,4,7,8,9.",
+        "For HCF of large numbers, use successive division (Euclidean algorithm) instead of factorization.",
+        "If a number leaves remainder r when divided by d, it can be written as d×q + r.",
+        "Product of n consecutive integers is always divisible by n!"
+      ]
+    },
+    {
+      "key": "ages",
+      "title": "Problems on Ages",
+      "description": "Solve age-based word problems using linear equations and ratio methods.",
+      "subtopics": ["Basic Age Problems", "Ratio-Based", "Family Age Problems"],
+      "theory": "Age problems involve finding current, past, or future ages using the fact that the age difference between two people always remains constant.\n\n**Key Concepts:**\n- If A is x years old now, then t years ago A was (x-t) years old, and t years later A will be (x+t) years old.\n- Age difference between two people never changes regardless of time.\n- Ratio of ages changes over time, but the difference remains constant.\n\n**Approach:**\n1. Let the unknown age be x (or use the given ratio)\n2. Form an equation using the condition given\n3. Solve for x\n\n**Common Patterns:**\n- \"A is twice as old as B was when A was as old as B is now\" — these require setting up two time references carefully.",
+      "formulas": [
+        "If present age = x, then age n years ago = x - n",
+        "If present age = x, then age n years hence = x + n",
+        "If ratio of ages is a:b, let ages be ax and bx",
+        "Age difference = Constant (always, regardless of when)"
+      ],
+      "solvedExamples": [
+        {
+          "question": "The present ages of A and B are in the ratio 5:3. After 6 years, their ages will be in the ratio 7:5. Find their present ages.",
+          "solution": "Let present ages = 5x and 3x\nAfter 6 years: (5x+6)/(3x+6) = 7/5\n5(5x+6) = 7(3x+6)\n25x + 30 = 21x + 42\n4x = 12 → x = 3\nA's age = 5×3 = 15 years\nB's age = 3×3 = 9 years"
+        },
+        {
+          "question": "A father is 30 years older than his son. In 5 years, father's age will be 3 times son's age. Find their present ages.",
+          "solution": "Let son's age = x, Father's age = x + 30\nIn 5 years: (x+30+5) = 3(x+5)\nx + 35 = 3x + 15\n20 = 2x → x = 10\nSon = 10 years, Father = 40 years\nCheck: In 5 years → 45 = 3 × 15 ✓"
+        },
+        {
+          "question": "6 years ago, the ratio of ages of A and B was 6:1. The ratio of their present ages is 11:6. What is B's present age?",
+          "solution": "Let ages 6 years ago = 6x and x\nPresent ages = (6x+6) and (x+6)\n(6x+6)/(x+6) = 11/6\n36x + 36 = 11x + 66\n25x = 30 → x = 1.2\nB's present age = 1.2 + 6 = 7.2 years\n(In competitive exams, options would be given — pick closest or re-check.)"
+        }
+      ],
+      "tricks": [
+        "Always verify your answer by plugging it back into the original condition.",
+        "When ratio and difference are given: If a:b ratio and difference d, then ages are ad/(a-b) and bd/(a-b).",
+        "For 'n years ago' problems, subtract n from both sides of the ratio equation.",
+        "If the sum of ages is given with a ratio a:b, then ages are a×S/(a+b) and b×S/(a+b)."
+      ]
+    },
+    {
+      "key": "profit_loss",
+      "title": "Profit & Loss",
+      "description": "Master cost price, selling price, profit/loss percentage, discount, and markup calculations.",
+      "subtopics": ["Basic P&L", "Discount & Markup", "Successive Discounts", "Dishonest Dealers"],
+      "theory": "Profit and Loss deals with commercial transactions. The cost price (CP) is what you pay, the selling price (SP) is what you receive.\n\n**Basic Terms:**\n- **Cost Price (CP)**: Price at which an article is purchased\n- **Selling Price (SP)**: Price at which an article is sold\n- **Profit**: SP > CP → Profit = SP - CP\n- **Loss**: CP > SP → Loss = CP - SP\n- **Marked Price (MP)**: The listed/label price before any discount\n- **Discount**: Reduction given on MP → SP = MP - Discount\n\n**Important:** Profit/Loss percentage is ALWAYS calculated on CP unless stated otherwise.",
+      "formulas": [
+        "Profit% = (Profit/CP) × 100",
+        "Loss% = (Loss/CP) × 100",
+        "SP = CP × (100 + Profit%)/100",
+        "SP = CP × (100 - Loss%)/100",
+        "CP = SP × 100/(100 + Profit%)",
+        "Discount% = (Discount/MP) × 100",
+        "SP = MP × (100 - Discount%)/100",
+        "If two items sold at same SP, one at x% profit and other at x% loss, there is always a net loss = x²/100 %"
+      ],
+      "solvedExamples": [
+        {
+          "question": "A shopkeeper buys an article for ₹400 and sells it for ₹500. Find profit percentage.",
+          "solution": "CP = ₹400, SP = ₹500\nProfit = 500 - 400 = ₹100\nProfit% = (100/400) × 100 = 25%"
+        },
+        {
+          "question": "A item marked at ₹1200 is sold at 20% discount. If the shopkeeper still makes 25% profit, find CP.",
+          "solution": "MP = ₹1200, Discount = 20%\nSP = 1200 × 80/100 = ₹960\nSP = CP × (100+25)/100\n960 = CP × 125/100\nCP = 960 × 100/125 = ₹768"
+        },
+        {
+          "question": "Two articles are sold at ₹600 each. One at 20% profit, other at 20% loss. Find overall profit or loss.",
+          "solution": "Article 1: SP=600, Profit=20% → CP₁ = 600×100/120 = ₹500\nArticle 2: SP=600, Loss=20% → CP₂ = 600×100/80 = ₹750\nTotal CP = 500+750 = ₹1250\nTotal SP = 600+600 = ₹1200\nNet Loss = ₹50\nLoss% = 50/1250 × 100 = 4%\nShortcut: Loss% = x²/100 = 400/100 = 4% ✓"
+        }
+      ],
+      "tricks": [
+        "Same SP, same profit/loss % → Always net LOSS = x²/100 percent.",
+        "Dishonest dealer using false weights: Gain% = (True weight - False weight)/False weight × 100.",
+        "Successive discounts of a% and b% = single discount of (a + b - ab/100)%.",
+        "If CP of x articles = SP of y articles, then Profit% = (x-y)/y × 100."
+      ]
+    },
+    {
+      "key": "time_speed_distance",
+      "title": "Time, Speed & Distance",
+      "description": "Problems on relative speed, trains, boats, average speed, and circular tracks.",
+      "subtopics": ["Basic TSD", "Trains", "Boats & Streams", "Circular Tracks"],
+      "theory": "The fundamental relationship: Distance = Speed × Time.\n\n**Unit Conversions:**\n- km/hr to m/s: Multiply by 5/18\n- m/s to km/hr: Multiply by 18/5\n\n**Relative Speed:**\n- Same direction: |S₁ - S₂|\n- Opposite direction: S₁ + S₂\n\n**Trains:**\n- Time to pass a pole = Length of train / Speed\n- Time to pass a platform = (Length of train + Length of platform) / Speed\n- Time for two trains to cross each other = (L₁ + L₂) / Relative speed\n\n**Boats & Streams:**\n- Downstream speed = Boat speed + Stream speed\n- Upstream speed = Boat speed - Stream speed\n- Boat speed = (Downstream + Upstream) / 2\n- Stream speed = (Downstream - Upstream) / 2",
+      "formulas": [
+        "Distance = Speed × Time",
+        "Speed = Distance / Time",
+        "Time = Distance / Speed",
+        "Average Speed (same distance) = 2S₁S₂ / (S₁ + S₂)",
+        "km/hr to m/s: multiply by 5/18",
+        "Relative speed (same dir) = S₁ - S₂",
+        "Relative speed (opp dir) = S₁ + S₂"
+      ],
+      "solvedExamples": [
+        {
+          "question": "A train 150m long passes a pole in 15 seconds. Find its speed in km/hr.",
+          "solution": "Speed = Distance/Time = 150/15 = 10 m/s\nSpeed in km/hr = 10 × 18/5 = 36 km/hr"
+        },
+        {
+          "question": "A person covers half the distance at 40 km/hr and the other half at 60 km/hr. Find average speed.",
+          "solution": "Average speed = 2 × 40 × 60 / (40 + 60)\n= 4800 / 100 = 48 km/hr\nNote: Average speed ≠ (40+60)/2 = 50 km/hr!"
+        },
+        {
+          "question": "A boat goes 24 km downstream in 3 hours and returns in 4 hours. Find speed of boat and stream.",
+          "solution": "Downstream speed = 24/3 = 8 km/hr\nUpstream speed = 24/4 = 6 km/hr\nBoat speed = (8+6)/2 = 7 km/hr\nStream speed = (8-6)/2 = 1 km/hr"
+        }
+      ],
+      "tricks": [
+        "For average speed over equal distances, use harmonic mean: 2ab/(a+b), NOT arithmetic mean.",
+        "Train crossing a man/pole → only train length matters. Train crossing bridge → add both lengths.",
+        "If ratio of speeds is a:b, then ratio of times (same distance) is b:a (inverse).",
+        "Meeting point: Two people starting simultaneously from A and B meet at distance = (Speed_A/Total_Speed) × Total_Distance from A."
+      ]
+    },
+    {
+      "key": "averages",
+      "title": "Averages",
+      "description": "Weighted averages, average of series, and effect of adding/removing elements.",
+      "subtopics": ["Simple Average", "Weighted Average", "Change in Average"],
+      "theory": "Average (Arithmetic Mean) is the sum of observations divided by the number of observations.\n\n**Key Concepts:**\n- Average = Sum / Count\n- Sum = Average × Count\n- If one number is added/removed, recalculate using new sum and new count.\n\n**Weighted Average:**\nWhen different groups have different sizes, use weighted average:\nWeighted Avg = (n₁×A₁ + n₂×A₂) / (n₁ + n₂)\n\n**Properties:**\n- The average always lies between the minimum and maximum values.\n- If all values increase by k, the average increases by k.\n- If all values are multiplied by k, the average is multiplied by k.",
+      "formulas": [
+        "Average = Sum of observations / Number of observations",
+        "Sum = Average × Number of observations",
+        "Weighted Average = Σ(wᵢ × xᵢ) / Σwᵢ",
+        "New average after adding a value = (Old sum + New value) / (n + 1)",
+        "Average of first n natural numbers = (n+1)/2",
+        "Average of first n even numbers = (n+1)",
+        "Average of first n odd numbers = n"
+      ],
+      "solvedExamples": [
+        {
+          "question": "The average of 5 numbers is 20. If one number is removed, the average becomes 18. Find the removed number.",
+          "solution": "Original sum = 5 × 20 = 100\nNew sum = 4 × 18 = 72\nRemoved number = 100 - 72 = 28"
+        },
+        {
+          "question": "The average age of a class of 30 students is 14 years. When the teacher's age is included, the average increases by 1 year. Find the teacher's age.",
+          "solution": "Sum of students' ages = 30 × 14 = 420\nNew average = 15, Total people = 31\nNew sum = 31 × 15 = 465\nTeacher's age = 465 - 420 = 45 years"
+        },
+        {
+          "question": "A batsman has an average of 40 runs in 10 innings. How many runs should he score in the 11th inning to increase his average by 4?",
+          "solution": "Required new average = 44\nRequired total = 44 × 11 = 484\nCurrent total = 40 × 10 = 400\nRuns needed = 484 - 400 = 84 runs"
+        }
+      ],
+      "tricks": [
+        "When a new member joins: New member's value = New average + n × (New avg - Old avg), where n is NEW count.",
+        "Average of an arithmetic progression = (First term + Last term) / 2.",
+        "If average of n numbers is A, and each number is increased by x, new average = A + x.",
+        "Cricket average trick: Runs needed = New average + Previous innings × Increase needed."
+      ]
+    },
+    {
+      "key": "percentages",
+      "title": "Percentages",
+      "description": "Percentage increase/decrease, successive changes, and percentage-to-fraction conversions.",
+      "subtopics": ["Basic Percentage", "Successive Changes", "Population/Depreciation"],
+      "theory": "Percentage means 'per hundred'. It is a way of expressing a number as a fraction of 100.\n\n**Key Concepts:**\n- x% of y = (x/100) × y = y% of x\n- Percentage increase = (Increase/Original) × 100\n- Percentage decrease = (Decrease/Original) × 100\n\n**Successive Percentage Changes:**\nIf a value changes by a% and then by b%, the net effect is:\nNet change = a + b + (ab/100) %\n\n**Common Fraction-Percentage Equivalents:**\n1/2 = 50%, 1/3 ≈ 33.33%, 1/4 = 25%, 1/5 = 20%, 1/6 ≈ 16.67%, 1/8 = 12.5%",
+      "formulas": [
+        "x% of y = (x × y) / 100",
+        "Percentage change = (Change / Original) × 100",
+        "After a% increase: New = Original × (100+a)/100",
+        "After a% decrease: New = Original × (100-a)/100",
+        "Net effect of a% then b% = (a + b + ab/100)%",
+        "Population after n years = P × (1 + r/100)^n",
+        "Depreciation after n years = P × (1 - r/100)^n",
+        "If A is x% more than B, then B is (x/(100+x))×100 % less than A"
+      ],
+      "solvedExamples": [
+        {
+          "question": "A price increases by 20% and then decreases by 20%. What is the net percentage change?",
+          "solution": "Net change = 20 + (-20) + (20 × -20)/100\n= 20 - 20 - 4 = -4%\nSo there is a net decrease of 4%.\nShortcut: Same % increase then decrease always gives loss of x²/100 %."
+        },
+        {
+          "question": "If A's salary is 25% more than B's, by what percentage is B's salary less than A's?",
+          "solution": "B is less than A by: (25/125) × 100 = 20%\nFormula: x/(100+x) × 100 = 25/125 × 100 = 20%"
+        },
+        {
+          "question": "The population of a town increases by 10% every year. If the current population is 50,000, what will it be after 3 years?",
+          "solution": "P = 50000 × (1 + 10/100)³\n= 50000 × (1.1)³\n= 50000 × 1.331 = 66,550"
+        }
+      ],
+      "tricks": [
+        "x% increase followed by x% decrease (or vice versa) always gives a net decrease of x²/100 %.",
+        "Memorize common fraction-percentage pairs for quick mental math.",
+        "If A is x% more than B, B is NOT x% less than A. Use: x/(100+x) × 100.",
+        "For successive increases of a%, b%, c%: multiply (1+a/100)(1+b/100)(1+c/100) and subtract 1."
+      ]
+    },
+    {
+      "key": "ratio_proportion",
+      "title": "Ratio & Proportion",
+      "description": "Ratios, proportions, mixtures, and alligation problems.",
+      "subtopics": ["Basic Ratios", "Proportion", "Mixtures & Alligation"],
+      "theory": "A ratio compares two quantities. a:b means for every a units of one, there are b units of the other.\n\n**Key Concepts:**\n- Ratio a:b can be written as a/b\n- If a:b = c:d, then ad = bc (cross multiplication)\n- Compounded ratio of a:b and c:d = ac:bd\n\n**Proportion:**\nIf a:b = c:d, then a,b,c,d are in proportion.\n- Mean proportional of a and c = √(ac)\n- Third proportional to a,b = b²/a\n\n**Alligation (Mixture Problems):**\nWhen two ingredients at different prices/concentrations are mixed:\nRatio = (Higher - Mean) : (Mean - Lower)",
+      "formulas": [
+        "If a:b and b:c are given, then a:b:c = a×b : b×b : b×c (normalize the common term)",
+        "Mean proportional of a and b = √(ab)",
+        "Third proportional to a,b = b²/a",
+        "Alligation ratio: (Dearer - Mean) : (Mean - Cheaper)",
+        "If ratios are a:b and c:d, compounded ratio = ac:bd",
+        "Duplicate ratio of a:b = a²:b²",
+        "Sub-duplicate ratio of a:b = √a:√b"
+      ],
+      "solvedExamples": [
+        {
+          "question": "Divide ₹1870 among A, B, C in the ratio 2:3:6.",
+          "solution": "Total parts = 2+3+6 = 11\nA = (2/11) × 1870 = ₹340\nB = (3/11) × 1870 = ₹510\nC = (6/11) × 1870 = ₹1020\nCheck: 340+510+1020 = 1870 ✓"
+        },
+        {
+          "question": "Milk costs ₹30/litre and water is free. In what ratio should they be mixed to sell at ₹20/litre?",
+          "solution": "Using Alligation:\nMilk = 30, Water = 0, Mean = 20\nRatio = (30-20) : (20-0) = 10:20 = 1:2\nMix 1 litre milk with 2 litres water."
+        },
+        {
+          "question": "If A:B = 3:4 and B:C = 5:7, find A:B:C.",
+          "solution": "Make B common: B appears as 4 and 5\nLCM of 4 and 5 = 20\nA:B = 3:4 = 15:20\nB:C = 5:7 = 20:28\nA:B:C = 15:20:28"
+        }
+      ],
+      "tricks": [
+        "To combine ratios a:b and b:c, make the common term (b) equal by finding LCM.",
+        "Alligation is a visual cross method — place values in a cross pattern and subtract diagonally.",
+        "Income-expenditure problems: If income ratio is a:b and expenditure ratio is c:d, set up equations with savings.",
+        "If a quantity is divided in ratio a:b, the parts are a/(a+b) and b/(a+b) of the total."
+      ]
+    },
+    {
+      "key": "simple_compound_interest",
+      "title": "Simple & Compound Interest",
+      "description": "Calculate SI, CI, difference between them, and solve installment problems.",
+      "subtopics": ["Simple Interest", "Compound Interest", "SI vs CI Difference"],
+      "theory": "Interest is the cost of borrowing money.\n\n**Simple Interest (SI):**\nInterest calculated only on the original principal. The interest is the same every year.\n\n**Compound Interest (CI):**\nInterest calculated on principal + accumulated interest. Interest grows every period.\n\n**Key Difference:**\n- For 1st year: SI = CI (same amount)\n- From 2nd year onward: CI > SI\n- Difference for 2 years: CI - SI = P(r/100)²\n- Difference for 3 years: CI - SI = P(r/100)² × (3 + r/100)",
+      "formulas": [
+        "SI = P × R × T / 100",
+        "Amount (SI) = P + SI = P(1 + RT/100)",
+        "CI = P[(1 + R/100)^T - 1]",
+        "Amount (CI) = P(1 + R/100)^T",
+        "CI - SI (2 years) = P × (R/100)²",
+        "CI - SI (3 years) = P × (R/100)² × (3 + R/100)",
+        "Half-yearly CI: A = P(1 + R/200)^(2T)",
+        "Quarterly CI: A = P(1 + R/400)^(4T)"
+      ],
+      "solvedExamples": [
+        {
+          "question": "Find SI on ₹5000 at 8% per annum for 3 years.",
+          "solution": "SI = P×R×T/100 = 5000×8×3/100 = ₹1200\nAmount = 5000 + 1200 = ₹6200"
+        },
+        {
+          "question": "Find CI on ₹10000 at 10% per annum for 2 years.",
+          "solution": "Amount = P(1+R/100)^T = 10000(1+10/100)²\n= 10000 × 1.1 × 1.1 = 10000 × 1.21 = ₹12100\nCI = 12100 - 10000 = ₹2100\n\nAlternative: SI for 2 years = 10000×10×2/100 = ₹2000\nCI - SI = P(R/100)² = 10000×(0.1)² = ₹100\nCI = 2000 + 100 = ₹2100 ✓"
+        },
+        {
+          "question": "The difference between CI and SI for 2 years at 5% per annum is ₹20. Find the principal.",
+          "solution": "CI - SI = P × (R/100)²\n20 = P × (5/100)²\n20 = P × 1/400\nP = 20 × 400 = ₹8000"
+        }
+      ],
+      "tricks": [
+        "CI - SI for 2 years = SI for 1 year × R/100. This is because the extra interest in CI is interest on first year's interest.",
+        "For quick CI calculation: Use SI first, then add the extra interest on interest.",
+        "If a sum doubles in n years at SI, rate = 100/n %. At CI, rate = (2^(1/n) - 1) × 100 %.",
+        "Rule of 72: Money doubles in approximately 72/R years at compound interest."
+      ]
+    }
+  ]
+}

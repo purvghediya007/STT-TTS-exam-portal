@@ -12,6 +12,7 @@ const facultyRoutes = require("./routes/facultyRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const studentExamRoutes = require("./routes/studentExamRoutes");
+const practiceRoutes = require("../practice/routes/practiceRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const studentAnalyticsRoutes = require("./routes/studentAnalyticsRoutes");
 const path = require("path");
@@ -29,7 +30,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json());
+// app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Simple log to see requests
 app.use((req, res, next) => {
@@ -64,6 +66,9 @@ app.use("/api/student", studentExamRoutes);
 // Analytics endpoints
 app.use("/api/faculty/analytics", analyticsRoutes);
 app.use("/api/analytics", studentAnalyticsRoutes);
+
+//practice hub endpoints
+app.use("/api/practice", practiceRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

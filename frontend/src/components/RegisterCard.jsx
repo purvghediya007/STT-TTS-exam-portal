@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader, ChevronDown } from 'lucide-react'
-import { Loader } from 'lucide-react'
+// import { Loader } from 'lucide-react'
 import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
 
