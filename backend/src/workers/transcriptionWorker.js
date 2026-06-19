@@ -99,19 +99,34 @@ async function transcribeAudio(audioBuffer, filename = "audio.wav") {
     const formData = new FormData();
     formData.append("audio", audioBuffer, filename);
 
-    console.log(
-      `🌐 Calling STT API: https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe`,
-    );
+    // OLD STT API CALL (BACKUP)
+    // console.log(
+    //   `🌐 Calling STT API: https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe`,
+    // );
+    // console.log(`📁 Audio filename: ${filename}`);
+    // 
+    // const response = await axios.post(
+    //   "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe",
+    //   formData,
+    //   {
+    //     headers: formData.getHeaders(),
+    //     timeout: 60000, // 60 second timeout
+    //   },
+    // );
+
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+    console.log(`🌐 Calling STT API: ${aiServiceUrl}/api/v1/stt/transcribe`);
     console.log(`📁 Audio filename: ${filename}`);
 
     const response = await axios.post(
-      "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/stt/transcribe",
+      `${aiServiceUrl}/api/v1/stt/transcribe`,
       formData,
       {
         headers: formData.getHeaders(),
         timeout: 60000, // 60 second timeout
       },
     );
+
 
     console.log(`✅ STT API Response:`, response.data);
 

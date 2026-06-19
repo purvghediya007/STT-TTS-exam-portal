@@ -867,6 +867,8 @@ router.post(
         status: "in_progress",
       });
       
+      // Commented out the duplicate block (lines 870-904) that returned old expired deadlines
+      /*
       // 🔥 NEW: handle reallowed attempt (reuse existing)
       if (!attempt) {
         const reallowedAttempt = await StudentExamAttempt.findOne({
@@ -902,14 +904,22 @@ router.post(
         });
         }
       } 
+      */
 
       // 🔥 NEW: handle reallowed attempt (reuse existing)
       if (!attempt) {
+        // Commented out old unsorted query to always target the latest attempt
+        // const reallowedAttempt = await StudentExamAttempt.findOne({
+        //   examId,
+        //   studentId,
+        //   status: "reallowed",
+        // });
+        // NEW: Sort by startedAt descending to get the latest attempt
         const reallowedAttempt = await StudentExamAttempt.findOne({
           examId,
           studentId,
           status: "reallowed",
-        });
+        }).sort({ startedAt: -1 });
 
         if (reallowedAttempt) {
           // reset same attempt (NO new document)
@@ -1005,6 +1015,140 @@ router.post(
       next(error);
     }
   },
+);
+
+//
+// ---------- 2.5) SAVE PROGRESS DURING EXAM ----------
+// POST /api/student/exams/:examId/save-progress
+// Saves student answers dynamically without submitting/finishing the attempt
+//
+router.post(
+  "/exams/:examId/save-progress",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const studentId = req.user.sub;
+      let { attemptId, answers } = req.body;
+      const now = new Date();
+
+      if (!attemptId) {
+        return res.status(400).json({ message: "attemptId is required" });
+      }
+
+      // Verify the attempt belongs to this student and exam
+      const attempt = await StudentExamAttempt.findOne({
+        _id: attemptId,
+        studentId,
+        examId,
+      });
+
+      if (!attempt) {
+        return res.status(404).json({ message: "Active exam attempt not found" });
+      }
+
+      if (attempt.status !== "in_progress") {
+        return res.status(400).json({ message: `Cannot save progress. Attempt status is ${attempt.status}` });
+      }
+
+      // Check if attempt deadline has passed
+      if (now > attempt.deadlineAt) {
+        attempt.status = "expired";
+        await attempt.save();
+        return res.status(400).json({ message: "Attempt time is over" });
+      }
+
+      if (answers && Array.isArray(answers)) {
+        for (const answer of answers) {
+          if (!answer.questionId) continue;
+
+          const answerUpdate = {
+            attemptId: attempt._id,
+            examId,
+            studentId,
+            questionId: answer.questionId,
+          };
+
+          if (answer.selectedOptionIndex !== undefined) {
+            answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
+          }
+          if (answer.answerText !== undefined) {
+            answerUpdate.answerText = answer.answerText;
+          }
+          if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
+            answerUpdate.recordingUrls = answer.recordingUrls;
+          }
+
+          await StudentAnswer.findOneAndUpdate(
+            { attemptId: attempt._id, questionId: answer.questionId },
+            answerUpdate,
+            { upsert: true, new: true }
+          );
+        }
+      }
+
+      return res.status(200).json({
+        message: "Progress saved successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 2.6) GET SAVED ANSWERS FOR ATTEMPT ----------
+// GET /api/student/attempts/:attemptId/saved-answers
+// Retrieves all saved draft answers for a specific exam attempt
+//
+router.get(
+  "/attempts/:attemptId/saved-answers",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { attemptId } = req.params;
+      const studentId = req.user.sub;
+
+      const attempt = await StudentExamAttempt.findOne({
+        _id: attemptId,
+        studentId,
+      });
+
+      if (!attempt) {
+        return res.status(404).json({ message: "Exam attempt not found" });
+      }
+
+      const savedAnswers = await StudentAnswer.find({ attemptId });
+
+      const formattedAnswers = savedAnswers.map(ans => ({
+        questionId: ans.questionId.toString(),
+        selectedOptionIndex: ans.selectedOptionIndex,
+        answerText: ans.answerText,
+        recordingUrls: ans.recordingUrls,
+        sttStatus: ans.sttStatus,
+        evaluationStatus: ans.evaluationStatus
+      }));
+
+      // ANTIGRAVITY NEW: Disable browser caching to ensure latest saved answers are always returned on re-entry
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      
+      /* Old response without Cache-Control headers:
+      return res.status(200).json({
+        attemptId,
+        answers: formattedAnswers
+      });
+      */
+      
+      return res.status(200).json({
+        attemptId,
+        answers: formattedAnswers
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 //
@@ -1439,13 +1583,24 @@ router.post(
           feedback = mcqFeedback;
         } else {
           // Descriptive evaluation using AI
+          // OLD CALL (BACKUP)
+          // const { score: aiScore, feedback: aiFeedback } =
+          //   await evaluateAnswerWithAI({
+          //     questionText: q.text,
+          //     expectedAnswer: q.expectedAnswer,
+          //     studentAnswer: ans.answerText,
+          //     maxMarks,
+          //   });
+
           const { score: aiScore, feedback: aiFeedback } =
             await evaluateAnswerWithAI({
+              questionId: q._id,
               questionText: q.text,
               expectedAnswer: q.expectedAnswer,
               studentAnswer: ans.answerText,
               maxMarks,
             });
+
 
           score = aiScore;
           feedback = aiFeedback;

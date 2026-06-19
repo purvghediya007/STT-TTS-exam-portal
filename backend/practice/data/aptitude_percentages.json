@@ -1,17 +1,752 @@
 [
-  {"category":"aptitude","topic":"percentages","question":"What is 15% of 240?","options":[{"text":"36","isCorrect":true},{"text":"30","isCorrect":false},{"text":"40","isCorrect":false},{"text":"24","isCorrect":false}],"correctAnswer":0,"explanation":"15/100 × 240 = 36","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A number increased by 20% gives 600. The number is:","options":[{"text":"500","isCorrect":true},{"text":"480","isCorrect":false},{"text":"520","isCorrect":false},{"text":"550","isCorrect":false}],"correctAnswer":0,"explanation":"N×1.2=600. N=500","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"If price increases by 25%, by what % should consumption decrease to keep expenditure same?","options":[{"text":"20%","isCorrect":true},{"text":"25%","isCorrect":false},{"text":"15%","isCorrect":false},{"text":"30%","isCorrect":false}],"correctAnswer":0,"explanation":"Decrease = 25/(100+25)×100 = 25/125×100 = 20%","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A value increases by 10% then decreases by 10%. Net change is:","options":[{"text":"0%","isCorrect":false},{"text":"-1%","isCorrect":true},{"text":"+1%","isCorrect":false},{"text":"-2%","isCorrect":false}],"correctAnswer":1,"explanation":"Net = 10-10-(10×10/100) = -1%","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"Population grows at 5% per year. Present population 10000. After 2 years:","options":[{"text":"11025","isCorrect":true},{"text":"11000","isCorrect":false},{"text":"10500","isCorrect":false},{"text":"11050","isCorrect":false}],"correctAnswer":0,"explanation":"10000×(1.05)²=10000×1.1025=11025","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"If A's income is 30% more than B's, B's income is less than A's by:","options":[{"text":"23.08%","isCorrect":true},{"text":"30%","isCorrect":false},{"text":"25%","isCorrect":false},{"text":"20%","isCorrect":false}],"correctAnswer":0,"explanation":"30/(100+30)×100 = 30/130×100 = 23.08%","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"2/5 expressed as percentage is:","options":[{"text":"40%","isCorrect":true},{"text":"25%","isCorrect":false},{"text":"20%","isCorrect":false},{"text":"50%","isCorrect":false}],"correctAnswer":0,"explanation":"2/5 × 100 = 40%","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"In an election, candidate A gets 60% of votes. He wins by 2800 votes. Total votes are:","options":[{"text":"14000","isCorrect":true},{"text":"12000","isCorrect":false},{"text":"10000","isCorrect":false},{"text":"16000","isCorrect":false}],"correctAnswer":0,"explanation":"A=60%, B=40%. Diff=20% of total=2800. Total=14000","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A machine depreciates at 10% p.a. Present value ₹100000. Value after 3 years:","options":[{"text":"₹72900","isCorrect":true},{"text":"₹70000","isCorrect":false},{"text":"₹75000","isCorrect":false},{"text":"₹81000","isCorrect":false}],"correctAnswer":0,"explanation":"100000×(0.9)³=100000×0.729=72900","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"60% of a number is added to 60, the result is the number itself. Number is:","options":[{"text":"150","isCorrect":true},{"text":"100","isCorrect":false},{"text":"120","isCorrect":false},{"text":"200","isCorrect":false}],"correctAnswer":0,"explanation":"0.6N+60=N. 0.4N=60. N=150","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A student scores 320 out of 500. His percentage is:","options":[{"text":"64%","isCorrect":true},{"text":"62%","isCorrect":false},{"text":"68%","isCorrect":false},{"text":"60%","isCorrect":false}],"correctAnswer":0,"explanation":"320/500×100=64%","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"If 30% of A = 40% of B, then A:B is:","options":[{"text":"4:3","isCorrect":true},{"text":"3:4","isCorrect":false},{"text":"2:3","isCorrect":false},{"text":"3:2","isCorrect":false}],"correctAnswer":0,"explanation":"0.3A=0.4B. A/B=4/3. A:B=4:3","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"Two successive discounts of 20% and 10% equal single discount of:","options":[{"text":"28%","isCorrect":true},{"text":"30%","isCorrect":false},{"text":"27%","isCorrect":false},{"text":"25%","isCorrect":false}],"correctAnswer":0,"explanation":"Net = 20+10-20×10/100 = 28%","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A's salary is ₹5000. He spends 30% on food, 20% on rent, 10% on travel. Savings:","options":[{"text":"₹2000","isCorrect":true},{"text":"₹1500","isCorrect":false},{"text":"₹2500","isCorrect":false},{"text":"₹1800","isCorrect":false}],"correctAnswer":0,"explanation":"Total spend=60%. Savings=40%×5000=2000","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"percentages","question":"A number when increased by 37.5% gives 55. The number is:","options":[{"text":"40","isCorrect":true},{"text":"35","isCorrect":false},{"text":"45","isCorrect":false},{"text":"42","isCorrect":false}],"correctAnswer":0,"explanation":"N×1.375=55. N=55/1.375=40","difficulty":"medium","marks":1}
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If 35% of a number is 175, what is the number?",
+    "options": [
+      { "text": "400", "isCorrect": false },
+      { "text": "500", "isCorrect": true },
+      { "text": "450", "isCorrect": false },
+      { "text": "550", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let the number be x. 35% of x = 175 → 0.35x = 175 → x = 175 / 0.35 = 500.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "What percentage of 250 is 45?",
+    "options": [
+      { "text": "16%", "isCorrect": false },
+      { "text": "20%", "isCorrect": false },
+      { "text": "18%", "isCorrect": true },
+      { "text": "22%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "(45/250) × 100 = 4500/250 = 18%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A number is increased by 20% and then decreased by 20%. What is the net percentage change?",
+    "options": [
+      { "text": "No change", "isCorrect": false },
+      { "text": "4% decrease", "isCorrect": true },
+      { "text": "4% increase", "isCorrect": false },
+      { "text": "2% decrease", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Net effect of successive changes of +a% and −a% = −(a²/100)%. Here a = 20, so net change = −(400/100)% = −4%. The number decreases by 4%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The population of a town is 50,000. It increases by 10% in the first year and 20% in the second year. What is the population after 2 years?",
+    "options": [
+      { "text": "65,000", "isCorrect": false },
+      { "text": "66,000", "isCorrect": true },
+      { "text": "64,000", "isCorrect": false },
+      { "text": "60,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "After 1st year: 50,000 × 1.10 = 55,000. After 2nd year: 55,000 × 1.20 = 66,000.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In an election between two candidates, the winning candidate got 62% of the total valid votes. If 15% of the votes were invalid and total votes were 8,000, how many valid votes did the losing candidate get?",
+    "options": [
+      { "text": "2,584", "isCorrect": true },
+      { "text": "2,480", "isCorrect": false },
+      { "text": "3,000", "isCorrect": false },
+      { "text": "2,800", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Total valid votes = 85% of 8,000 = 6,800. Losing candidate got 100% − 62% = 38% of valid votes. Votes = 38% of 6,800 = 0.38 × 6,800 = 2,584.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the price of sugar increases by 25%, by what percentage must a household reduce its consumption so that the expenditure remains the same?",
+    "options": [
+      { "text": "25%", "isCorrect": false },
+      { "text": "30%", "isCorrect": false },
+      { "text": "20%", "isCorrect": true },
+      { "text": "15%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Required reduction = (increase / (100 + increase)) × 100 = (25/125) × 100 = 20%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "Ravi's salary is 30% more than Suresh's salary. By what percentage is Suresh's salary less than Ravi's?",
+    "options": [
+      { "text": "30%", "isCorrect": false },
+      { "text": "23.08%", "isCorrect": true },
+      { "text": "25%", "isCorrect": false },
+      { "text": "27%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "If Suresh's salary = 100, Ravi's = 130. Difference = 30. Percentage less = (30/130) × 100 = 23.08% (approx).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A shopkeeper marks up his goods by 40% and then offers a discount of 10%. What is his net profit percentage?",
+    "options": [
+      { "text": "30%", "isCorrect": false },
+      { "text": "26%", "isCorrect": true },
+      { "text": "28%", "isCorrect": false },
+      { "text": "32%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let CP = 100. Marked Price = 140. After 10% discount, SP = 140 × 0.90 = 126. Profit% = (126 − 100)/100 × 100 = 26%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The value of a machine depreciates at the rate of 15% per annum. If its present value is ₹1,20,000, what will be its value after 2 years?",
+    "options": [
+      { "text": "₹84,600", "isCorrect": false },
+      { "text": "₹86,700", "isCorrect": true },
+      { "text": "₹85,000", "isCorrect": false },
+      { "text": "₹90,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Value after 2 years = 1,20,000 × (1 − 0.15)² = 1,20,000 × 0.85² = 1,20,000 × 0.7225 = ₹86,700.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A student scored 280 marks out of 400. What percentage did the student score?",
+    "options": [
+      { "text": "65%", "isCorrect": false },
+      { "text": "72%", "isCorrect": false },
+      { "text": "68%", "isCorrect": false },
+      { "text": "70%", "isCorrect": true }
+    ],
+    "correctAnswer": 3,
+    "explanation": "(280/400) × 100 = 70%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "Two numbers are respectively 20% and 50% more than a third number. What is the ratio of the first number to the second?",
+    "options": [
+      { "text": "2:5", "isCorrect": false },
+      { "text": "4:5", "isCorrect": true },
+      { "text": "3:5", "isCorrect": false },
+      { "text": "5:6", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let the third number be 100. First = 120, Second = 150. Ratio = 120:150 = 4:5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A's income is 25% more than B's income. B's income is what percentage less than A's income?",
+    "options": [
+      { "text": "25%", "isCorrect": false },
+      { "text": "15%", "isCorrect": false },
+      { "text": "20%", "isCorrect": true },
+      { "text": "22%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let B's income = 100, then A's = 125. Difference = 25. Percentage less = (25/125) × 100 = 20%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A price after successive discounts of 10% and 20% is ₹360. What is the original price?",
+    "options": [
+      { "text": "₹500", "isCorrect": true },
+      { "text": "₹480", "isCorrect": false },
+      { "text": "₹520", "isCorrect": false },
+      { "text": "₹450", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let original price = P. After 10% discount: 0.90P. After 20% discount: 0.90P × 0.80 = 0.72P. Given 0.72P = 360, so P = 360/0.72 = ₹500.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The population of a village decreases by 5% every year. If the current population is 20,000, what was the population 2 years ago (approximately)?",
+    "options": [
+      { "text": "22,161", "isCorrect": true },
+      { "text": "21,000", "isCorrect": false },
+      { "text": "22,000", "isCorrect": false },
+      { "text": "21,500", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let past population = P. P × (0.95)² = 20,000. P × 0.9025 = 20,000. P = 20,000 / 0.9025 ≈ 22,160.66 ≈ 22,161.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In an examination, 40% of the students failed in Maths, 30% failed in English, and 15% failed in both. What percentage of students passed in both subjects?",
+    "options": [
+      { "text": "40%", "isCorrect": false },
+      { "text": "45%", "isCorrect": true },
+      { "text": "50%", "isCorrect": false },
+      { "text": "55%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Failed in at least one = 40 + 30 − 15 = 55%. Passed in both = 100 − 55 = 45%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the numerator of a fraction is increased by 20% and the denominator is decreased by 10%, the fraction becomes 2/3. What is the original fraction?",
+    "options": [
+      { "text": "5/9", "isCorrect": false },
+      { "text": "1/2", "isCorrect": true },
+      { "text": "3/7", "isCorrect": false },
+      { "text": "2/5", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let fraction = a/b. New fraction = (1.2a)/(0.9b) = (4/3)(a/b) = 2/3. So a/b = (2/3) × (3/4) = 1/2. Verification: 1.2 × 1 = 1.2, 0.9 × 2 = 1.8. 1.2/1.8 = 2/3. ✓",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "Amit spends 30% of his salary on food, 20% on rent, and 10% on transport. If he saves ₹8,000 per month, what is his monthly salary?",
+    "options": [
+      { "text": "₹18,000", "isCorrect": false },
+      { "text": "₹22,000", "isCorrect": false },
+      { "text": "₹20,000", "isCorrect": true },
+      { "text": "₹25,000", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total spending = 30 + 20 + 10 = 60%. Savings = 40% of salary. 40% of salary = 8,000. Salary = 8,000 / 0.40 = ₹20,000.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A number is first increased by 10%, then by 20%, and finally by 30%. What is the overall percentage increase?",
+    "options": [
+      { "text": "60%", "isCorrect": false },
+      { "text": "71.6%", "isCorrect": true },
+      { "text": "66%", "isCorrect": false },
+      { "text": "72%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Net multiplier = 1.10 × 1.20 × 1.30 = 1.716. Overall increase = (1.716 − 1) × 100 = 71.6%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In an election, candidate A received 55% of the total valid votes. 20% of the total votes were declared invalid. If the total number of votes is 10,000, by how many votes did A win?",
+    "options": [
+      { "text": "600", "isCorrect": false },
+      { "text": "700", "isCorrect": false },
+      { "text": "800", "isCorrect": true },
+      { "text": "900", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Valid votes = 80% of 10,000 = 8,000. A got 55% = 4,400. B got 45% = 3,600. Winning margin = 4,400 − 3,600 = 800.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the side of a square is increased by 30%, by what percentage does the area increase?",
+    "options": [
+      { "text": "60%", "isCorrect": false },
+      { "text": "69%", "isCorrect": true },
+      { "text": "90%", "isCorrect": false },
+      { "text": "30%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "New area = (1.3s)² = 1.69s². Increase in area = (1.69 − 1) × 100 = 69%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A mixture of 80 litres contains milk and water in the ratio 3:1. How much water must be added to make the ratio 2:3?",
+    "options": [
+      { "text": "60 litres", "isCorrect": false },
+      { "text": "50 litres", "isCorrect": false },
+      { "text": "70 litres", "isCorrect": true },
+      { "text": "40 litres", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Milk = (3/4) × 80 = 60 litres. Water = 20 litres. Let x litres of water be added. 60/(20 + x) = 2/3. 180 = 40 + 2x. 2x = 140. x = 70 litres.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The price of petrol rose by 15%. By what percentage must a car owner reduce his consumption so that his expenditure on petrol increases by only 5%?",
+    "options": [
+      { "text": "8.7%", "isCorrect": true },
+      { "text": "10%", "isCorrect": false },
+      { "text": "12%", "isCorrect": false },
+      { "text": "9.5%", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let original price = P, consumption = C. Original expenditure = PC. New expenditure = 1.05PC. New price = 1.15P. New consumption = 1.05PC / 1.15P = (1.05/1.15)C = (21/23)C. Reduction = 1 − 21/23 = 2/23 ≈ 8.7%.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A's salary is 50% more than B's. How much percent is B's salary less than A's?",
+    "options": [
+      { "text": "50%", "isCorrect": false },
+      { "text": "33.33%", "isCorrect": true },
+      { "text": "25%", "isCorrect": false },
+      { "text": "40%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let B = 100, A = 150. Difference = 50. Percentage less = (50/150) × 100 = 33.33%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the length of a rectangle is increased by 20% and the width is decreased by 10%, what is the percentage change in its area?",
+    "options": [
+      { "text": "10% increase", "isCorrect": false },
+      { "text": "12% increase", "isCorrect": false },
+      { "text": "8% increase", "isCorrect": true },
+      { "text": "6% increase", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "New area = 1.20L × 0.90W = 1.08LW. Change = (1.08 − 1) × 100 = 8% increase.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A vendor bought toffees at 6 for ₹1 and sold at 4 for ₹1. What is his profit percentage?",
+    "options": [
+      { "text": "33.33%", "isCorrect": false },
+      { "text": "50%", "isCorrect": true },
+      { "text": "40%", "isCorrect": false },
+      { "text": "25%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "CP of 1 toffee = 1/6. SP of 1 toffee = 1/4. Profit = 1/4 − 1/6 = 1/12. Profit% = (1/12) / (1/6) × 100 = 50%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A man donates 15% of his income to charity and deposits 20% of the remainder into a bank. If he has ₹34,000 left with him, what is his total income?",
+    "options": [
+      { "text": "₹45,000", "isCorrect": false },
+      { "text": "₹50,000", "isCorrect": true },
+      { "text": "₹55,000", "isCorrect": false },
+      { "text": "₹48,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let income = I. After donation: 0.85I. After bank deposit: 0.85I × 0.80 = 0.68I. Given 0.68I = 34,000. I = 34,000 / 0.68 = ₹50,000.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The population of a city increases at the rate of 5% per annum. If its present population is 1,85,220, what was the population 3 years ago?",
+    "options": [
+      { "text": "1,50,000", "isCorrect": false },
+      { "text": "1,60,000", "isCorrect": true },
+      { "text": "1,55,000", "isCorrect": false },
+      { "text": "1,65,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let population 3 years ago = P. P × (1.05)³ = 1,85,220. (1.05)³ = 1.157625. P = 1,85,220 / 1.157625 = 1,60,000.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A single discount equivalent to successive discounts of 20%, 10%, and 5% is:",
+    "options": [
+      { "text": "31.6%", "isCorrect": true },
+      { "text": "35%", "isCorrect": false },
+      { "text": "30%", "isCorrect": false },
+      { "text": "28%", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Net price = 0.80 × 0.90 × 0.95 = 0.684. So equivalent single discount = (1 − 0.684) × 100 = 31.6%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The salary of a worker is first increased by 10% and then decreased by 10%. What is the percentage change in the salary?",
+    "options": [
+      { "text": "1% decrease", "isCorrect": true },
+      { "text": "No change", "isCorrect": false },
+      { "text": "1% increase", "isCorrect": false },
+      { "text": "0.5% decrease", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Net effect = −(10²/100)% = −1%. The salary decreases by 1%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If 60% of a class are boys and the number of girls is 160, what is the total number of students in the class?",
+    "options": [
+      { "text": "400", "isCorrect": true },
+      { "text": "350", "isCorrect": false },
+      { "text": "450", "isCorrect": false },
+      { "text": "300", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Girls = 40% of total. 0.40 × Total = 160. Total = 160 / 0.40 = 400.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In a mixture of 60 litres, the ratio of milk to water is 2:1. How much water must be added so that milk becomes 40% of the mixture?",
+    "options": [
+      { "text": "20 litres", "isCorrect": false },
+      { "text": "30 litres", "isCorrect": false },
+      { "text": "40 litres", "isCorrect": true },
+      { "text": "25 litres", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Milk = (2/3) × 60 = 40 litres. Water = 20 litres. After adding x litres of water, milk is 40% of total. 40/(60 + x) = 40/100 = 2/5. 200 = 120 + 2x. 2x = 80. x = 40 litres.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A person's expenditure and savings are in the ratio 4:1. If his income increases by 20% and his expenditure increases by 25%, what is the percentage change in his savings?",
+    "options": [
+      { "text": "No change", "isCorrect": true },
+      { "text": "5% increase", "isCorrect": false },
+      { "text": "5% decrease", "isCorrect": false },
+      { "text": "10% increase", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let income = 5 (expenditure = 4, savings = 1). New income = 5 × 1.20 = 6. New expenditure = 4 × 1.25 = 5. New savings = 6 − 5 = 1. Change = 0%.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the radius of a circle is increased by 10%, by what percentage does the area increase?",
+    "options": [
+      { "text": "10%", "isCorrect": false },
+      { "text": "20%", "isCorrect": false },
+      { "text": "21%", "isCorrect": true },
+      { "text": "11%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "New area = π(1.1r)² = 1.21πr². Increase = (1.21 − 1) × 100 = 21%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A shopkeeper uses a weight that is 20% less than the actual weight. What is his profit percentage?",
+    "options": [
+      { "text": "20%", "isCorrect": false },
+      { "text": "22%", "isCorrect": false },
+      { "text": "25%", "isCorrect": true },
+      { "text": "30%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "He sells 800g for the price of 1000g. Profit% = (200/800) × 100 = 25%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "An article is sold at a discount of 25% on the marked price. The marked price is 40% above the cost price. What is the profit or loss percentage?",
+    "options": [
+      { "text": "5% profit", "isCorrect": true },
+      { "text": "10% profit", "isCorrect": false },
+      { "text": "5% loss", "isCorrect": false },
+      { "text": "No profit no loss", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let CP = 100. MP = 140. SP = 140 × 0.75 = 105. Profit = 5. Profit% = 5%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A jar has 100 litres of pure milk. 10 litres are removed and replaced with water. This process is repeated two more times. What percentage of milk remains?",
+    "options": [
+      { "text": "72.9%", "isCorrect": true },
+      { "text": "70%", "isCorrect": false },
+      { "text": "75%", "isCorrect": false },
+      { "text": "80%", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "After n replacements, milk remaining = 100 × (1 − 10/100)^n = 100 × (0.9)³ = 100 × 0.729 = 72.9 litres. Percentage = 72.9%.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "Neha scored 540 marks in an exam and Priya got 80% of Neha's marks. If Priya got 60% of the total marks, what are the maximum marks of the exam?",
+    "options": [
+      { "text": "700", "isCorrect": false },
+      { "text": "720", "isCorrect": true },
+      { "text": "750", "isCorrect": false },
+      { "text": "800", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Priya's marks = 80% of 540 = 432. 432 = 60% of total. Total = 432/0.60 = 720.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the price of rice falls by 20%, how many more kg of rice can be bought for ₹800 if the original price was ₹40 per kg?",
+    "options": [
+      { "text": "4 kg", "isCorrect": false },
+      { "text": "5 kg", "isCorrect": true },
+      { "text": "6 kg", "isCorrect": false },
+      { "text": "3 kg", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Original: 800/40 = 20 kg. New price = 40 × 0.80 = ₹32. New quantity = 800/32 = 25 kg. Extra = 25 − 20 = 5 kg.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In measuring the side of a square, an error of 5% in excess is made. What is the percentage error in the calculated area?",
+    "options": [
+      { "text": "10%", "isCorrect": false },
+      { "text": "10.25%", "isCorrect": true },
+      { "text": "5%", "isCorrect": false },
+      { "text": "25%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Measured side = 1.05s. Calculated area = (1.05s)² = 1.1025s². Error in area = (1.1025 − 1) × 100 = 10.25%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A student needs 40% marks to pass. He gets 178 marks and fails by 22 marks. What are the maximum marks?",
+    "options": [
+      { "text": "450", "isCorrect": false },
+      { "text": "500", "isCorrect": true },
+      { "text": "550", "isCorrect": false },
+      { "text": "600", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Pass marks = 178 + 22 = 200. 40% of max = 200. Max = 200/0.40 = 500.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "The monthly salary of Ramesh is ₹60,000. He spends 30% on house rent, 20% on food, and 15% on children's education. If 50% of the remaining is invested in mutual funds, how much does he invest?",
+    "options": [
+      { "text": "₹10,500", "isCorrect": true },
+      { "text": "₹12,000", "isCorrect": false },
+      { "text": "₹9,000", "isCorrect": false },
+      { "text": "₹11,000", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Spent = 30 + 20 + 15 = 65%. Remaining = 35% of 60,000 = ₹21,000. Investment = 50% of 21,000 = ₹10,500.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In a town, 40% of the population are males, 50% of males and 30% of females are literate. What is the overall literacy rate of the town?",
+    "options": [
+      { "text": "38%", "isCorrect": true },
+      { "text": "40%", "isCorrect": false },
+      { "text": "35%", "isCorrect": false },
+      { "text": "42%", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let population = 100. Males = 40, Females = 60. Literate males = 50% of 40 = 20. Literate females = 30% of 60 = 18. Total literate = 38. Literacy rate = 38%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A fruit seller sells mangoes at 20% profit. If he had bought them for 10% less and sold them for ₹3 more, he would have gained 40%. What is the cost price per mango?",
+    "options": [
+      { "text": "₹50", "isCorrect": true },
+      { "text": "₹40", "isCorrect": false },
+      { "text": "₹60", "isCorrect": false },
+      { "text": "₹45", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let CP = x. SP = 1.2x. New CP = 0.9x. New SP = 1.4 × 0.9x = 1.26x. Also, New SP = 1.2x + 3. So 1.26x = 1.2x + 3. 0.06x = 3. x = 50. Verification: CP = 50, SP = 60. New CP = 45, New SP = 63. Profit = 18. Profit% = 18/45 × 100 = 40%. ✓",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "If the income tax rate is increased from 20% to 25%, a person's net income decreases by ₹4,000. What is the person's gross income?",
+    "options": [
+      { "text": "₹60,000", "isCorrect": false },
+      { "text": "₹80,000", "isCorrect": true },
+      { "text": "₹1,00,000", "isCorrect": false },
+      { "text": "₹75,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Increase in tax = 25% − 20% = 5% of income. 5% of income = ₹4,000. Income = 4,000 / 0.05 = ₹80,000.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "In a school, 70% of the students passed in English, 80% passed in Hindi, and 10% failed in both. What percentage passed in both subjects?",
+    "options": [
+      { "text": "50%", "isCorrect": false },
+      { "text": "55%", "isCorrect": false },
+      { "text": "60%", "isCorrect": true },
+      { "text": "65%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Failed in English = 30%, Failed in Hindi = 20%, Failed in both = 10%. Failed in at least one = 30 + 20 − 10 = 40%. Passed in both = 100% − 40% = 60%.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A company has 200 employees. 60% are male. The company hires 50 new female employees. What is the new percentage of male employees?",
+    "options": [
+      { "text": "52%", "isCorrect": false },
+      { "text": "48%", "isCorrect": true },
+      { "text": "45%", "isCorrect": false },
+      { "text": "50%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Males = 60% of 200 = 120. New total = 200 + 50 = 250. Male% = (120/250) × 100 = 48%.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A is 20% more efficient than B. If B alone can complete a work in 12 days, in how many days can A alone complete it?",
+    "options": [
+      { "text": "9 days", "isCorrect": false },
+      { "text": "10 days", "isCorrect": true },
+      { "text": "8 days", "isCorrect": false },
+      { "text": "11 days", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A is 20% more efficient, so A does 1.2 times the work B does per day. B's rate = 1/12. A's rate = 1.2 × (1/12) = 1/10. A finishes in 10 days.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "30% of the men are more than 25 years old and 80% of the men are less than or equal to 50 years old. 20% of all men play football. If 20% of the men above age 50 play football, what percentage of the football players are above 50?",
+    "options": [
+      { "text": "15%", "isCorrect": false },
+      { "text": "20%", "isCorrect": true },
+      { "text": "25%", "isCorrect": false },
+      { "text": "30%", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let total men = 100. Men above 50 = 100 − 80 = 20. Football players above 50 = 20% of 20 = 4. Total football players = 20% of 100 = 20. Percentage = (4/20) × 100 = 20%.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "A reduction of 20% in the price of oranges enables a buyer to buy 5 more oranges for ₹100. What is the reduced price per orange?",
+    "options": [
+      { "text": "₹3", "isCorrect": false },
+      { "text": "₹5", "isCorrect": false },
+      { "text": "₹4", "isCorrect": true },
+      { "text": "₹6", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let original price = P. Reduced price = 0.8P. Original count = 100/P. New count = 100/(0.8P). Difference = 100/(0.8P) − 100/P = 5. 100 × (1.25 − 1)/P = 5. 25/P = 5. P = 5. Reduced price = 0.8 × 5 = ₹4.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "percentages",
+    "question": "Priya's income is 40% of Raj's income, and Raj's income is 75% of Mohan's income. What percentage of Mohan's income is Priya's income?",
+    "options": [
+      { "text": "25%", "isCorrect": false },
+      { "text": "35%", "isCorrect": false },
+      { "text": "30%", "isCorrect": true },
+      { "text": "20%", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Priya = 0.40 × Raj. Raj = 0.75 × Mohan. Priya = 0.40 × 0.75 × Mohan = 0.30 × Mohan = 30% of Mohan.",
+    "difficulty": "easy",
+    "marks": 1
+  }
 ]

@@ -1,17 +1,662 @@
 [
-  {"category":"aptitude","topic":"averages","question":"Average of first 10 natural numbers is:","options":[{"text":"5","isCorrect":false},{"text":"5.5","isCorrect":true},{"text":"6","isCorrect":false},{"text":"4.5","isCorrect":false}],"correctAnswer":1,"explanation":"(n+1)/2 = 11/2 = 5.5","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average of 5 numbers is 20. If one number is excluded, average becomes 18. Excluded number is:","options":[{"text":"28","isCorrect":true},{"text":"24","isCorrect":false},{"text":"30","isCorrect":false},{"text":"22","isCorrect":false}],"correctAnswer":0,"explanation":"Sum=100. New sum=72. Excluded=100-72=28","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average age of 30 students is 15. If teacher's age included, average becomes 16. Teacher's age is:","options":[{"text":"46","isCorrect":true},{"text":"40","isCorrect":false},{"text":"48","isCorrect":false},{"text":"36","isCorrect":false}],"correctAnswer":0,"explanation":"Sum=450. New sum=31×16=496. Teacher=496-450=46","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"A batsman scores 87 in his 17th innings, increasing average by 3. Average after 17th innings:","options":[{"text":"39","isCorrect":true},{"text":"36","isCorrect":false},{"text":"42","isCorrect":false},{"text":"40","isCorrect":false}],"correctAnswer":0,"explanation":"New avg=A+3. 16A+87=17(A+3). 16A+87=17A+51. A=36. New avg=39","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average of 20 numbers is 0. At most how many may be greater than 0?","options":[{"text":"0","isCorrect":false},{"text":"1","isCorrect":false},{"text":"19","isCorrect":true},{"text":"20","isCorrect":false}],"correctAnswer":2,"explanation":"19 can be positive if the 20th is negative enough to make sum=0","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average weight of 8 persons increases by 2.5 kg when a new person replaces one weighing 65 kg. Weight of new person:","options":[{"text":"85","isCorrect":true},{"text":"80","isCorrect":false},{"text":"75","isCorrect":false},{"text":"90","isCorrect":false}],"correctAnswer":0,"explanation":"Increase in total = 8×2.5 = 20. New = 65+20 = 85 kg","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average marks of 3 students is 60. If the marks of each student are doubled, new average is:","options":[{"text":"120","isCorrect":true},{"text":"60","isCorrect":false},{"text":"90","isCorrect":false},{"text":"180","isCorrect":false}],"correctAnswer":0,"explanation":"If all values double, average doubles: 60×2=120","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"The average of 11 results is 50. Average of first 6 is 49, last 6 is 52. 6th result is:","options":[{"text":"56","isCorrect":true},{"text":"50","isCorrect":false},{"text":"54","isCorrect":false},{"text":"52","isCorrect":false}],"correctAnswer":0,"explanation":"Total=550. First6=294. Last6=312. 6th=294+312-550=56","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average of 50 numbers is 38. If two numbers 45 and 55 are discarded, average of remaining is:","options":[{"text":"37.5","isCorrect":true},{"text":"36","isCorrect":false},{"text":"38","isCorrect":false},{"text":"37","isCorrect":false}],"correctAnswer":0,"explanation":"Sum=1900. New sum=1900-100=1800. Avg=1800/48=37.5","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"A student's average for 9 subjects is 75. If Hindi is excluded, average drops to 72. Marks in Hindi:","options":[{"text":"99","isCorrect":true},{"text":"95","isCorrect":false},{"text":"90","isCorrect":false},{"text":"85","isCorrect":false}],"correctAnswer":0,"explanation":"Total=675. Without Hindi=8×72=576. Hindi=675-576=99","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average runs scored by a player in 40 innings is 50. Highest score exceeds lowest by 172. Excluding both, average of 38 innings is 48. Highest score is:","options":[{"text":"174","isCorrect":true},{"text":"172","isCorrect":false},{"text":"180","isCorrect":false},{"text":"176","isCorrect":false}],"correctAnswer":0,"explanation":"Total=2000. Excl=38×48=1824. H+L=176. H-L=172. H=174, L=2","difficulty":"hard","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average of 7 consecutive numbers is 33. Largest number is:","options":[{"text":"36","isCorrect":true},{"text":"35","isCorrect":false},{"text":"37","isCorrect":false},{"text":"39","isCorrect":false}],"correctAnswer":0,"explanation":"Middle=33. Numbers: 30,31,32,33,34,35,36. Largest=36","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Weighted average of 20 boys (avg 70) and 30 girls (avg 80) is:","options":[{"text":"76","isCorrect":true},{"text":"75","isCorrect":false},{"text":"78","isCorrect":false},{"text":"74","isCorrect":false}],"correctAnswer":0,"explanation":"(20×70+30×80)/50 = (1400+2400)/50 = 3800/50 = 76","difficulty":"easy","marks":1},
-  {"category":"aptitude","topic":"averages","question":"Average of 6 numbers is 3.95. Average of two of them is 3.4. Average of remaining 4 is:","options":[{"text":"4.225","isCorrect":true},{"text":"4.5","isCorrect":false},{"text":"4.1","isCorrect":false},{"text":"3.9","isCorrect":false}],"correctAnswer":0,"explanation":"Total=23.7. Two=6.8. Four=16.9. Avg=16.9/4=4.225","difficulty":"medium","marks":1},
-  {"category":"aptitude","topic":"averages","question":"The average salary of all workers is ₹8000. Average salary of 7 technicians is ₹12000 and of remaining workers is ₹6000. Total number of workers is:","options":[{"text":"21","isCorrect":true},{"text":"28","isCorrect":false},{"text":"14","isCorrect":false},{"text":"35","isCorrect":false}],"correctAnswer":0,"explanation":"7×12000+n×6000=(7+n)×8000. 84000+6000n=56000+8000n. 28000=2000n. n=14. Total=21","difficulty":"medium","marks":1}
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of the first 10 natural numbers?",
+    "options": [
+      { "text": "5", "isCorrect": false },
+      { "text": "5.5", "isCorrect": true },
+      { "text": "6", "isCorrect": false },
+      { "text": "4.5", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "First 10 natural numbers: 1, 2, 3, …, 10.\nSum = 10 × 11 / 2 = 55.\nAverage = 55 / 10 = 5.5.\nFormula: Average of first n natural numbers = (n + 1) / 2 = 11/2 = 5.5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of the first 10 even numbers?",
+    "options": [
+      { "text": "10", "isCorrect": false },
+      { "text": "11", "isCorrect": true },
+      { "text": "12", "isCorrect": false },
+      { "text": "9", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "First 10 even numbers: 2, 4, 6, …, 20.\nSum = 2(1 + 2 + … + 10) = 2 × 55 = 110.\nAverage = 110 / 10 = 11.\nAlternatively: Average of first n even numbers = n + 1 = 11.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of the first 10 odd numbers?",
+    "options": [
+      { "text": "9", "isCorrect": false },
+      { "text": "10", "isCorrect": true },
+      { "text": "11", "isCorrect": false },
+      { "text": "8", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "First 10 odd numbers: 1, 3, 5, …, 19.\nSum = 10² = 100.\nAverage = 100 / 10 = 10.\nFormula: Average of first n odd numbers = n.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of the first 20 multiples of 5?",
+    "options": [
+      { "text": "50", "isCorrect": false },
+      { "text": "55", "isCorrect": false },
+      { "text": "52.5", "isCorrect": true },
+      { "text": "47.5", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "First 20 multiples of 5: 5, 10, 15, …, 100.\nSum = 5(1 + 2 + … + 20) = 5 × 20 × 21/2 = 5 × 210 = 1050.\nAverage = 1050 / 20 = 52.5.\nAlternatively: Average = (First + Last) / 2 = (5 + 100) / 2 = 52.5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average age of 5 students is 20 years. A new student joins the group and the average becomes 18 years. What is the age of the new student?",
+    "options": [
+      { "text": "6 years", "isCorrect": false },
+      { "text": "8 years", "isCorrect": true },
+      { "text": "10 years", "isCorrect": false },
+      { "text": "12 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total age of 5 students = 5 × 20 = 100.\nTotal age of 6 students = 6 × 18 = 108.\nAge of new student = 108 − 100 = 8 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 5 numbers is 30. If one number is excluded, the average of the remaining 4 numbers becomes 28. What is the excluded number?",
+    "options": [
+      { "text": "36", "isCorrect": false },
+      { "text": "38", "isCorrect": true },
+      { "text": "40", "isCorrect": false },
+      { "text": "32", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Sum of 5 numbers = 5 × 30 = 150.\nSum of remaining 4 numbers = 4 × 28 = 112.\nExcluded number = 150 − 112 = 38.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average weight of 8 persons is 65 kg. A person weighing 55 kg is replaced by a new person and the average weight becomes 66.5 kg. What is the weight of the new person?",
+    "options": [
+      { "text": "63 kg", "isCorrect": false },
+      { "text": "65 kg", "isCorrect": false },
+      { "text": "67 kg", "isCorrect": true },
+      { "text": "70 kg", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Old total = 8 × 65 = 520 kg.\nNew total = 8 × 66.5 = 532 kg.\nIncrease in total = 532 − 520 = 12 kg.\nWeight of new person = 55 + 12 = 67 kg.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "In a class, 30 boys scored an average of 60 marks and 20 girls scored an average of 75 marks. What is the overall average of the class?",
+    "options": [
+      { "text": "64", "isCorrect": false },
+      { "text": "66", "isCorrect": true },
+      { "text": "68", "isCorrect": false },
+      { "text": "70", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total marks of boys = 30 × 60 = 1800.\nTotal marks of girls = 20 × 75 = 1500.\nOverall total = 1800 + 1500 = 3300.\nOverall average = 3300 / 50 = 66.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "A batsman's average after 20 innings is 35. How many runs must he score in the 21st innings to raise his average to 37?",
+    "options": [
+      { "text": "72", "isCorrect": false },
+      { "text": "75", "isCorrect": false },
+      { "text": "77", "isCorrect": true },
+      { "text": "80", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total runs in 20 innings = 20 × 35 = 700.\nRequired total after 21 innings = 21 × 37 = 777.\nRuns needed in 21st innings = 777 − 700 = 77.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average temperature of Monday, Tuesday and Wednesday was 37°C. The average of Tuesday, Wednesday and Thursday was 34°C. If Thursday's temperature was 30°C, find Monday's temperature.",
+    "options": [
+      { "text": "36°C", "isCorrect": false },
+      { "text": "39°C", "isCorrect": true },
+      { "text": "42°C", "isCorrect": false },
+      { "text": "38°C", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Mon + Tue + Wed = 3 × 37 = 111.\nTue + Wed + Thu = 3 × 34 = 102.\nSubtracting: Mon − Thu = 111 − 102 = 9.\nMon = Thu + 9 = 30 + 9 = 39°C.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average marks of 30 students in a class is 60. Later, it was found that one student's marks were wrongly entered as 78 instead of 48. What is the correct average?",
+    "options": [
+      { "text": "58", "isCorrect": false },
+      { "text": "59", "isCorrect": true },
+      { "text": "60.5", "isCorrect": false },
+      { "text": "57", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Wrong total = 30 × 60 = 1800.\nCorrect total = 1800 − 78 + 48 = 1770.\nCorrect average = 1770 / 30 = 59.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 5 consecutive numbers is 30. What is the largest of these numbers?",
+    "options": [
+      { "text": "30", "isCorrect": false },
+      { "text": "31", "isCorrect": false },
+      { "text": "32", "isCorrect": true },
+      { "text": "34", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "For consecutive numbers, the average is the middle number.\nSo the middle (3rd) number = 30.\nThe 5 numbers are: 28, 29, 30, 31, 32.\nLargest = 32.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 11 observations is 50. The average of the first 5 is 48 and the average of the last 5 is 52. What is the 6th observation?",
+    "options": [
+      { "text": "48", "isCorrect": false },
+      { "text": "50", "isCorrect": true },
+      { "text": "52", "isCorrect": false },
+      { "text": "55", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total of 11 observations = 11 × 50 = 550.\nSum of first 5 = 5 × 48 = 240.\nSum of last 5 = 5 × 52 = 260.\n6th observation = 550 − 240 − 260 = 50.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "Three years ago, the average age of a family of 5 members was 17 years. A baby was born, and the present average age of the family is still 17 years. What is the age of the baby?",
+    "options": [
+      { "text": "1 year", "isCorrect": false },
+      { "text": "2 years", "isCorrect": true },
+      { "text": "3 years", "isCorrect": false },
+      { "text": "4 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "3 years ago, total age of 5 members = 5 × 17 = 85.\nPresent total of those 5 members = 85 + (5 × 3) = 100.\nPresent total of 6 members = 6 × 17 = 102.\nAge of baby = 102 − 100 = 2 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 7 numbers is 12. The average of the first 3 is 10 and the average of the last 3 is 15. What is the 4th number?",
+    "options": [
+      { "text": "7", "isCorrect": false },
+      { "text": "9", "isCorrect": true },
+      { "text": "11", "isCorrect": false },
+      { "text": "12", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total of 7 numbers = 7 × 12 = 84.\nSum of first 3 = 3 × 10 = 30.\nSum of last 3 = 3 × 15 = 45.\n4th number = 84 − 30 − 45 = 9.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "In a class of 40 students, the average weight of boys is 50 kg and that of girls is 40 kg. If the average weight of the whole class is 46 kg, how many boys are there?",
+    "options": [
+      { "text": "20", "isCorrect": false },
+      { "text": "22", "isCorrect": false },
+      { "text": "24", "isCorrect": true },
+      { "text": "28", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let number of boys = b. Then girls = 40 − b.\n50b + 40(40 − b) = 46 × 40\n50b + 1600 − 40b = 1840\n10b = 240\nb = 24.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average salary of 60 workers in a company is ₹6,000. If the average salary of managers is ₹10,000 and the average salary of other workers is ₹5,000, how many managers are there?",
+    "options": [
+      { "text": "10", "isCorrect": false },
+      { "text": "12", "isCorrect": true },
+      { "text": "15", "isCorrect": false },
+      { "text": "18", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let number of managers = m.\n10000m + 5000(60 − m) = 6000 × 60\n10000m + 300000 − 5000m = 360000\n5000m = 60000\nm = 12.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "A cricketer's average score after 40 innings is 50. How many runs must he score in the 41st innings to raise his average to 52?",
+    "options": [
+      { "text": "120", "isCorrect": false },
+      { "text": "130", "isCorrect": false },
+      { "text": "132", "isCorrect": true },
+      { "text": "140", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total runs in 40 innings = 40 × 50 = 2000.\nRequired total after 41 innings = 41 × 52 = 2132.\nRuns needed = 2132 − 2000 = 132.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average age of a group of 10 persons is increased by 3 years when one person whose age is 20 years is replaced by a new person. What is the age of the new person?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": false },
+      { "text": "50 years", "isCorrect": true },
+      { "text": "55 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total increase in age = 10 × 3 = 30 years.\nThe new person must be 30 years older than the replaced person.\nAge of new person = 20 + 30 = 50 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 50 numbers is 38. If two numbers, 45 and 55, are discarded, what is the average of the remaining 48 numbers?",
+    "options": [
+      { "text": "36.5", "isCorrect": false },
+      { "text": "37", "isCorrect": false },
+      { "text": "37.5", "isCorrect": true },
+      { "text": "38.5", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total of 50 numbers = 50 × 38 = 1900.\nNew total = 1900 − 45 − 55 = 1800.\nNew average = 1800 / 48 = 37.5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of three numbers A, B, and C is 20. The average of A and B is 16 and the average of B and C is 22. Find the value of B.",
+    "options": [
+      { "text": "14", "isCorrect": false },
+      { "text": "16", "isCorrect": true },
+      { "text": "18", "isCorrect": false },
+      { "text": "20", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A + B + C = 60 … (from average = 20).\nA + B = 32 … (from average = 16).\nB + C = 44 … (from average = 22).\nAdding the last two: A + 2B + C = 76.\nSubstituting A + B + C = 60:\n60 + B = 76 → B = 16.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "In an exam, 120 candidates appeared. The average marks of passed candidates is 39 and that of failed candidates is 15. If the overall average is 35, how many candidates failed?",
+    "options": [
+      { "text": "15", "isCorrect": false },
+      { "text": "18", "isCorrect": false },
+      { "text": "20", "isCorrect": true },
+      { "text": "25", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let number of failed candidates = f.\n39(120 − f) + 15f = 120 × 35\n4680 − 39f + 15f = 4200\n−24f = −480\nf = 20.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 6 numbers is 3.95. The average of two of them is 3.4 and the average of another two is 3.85. What is the average of the remaining two numbers?",
+    "options": [
+      { "text": "4.2", "isCorrect": false },
+      { "text": "4.4", "isCorrect": false },
+      { "text": "4.6", "isCorrect": true },
+      { "text": "4.8", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Sum of all 6 = 6 × 3.95 = 23.7.\nSum of first pair = 2 × 3.4 = 6.8.\nSum of second pair = 2 × 3.85 = 7.7.\nSum of remaining pair = 23.7 − 6.8 − 7.7 = 9.2.\nAverage of remaining pair = 9.2 / 2 = 4.6.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average monthly income of A and B is ₹5,050. The average of B and C is ₹6,250 and the average of A and C is ₹5,200. What is B's monthly income?",
+    "options": [
+      { "text": "₹5,800", "isCorrect": false },
+      { "text": "₹6,100", "isCorrect": true },
+      { "text": "₹6,500", "isCorrect": false },
+      { "text": "₹5,500", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A + B = 10100 … (1)\nB + C = 12500 … (2)\nA + C = 10400 … (3)\nAdding all: 2(A + B + C) = 33000 → A + B + C = 16500.\nB = 16500 − (A + C) = 16500 − 10400 = ₹6,100.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "Ravi travels from city A to city B at 84 km/hr and returns at 56 km/hr. What is his average speed for the round trip?",
+    "options": [
+      { "text": "70 km/hr", "isCorrect": false },
+      { "text": "67.2 km/hr", "isCorrect": true },
+      { "text": "65 km/hr", "isCorrect": false },
+      { "text": "72 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "For a round trip (equal distances), average speed = 2S₁S₂ / (S₁ + S₂).\nAverage speed = 2 × 84 × 56 / (84 + 56) = 9408 / 140 = 67.2 km/hr.\nNote: The average speed is NOT (84 + 56) / 2 = 70 km/hr.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "A student's marks were wrongly entered as 83 instead of 63. Due to this, the average marks of a class of 20 students was shown as 76. What is the correct average?",
+    "options": [
+      { "text": "74", "isCorrect": false },
+      { "text": "75", "isCorrect": true },
+      { "text": "73", "isCorrect": false },
+      { "text": "76.5", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Wrong total = 20 × 76 = 1520.\nCorrect total = 1520 − 83 + 63 = 1500.\nCorrect average = 1500 / 20 = 75.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average runs scored by a batsman in 42 innings is 30. The difference between his maximum and minimum score is 100. Excluding these two innings, the average of the remaining 40 is 28. Find the maximum score.",
+    "options": [
+      { "text": "100", "isCorrect": false },
+      { "text": "110", "isCorrect": false },
+      { "text": "120", "isCorrect": true },
+      { "text": "130", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total runs = 42 × 30 = 1260.\nTotal of remaining 40 innings = 40 × 28 = 1120.\nMax + Min = 1260 − 1120 = 140.\nMax − Min = 100.\nMax = (140 + 100) / 2 = 120.\nMin = (140 − 100) / 2 = 20.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 5 observations is 4.4. Three of them are 1, 2 and 6. If the difference between the other two is 7, find the larger observation.",
+    "options": [
+      { "text": "8", "isCorrect": false },
+      { "text": "9", "isCorrect": false },
+      { "text": "10", "isCorrect": true },
+      { "text": "11", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Sum of 5 observations = 5 × 4.4 = 22.\nSum of the other two = 22 − 1 − 2 − 6 = 13.\nLet them be a and b (a > b): a + b = 13, a − b = 7.\na = (13 + 7) / 2 = 10, b = (13 − 7) / 2 = 3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "A grocer has sales of ₹6,435, ₹6,927, ₹6,855, ₹7,230 and ₹6,562 for 5 consecutive months. How much sale must he have in the 6th month to get an average sale of ₹6,500 per month?",
+    "options": [
+      { "text": "₹4,891", "isCorrect": false },
+      { "text": "₹4,991", "isCorrect": true },
+      { "text": "₹5,091", "isCorrect": false },
+      { "text": "₹5,191", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Required total for 6 months = 6 × 6500 = ₹39,000.\nTotal of 5 months = 6435 + 6927 + 6855 + 7230 + 6562 = ₹34,009.\n6th month sale = 39000 − 34009 = ₹4,991.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "Section A of a class has 36 students with average marks 65 and Section B has 44 students with average marks 70. What is the overall average marks of the class?",
+    "options": [
+      { "text": "66.5", "isCorrect": false },
+      { "text": "67.75", "isCorrect": true },
+      { "text": "68", "isCorrect": false },
+      { "text": "67.5", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total marks of Section A = 36 × 65 = 2340.\nTotal marks of Section B = 44 × 70 = 3080.\nOverall total = 2340 + 3080 = 5420.\nOverall average = 5420 / 80 = 67.75.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 9 numbers is 30. The average of the first 5 numbers is 25 and the average of the last 3 numbers is 35. What is the 6th number?",
+    "options": [
+      { "text": "35", "isCorrect": false },
+      { "text": "38", "isCorrect": false },
+      { "text": "40", "isCorrect": true },
+      { "text": "42", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total of 9 numbers = 9 × 30 = 270.\nSum of first 5 = 5 × 25 = 125.\nSum of last 3 = 3 × 35 = 105.\n6th number = 270 − 125 − 105 = 40.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "Four years ago, the average age of a family of 4 members was 30 years. Two children have been born since then. The present average age of the family is 25 years. If the two children differ in age by 2 years, what is the age of the younger child?",
+    "options": [
+      { "text": "4 years", "isCorrect": false },
+      { "text": "5 years", "isCorrect": false },
+      { "text": "6 years", "isCorrect": true },
+      { "text": "7 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "4 years ago, total age of 4 members = 4 × 30 = 120.\nPresent total of those 4 members = 120 + (4 × 4) = 136.\nPresent total of 6 members = 6 × 25 = 150.\nSum of children's ages = 150 − 136 = 14.\nLet younger = y, older = y + 2. Then 2y + 2 = 14 → y = 6 years.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 8 numbers is 27. If each number is multiplied by 3, what is the new average?",
+    "options": [
+      { "text": "54", "isCorrect": false },
+      { "text": "72", "isCorrect": false },
+      { "text": "81", "isCorrect": true },
+      { "text": "90", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "When each number is multiplied by a constant k, the new average = k × old average.\nNew average = 3 × 27 = 81.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of the numbers 25, 30, x, 40 and 45 is 35. Find x.",
+    "options": [
+      { "text": "30", "isCorrect": false },
+      { "text": "35", "isCorrect": true },
+      { "text": "38", "isCorrect": false },
+      { "text": "40", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Sum = 5 × 35 = 175.\n25 + 30 + x + 40 + 45 = 175.\n140 + x = 175.\nx = 35.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average weight of A, B and C is 45 kg. The average weight of A and B is 40 kg and the average of B and C is 43 kg. What is the weight of B?",
+    "options": [
+      { "text": "28 kg", "isCorrect": false },
+      { "text": "31 kg", "isCorrect": true },
+      { "text": "34 kg", "isCorrect": false },
+      { "text": "36 kg", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A + B + C = 135 … (avg = 45).\nA + B = 80 … (avg = 40).\nB + C = 86 … (avg = 43).\nAdding last two: A + 2B + C = 166.\nB = 166 − 135 = 31 kg.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "A class has 20 boys with an average height of 160 cm and 30 girls with an average height of 155 cm. What is the average height of the entire class?",
+    "options": [
+      { "text": "156 cm", "isCorrect": false },
+      { "text": "157 cm", "isCorrect": true },
+      { "text": "158 cm", "isCorrect": false },
+      { "text": "157.5 cm", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total height of boys = 20 × 160 = 3200 cm.\nTotal height of girls = 30 × 155 = 4650 cm.\nOverall total = 3200 + 4650 = 7850 cm.\nAverage height = 7850 / 50 = 157 cm.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of all multiples of 7 between 7 and 77 (inclusive)?",
+    "options": [
+      { "text": "38.5", "isCorrect": false },
+      { "text": "42", "isCorrect": true },
+      { "text": "44", "isCorrect": false },
+      { "text": "49", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Multiples of 7 from 7 to 77: 7, 14, 21, …, 77.\nThis is an arithmetic progression.\nAverage = (First + Last) / 2 = (7 + 77) / 2 = 84 / 2 = 42.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "What is the average of the first 50 natural numbers?",
+    "options": [
+      { "text": "25", "isCorrect": false },
+      { "text": "25.5", "isCorrect": true },
+      { "text": "26", "isCorrect": false },
+      { "text": "24.5", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Sum of first 50 natural numbers = 50 × 51 / 2 = 1275.\nAverage = 1275 / 50 = 25.5.\nFormula: Average of first n natural numbers = (n + 1) / 2 = 51/2 = 25.5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average age of 10 people is 32 years. One person aged 42 is replaced by a new person and the average drops to 30. What is the age of the new person?",
+    "options": [
+      { "text": "18 years", "isCorrect": false },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "22 years", "isCorrect": true },
+      { "text": "25 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total decrease in sum = 10 × (32 − 30) = 20.\nNew person is 20 years younger than the replaced person.\nAge of new person = 42 − 20 = 22 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average weight of 16 boys in a class is 50.25 kg and that of the remaining 8 boys is 45.15 kg. Find the average weight of all 24 boys.",
+    "options": [
+      { "text": "47.55 kg", "isCorrect": false },
+      { "text": "48.55 kg", "isCorrect": true },
+      { "text": "49.55 kg", "isCorrect": false },
+      { "text": "46.55 kg", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total weight of 16 boys = 16 × 50.25 = 804 kg.\nTotal weight of 8 boys = 8 × 45.15 = 361.2 kg.\nOverall total = 804 + 361.2 = 1165.2 kg.\nAverage = 1165.2 / 24 = 48.55 kg.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 11 numbers is 10.9. The average of the first 6 is 10.5 and the average of the last 6 is 11.4. What is the middle (6th) number?",
+    "options": [
+      { "text": "10.5", "isCorrect": false },
+      { "text": "11.0", "isCorrect": false },
+      { "text": "11.5", "isCorrect": true },
+      { "text": "12.0", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total of 11 numbers = 11 × 10.9 = 119.9.\nSum of first 6 = 6 × 10.5 = 63.\nSum of last 6 = 6 × 11.4 = 68.4.\nThe 6th number is counted in both groups.\n6th number = 63 + 68.4 − 119.9 = 11.5.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average salary of a staff of 20 is ₹3,000. If the average salary of 15 non-officers is ₹2,000, what is the average salary of the 5 officers?",
+    "options": [
+      { "text": "₹5,000", "isCorrect": false },
+      { "text": "₹6,000", "isCorrect": true },
+      { "text": "₹7,000", "isCorrect": false },
+      { "text": "₹8,000", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total salary of 20 = 20 × 3000 = ₹60,000.\nTotal salary of 15 non-officers = 15 × 2000 = ₹30,000.\nTotal salary of 5 officers = 60000 − 30000 = ₹30,000.\nAverage salary of officers = 30000 / 5 = ₹6,000.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average runs scored by a cricket player in 10 innings is 32. How many runs must he score in the next innings to increase his average to 34?",
+    "options": [
+      { "text": "48", "isCorrect": false },
+      { "text": "52", "isCorrect": false },
+      { "text": "54", "isCorrect": true },
+      { "text": "56", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total runs in 10 innings = 10 × 32 = 320.\nRequired total after 11 innings = 11 × 34 = 374.\nRuns needed = 374 − 320 = 54.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "averages",
+    "question": "The average of 15 numbers is 18. When 3 more numbers are added, the average of all 18 numbers becomes 20. What is the average of the 3 new numbers?",
+    "options": [
+      { "text": "26", "isCorrect": false },
+      { "text": "28", "isCorrect": false },
+      { "text": "30", "isCorrect": true },
+      { "text": "32", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Sum of 15 numbers = 15 × 18 = 270.\nSum of 18 numbers = 18 × 20 = 360.\nSum of 3 new numbers = 360 − 270 = 90.\nAverage of 3 new numbers = 90 / 3 = 30.",
+    "difficulty": "easy",
+    "marks": 1
+  }
 ]

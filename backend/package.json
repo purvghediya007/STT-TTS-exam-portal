@@ -29,8 +29,10 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.11",
     "openai": "^6.10.0",
+    "pdf-parse": "^2.4.5",
     "svg-captcha": "^1.4.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

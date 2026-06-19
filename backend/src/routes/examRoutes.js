@@ -1132,10 +1132,16 @@ router.patch(
         return res.status(403).json({ message: "Forbidden" });
       }
 
+      // Commented out the old query which did not sort by startedAt (could pick an older attempt if multiple existed)
+      // const attempt = await StudentExamAttempt.findOne({
+      //   examId,
+      //   studentId,
+      // });
+      // NEW: Find the latest attempt by sorting by startedAt descending
       const attempt = await StudentExamAttempt.findOne({
         examId,
         studentId,
-      });
+      }).sort({ startedAt: -1 });
 
       if (!attempt) {
         return res.status(404).json({

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam } from '../services/api';
+import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam, saveExamProgress, getSavedAnswers } from '../services/api';
 import { uploadAudioToS3Complete } from '../services/s3AudioUpload';
 
 // --- No Mock Data - Fetch from Backend ---
@@ -93,6 +93,13 @@ const TakeExamView = () => {
   const [error, setError] = useState(null);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [examStatus, setExamStatus] = useState([]);
+
+  // Ref to keep track of the latest examStatus without triggering dependency loops
+  const examStatusRef = useRef([]);
+  useEffect(() => {
+    examStatusRef.current = examStatus;
+  }, [examStatus]);
+
   const [remainingTime, setRemainingTime] = useState(3600);
   const [deadlineAt, setDeadlineAt] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -298,6 +305,130 @@ const TakeExamView = () => {
     if (!url) return false;
     return url.startsWith('https://') && (url.includes('.s3') || url.includes('amazonaws.com'));
   };
+
+  // Helper to save answers progress to backend
+  const saveAnswerProgress = async (updatedStatus = examStatusRef.current) => {
+    const usedAttemptId = attemptId || location.state?.attemptId;
+    if (!examId || !usedAttemptId || questions.length === 0 || updatedStatus.length === 0) return;
+
+    try {
+      const answers = [];
+      for (let index = 0; index < questions.length; index++) {
+        const question = questions[index];
+        const status = updatedStatus[index];
+
+        if (!question || !status || status.answer === null || status.answer === undefined) continue;
+
+        if (question.type === 'mcq' && status.answer !== null) {
+          answers.push({
+            questionId: question._id,
+            selectedOptionIndex: status.answer
+          });
+        } else if (question.type !== 'mcq' && question.type !== 'viva' && question.type !== 'interview' && status.answer?.text) {
+          answers.push({
+            questionId: question._id,
+            answerText: status.answer.text
+          });
+        } else if ((question.type === 'viva' || question.type === 'interview') && status.answer?.recordings?.length > 0) {
+          const s3Urls = status.answer.recordings.filter(url => isS3Url(url));
+          if (s3Urls.length > 0) {
+            answers.push({
+              questionId: question._id,
+              recordingUrls: s3Urls
+            });
+          }
+        }
+      }
+
+      if (answers.length > 0) {
+        console.log(`💾 Saving progress for ${answers.length} answers...`);
+        await saveExamProgress(examId, {
+          attemptId: usedAttemptId,
+          answers
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ Progress save failed:', err);
+    }
+  };
+
+  // Load saved progress if attemptId and questions are available
+  useEffect(() => {
+    const loadSavedProgress = async () => {
+      if (!attemptId || questions.length === 0 || examStatus.length === 0) return;
+      try {
+        console.log('📂 Fetching saved progress for attempt:', attemptId);
+        const progressRes = await getSavedAnswers(attemptId);
+        if (progressRes && Array.isArray(progressRes.answers)) {
+          const savedAnswersMap = new Map();
+          progressRes.answers.forEach(ans => {
+            savedAnswersMap.set(ans.questionId, ans);
+          });
+
+          console.log(`✅ Loaded ${progressRes.answers.length} saved answers from DB.`);
+
+          setExamStatus(prevStatus => {
+            return prevStatus.map((qState, index) => {
+              const question = questions[index];
+              const savedAns = savedAnswersMap.get(question._id);
+
+              if (savedAns) {
+                let statusVal = 'Not Answered';
+                let answerVal = null;
+
+                if (question.type === 'mcq') {
+                  if (savedAns.selectedOptionIndex !== undefined && savedAns.selectedOptionIndex !== null) {
+                    answerVal = savedAns.selectedOptionIndex;
+                    statusVal = 'Answered';
+                  }
+                } else if (question.type === 'viva' || question.type === 'interview') {
+                  if (savedAns.recordingUrls && savedAns.recordingUrls.length > 0) {
+                    answerVal = {
+                      recordings: savedAns.recordingUrls,
+                      activeIndex: savedAns.recordingUrls.length - 1
+                    };
+                    statusVal = 'Answered';
+                  } else {
+                    answerVal = { recordings: [], activeIndex: null };
+                  }
+                } else {
+                  if (savedAns.answerText) {
+                    answerVal = { text: savedAns.answerText };
+                    statusVal = 'Answered';
+                  } else {
+                    answerVal = { text: '' };
+                  }
+                }
+
+                return {
+                  ...qState,
+                  status: statusVal,
+                  answer: answerVal
+                };
+              }
+              return qState;
+            });
+          });
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not load saved progress:', err);
+      }
+    };
+
+    loadSavedProgress();
+  }, [attemptId, questions.length, examStatus.length]);
+
+  // Auto-save descriptive answers every 15 seconds
+  useEffect(() => {
+    if (!isExamStarted || questions.length === 0) return;
+
+    const autoSaveInterval = setInterval(() => {
+      console.log('⏰ 15s Auto-save interval triggered');
+      saveAnswerProgress(examStatusRef.current);
+    }, 15000);
+
+    return () => clearInterval(autoSaveInterval);
+  }, [isExamStarted, questions.length]);
 
 
   // --- Timer & Security Effects ---
@@ -621,9 +752,11 @@ const TakeExamView = () => {
       newStatus = 'Answered';
     }
 
-    setExamStatus(prevStatus => prevStatus.map((q, index) =>
+    const nextStatus = examStatus.map((q, index) =>
       index === currentQIndex ? { ...q, answer: newAnswer, status: newStatus } : q
-    ));
+    );
+    setExamStatus(nextStatus);
+    saveAnswerProgress(nextStatus);
   };
 
   const stopMediaStream = useCallback(() => {
@@ -692,7 +825,7 @@ const TakeExamView = () => {
 
       // Update examStatus with uploaded S3 URLs
       if (uploadedUrls.length > 0) {
-        setExamStatus(prevStatus => prevStatus.map((q, idx) => {
+        const nextStatus = examStatus.map((q, idx) => {
           if (idx === questionIndex) {
             return {
               ...q,
@@ -703,8 +836,11 @@ const TakeExamView = () => {
             };
           }
           return q;
-        }));
+        });
+        setExamStatus(nextStatus);
         console.log(`✅ Audio upload complete for question ${questionIndex + 1}`);
+        // Save progress with the newly uploaded S3 URLs
+        await saveAnswerProgress(nextStatus);
       }
     } catch (error) {
       console.error(`❌ Unexpected error during audio upload:`, error);
@@ -731,6 +867,13 @@ const TakeExamView = () => {
     if (currentQIndex !== index) {
       const canProceed = await uploadCurrentQuestionAudio(currentQIndex);
       if (!canProceed) return; // Should not happen but safety check
+
+      // Save progress for text/MCQ/non-audio questions since they don't trigger upload
+      const question = questions[currentQIndex];
+      const isAudio = question && (question.type === 'viva' || question.type === 'interview');
+      if (!isAudio || !examStatus[currentQIndex]?.answer || examStatus[currentQIndex]?.answer?.recordings?.length === 0) {
+        saveAnswerProgress(examStatus);
+      }
     }
 
     stopMediaStream();

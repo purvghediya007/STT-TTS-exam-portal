@@ -6,7 +6,8 @@ import ExamForm from '../components/ExamForm'
 import ExamCreationWizard from '../components/ExamCreationWizard'
 import { formatExamTimeRange, formatDuration } from '../utils/format'
 import StatusPill from '../components/StatusPill'
-import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation } from '../services/api'
+// import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation } from '../services/api'
+import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation, retryExamEvaluation } from '../services/api'
 
 export default function FacultyExamsList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -25,6 +26,7 @@ export default function FacultyExamsList() {
   const [evaluationStatus, setEvaluationStatus] = useState({})
   const [loadingStatus, setLoadingStatus] = useState({})
   const [publishingId, setPublishingId] = useState(null)
+  const [retryingId, setRetryingId] = useState(null)
 
   useEffect(() => {
     if (searchParams.get('create') === 'true') {
@@ -164,6 +166,28 @@ export default function FacultyExamsList() {
       alert(error?.message || 'Failed to publish results. Please try again.')
     } finally {
       setPublishingId(null)
+    }
+  }
+
+  const handleRetryEvaluation = async (examId) => {
+    if (!confirm('Are you sure you want to retry failed transcriptions/evaluations? This will only re-process answers that failed.')) return
+
+    try {
+      setRetryingId(examId)
+      const response = await retryExamEvaluation(examId)
+
+      if (response.success) {
+        alert(response.message || 'Retry started successfully!')
+        const status = await getExamEvaluationStatus(examId)
+        setEvaluationStatus(prev => ({ ...prev, [examId]: status }))
+      } else {
+        alert(response.message || 'Failed to retry evaluation')
+      }
+    } catch (error) {
+      console.error('Error retrying evaluation:', error)
+      alert(error?.message || 'Failed to retry evaluation. Please try again.')
+    } finally {
+      setRetryingId(null)
     }
   }
 
@@ -466,6 +490,36 @@ export default function FacultyExamsList() {
                                 'Start Evaluation'
                               )}
                             </button>
+                          ) : evaluationStatus[exam.id]?.hasFailures ? (
+                            <div className="space-y-2">
+                              <div className="w-full flex flex-col items-center justify-center gap-1 p-2 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200 text-center">
+                                <span>⚠️ Some answers failed evaluation</span>
+                                <span className="text-[10px] opacity-70">
+                                  ({evaluationStatus[exam.id]?.evaluatedAttempts}/{evaluationStatus[exam.id]?.totalAttempts} attempts succeeded)
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleRetryEvaluation(exam.id)}
+                                disabled={retryingId === exam.id}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 shadow-md active:scale-95"
+                              >
+                                {retryingId === exam.id ? (
+                                  <>
+                                    <Loader className="w-4 h-4 animate-spin" />
+                                    Retrying...
+                                  </>
+                                ) : (
+                                  'Retry Failed Evaluations'
+                                )}
+                              </button>
+                              <button
+                                onClick={() => fetchEvaluationStatus(exam.id)}
+                                disabled={loadingStatus[exam.id]}
+                                className="w-full text-center text-xs text-blue-600 hover:underline font-semibold"
+                              >
+                                {loadingStatus[exam.id] ? 'Refreshing...' : 'Refresh Status'}
+                              </button>
+                            </div>
                           ) : evaluationStatus[exam.id]?.allEvaluated ? (
                             <button
                               onClick={() => handlePublishResults(exam.id)}

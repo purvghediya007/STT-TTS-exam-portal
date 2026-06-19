@@ -152,12 +152,26 @@ new Worker(
           }
 
           // Call LLM evaluation
+          // OLD CALL (BACKUP)
+          // const evaluation = await evaluateAnswerWithAI({
+          //   questionText: question.text,
+          //   expectedAnswer: question.expectedAnswer || "N/A",
+          //   studentAnswer: studentAnswer,
+          //   maxMarks: question.marks,
+          // });
+
           const evaluation = await evaluateAnswerWithAI({
+            questionId: question._id,
             questionText: question.text,
             expectedAnswer: question.expectedAnswer || "N/A",
             studentAnswer: studentAnswer,
             maxMarks: question.marks,
           });
+
+
+          if (evaluation.score === null) {
+            throw new Error(evaluation.feedback || "AI evaluation failed (both primary and fallback models errored)");
+          }
 
           // Store evaluation result
           answer.score = evaluation.score || 0;

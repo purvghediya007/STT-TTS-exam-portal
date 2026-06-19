@@ -284,6 +284,52 @@ export async function submitExam(
 }
 
 /**
+ * Save draft progress during the exam (MCQ choices, descriptive text, recording URLs)
+ */
+export async function saveExamProgress(
+  examId: string,
+  data: {
+    attemptId: string
+    answers: Array<{
+      questionId: string
+      selectedOptionIndex?: number
+      answerText?: string
+      recordingUrls?: string[]
+    }>
+  }
+): Promise<{ message: string }> {
+  const response = await fetchAPI(`/student/exams/${examId}/save-progress`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  return response.json()
+}
+
+/**
+ * Fetch all previously saved draft answers for this attempt
+ */
+export async function getSavedAnswers(
+  attemptId: string
+): Promise<{
+  attemptId: string
+  answers: Array<{
+    questionId: string
+    selectedOptionIndex?: number
+    answerText?: string
+    recordingUrls?: string[]
+    sttStatus?: string
+    evaluationStatus?: string
+  }>
+}> {
+  // ANTIGRAVITY NEW: Add a cache-busting timestamp parameter to force browser to get fresh progress from the server
+  /* Old fetch without cache-buster:
+  const response = await fetchAPI(`/student/attempts/${attemptId}/saved-answers`)
+  */
+  const response = await fetchAPI(`/student/attempts/${attemptId}/saved-answers?t=${Date.now()}`)
+  return response.json()
+}
+
+/**
  * Mock data fallback when API fails
  */
 export const MOCK_EXAMS: Exam[] = [
@@ -956,6 +1002,27 @@ export async function startExamEvaluation(examId: string): Promise<{
     return response.json()
   } catch (err) {
     console.error('Error starting exam evaluation:', err)
+    throw err
+  }
+}
+
+/**
+ * Retry evaluation process only for failed student attempts/answers
+ */
+export async function retryExamEvaluation(examId: string): Promise<{
+  success: boolean
+  message: string
+  retriedAttemptsCount: number
+  retriedAnswersCount: number
+}> {
+  try {
+    const response = await fetchAPI(`/faculty/exams/${examId}/retry-failed-evaluation`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+    return response.json()
+  } catch (err) {
+    console.error('Error retrying exam evaluation:', err)
     throw err
   }
 }
