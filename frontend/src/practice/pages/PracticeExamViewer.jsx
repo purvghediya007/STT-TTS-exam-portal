@@ -38,6 +38,8 @@ export default function PracticeExamViewer() {
   const [transcript, setTranscript] = useState('');
   const [localAudioURL, setLocalAudioURL] = useState(null);
   const [showTabWarning, setShowTabWarning] = useState(false);
+  const [evalError, setEvalError] = useState(null); // Added for tracking evaluation errors
+
 
   const sessionId = session?.sessionId;
   const maxReRecords = session?.maxReRecords || 2;
@@ -211,6 +213,7 @@ export default function PracticeExamViewer() {
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setEvalError(null); // Clear previous error
     setShowSubmitModal(false);
     // Save current spoken answer if exists
     if (isSpoken && localAudioURL) {
@@ -229,10 +232,14 @@ export default function PracticeExamViewer() {
         navigate('/student/practice/results', { state: { results: result.data } });
       }
     } catch (e) {
-      alert('Submit error: ' + (e.response?.data?.message || e.message));
+      console.error("AI Evaluation submission failed:", e);
+      const errMsg = e.response?.data?.message || e.message || 'AI Evaluation failed';
+      setEvalError(errMsg);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
+
 
   if (!session || !currentQ) return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>;
 
@@ -457,6 +464,40 @@ export default function PracticeExamViewer() {
           </div>
         </div>
       </div>
+      {/* Evaluation Error / Retry Modal */}
+      {evalError && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[110] p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 text-center border-t-4 border-red-500">
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Evaluation Failed</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Evaluation failed. Please try again after some time.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setEvalError(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors text-sm"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setEvalError(null);
+                  handleSubmit();
+                }}
+                className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center gap-1.5"
+              >
+                Retry Evaluation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <audio ref={audioRef} preload="auto" />
     </div>
   );

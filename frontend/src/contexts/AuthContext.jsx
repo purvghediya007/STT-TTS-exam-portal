@@ -75,7 +75,20 @@ export function AuthProvider({ children }) {
 
             return { success: true, user: userData }
         } catch (err) {
-            const errorMsg = err.message || 'Login failed'
+            let errorMsg = 'Login failed. Please try again.';
+            if (err.response) {
+                if (err.response.status === 401) {
+                    errorMsg = 'Invalid credentials. Please verify your login details and try again.';
+                } else if (err.response.status === 400) {
+                    errorMsg = err.response.data?.message || 'Invalid request details. Please try again.';
+                } else {
+                    errorMsg = err.response.data?.message || `Server error (Status ${err.response.status}). Please try again.`;
+                }
+            } else if (err.request) {
+                errorMsg = 'Cannot connect to the server. Please check your internet connection.';
+            } else {
+                errorMsg = err.message || 'An unexpected error occurred.';
+            }
             setError(errorMsg)
             return { success: false, error: errorMsg }
         } finally {
@@ -106,7 +119,20 @@ export function AuthProvider({ children }) {
 
             return { success: true, user: data.user }
         } catch (err) {
-            const errorMsg = err.message || 'Registration failed'
+            let errorMsg = 'Registration failed. Please try again.';
+            if (err.response) {
+                if (err.response.status === 409) {
+                    errorMsg = 'This username or email is already registered. Please use a different one.';
+                } else if (err.response.status === 400) {
+                    errorMsg = err.response.data?.message || 'Invalid registration details. Please verify your input.';
+                } else {
+                    errorMsg = err.response.data?.message || `Server error (Status ${err.response.status}). Please try again.`;
+                }
+            } else if (err.request) {
+                errorMsg = 'Cannot connect to the server. Please check your internet connection.';
+            } else {
+                errorMsg = err.message || 'An unexpected error occurred.';
+            }
             setError(errorMsg)
             return { success: false, error: errorMsg }
         } finally {

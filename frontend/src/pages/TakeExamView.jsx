@@ -94,12 +94,6 @@ const TakeExamView = () => {
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [examStatus, setExamStatus] = useState([]);
 
-  // Ref to keep track of the latest examStatus without triggering dependency loops
-  const examStatusRef = useRef([]);
-  useEffect(() => {
-    examStatusRef.current = examStatus;
-  }, [examStatus]);
-
   const [remainingTime, setRemainingTime] = useState(3600);
   const [deadlineAt, setDeadlineAt] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -115,6 +109,28 @@ const TakeExamView = () => {
   const [showMinimizeWarning, setShowMinimizeWarning] = useState(false);
   const [reRecordUsed, setReRecordUsed] = useState(0); // Track re-records used globally
   const [isUploadingAudio, setIsUploadingAudio] = useState(false); // Track audio upload status during navigation
+
+  // Ref to keep track of the latest examStatus without triggering dependency loops
+  const examStatusRef = useRef([]);
+  useEffect(() => {
+    examStatusRef.current = examStatus;
+  }, [examStatus]);
+
+  // Refs to avoid stale closures in effects and event listeners
+  const questionsRef = useRef([]);
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
+  const attemptIdRef = useRef(attemptId);
+  useEffect(() => {
+    attemptIdRef.current = attemptId;
+  }, [attemptId]);
+
+  const remainingTimeRef = useRef(remainingTime);
+  useEffect(() => {
+    remainingTimeRef.current = remainingTime;
+  }, [remainingTime]);
 
   // REMOVED: [isSpeaking] state for Text-to-Speech
 
@@ -308,32 +324,33 @@ const TakeExamView = () => {
 
   // Helper to save answers progress to backend
   const saveAnswerProgress = async (updatedStatus = examStatusRef.current) => {
-    const usedAttemptId = attemptId || location.state?.attemptId;
-    if (!examId || !usedAttemptId || questions.length === 0 || updatedStatus.length === 0) return;
+    const usedAttemptId = attemptIdRef.current || location.state?.attemptId;
+    const currentQuestions = questionsRef.current;
+    if (!examId || !usedAttemptId || currentQuestions.length === 0 || updatedStatus.length === 0) return;
 
     try {
       const answers = [];
-      for (let index = 0; index < questions.length; index++) {
-        const question = questions[index];
+      for (let index = 0; index < currentQuestions.length; index++) {
+        const question = currentQuestions[index];
         const status = updatedStatus[index];
 
         if (!question || !status || status.answer === null || status.answer === undefined) continue;
 
         if (question.type === 'mcq' && status.answer !== null) {
           answers.push({
-            questionId: question._id,
+            questionId: question._id || question.id,
             selectedOptionIndex: status.answer
           });
         } else if (question.type !== 'mcq' && question.type !== 'viva' && question.type !== 'interview' && status.answer?.text) {
           answers.push({
-            questionId: question._id,
+            questionId: question._id || question.id,
             answerText: status.answer.text
           });
         } else if ((question.type === 'viva' || question.type === 'interview') && status.answer?.recordings?.length > 0) {
           const s3Urls = status.answer.recordings.filter(url => isS3Url(url));
           if (s3Urls.length > 0) {
             answers.push({
-              questionId: question._id,
+              questionId: question._id || question.id,
               recordingUrls: s3Urls
             });
           }
@@ -370,7 +387,8 @@ const TakeExamView = () => {
           setExamStatus(prevStatus => {
             return prevStatus.map((qState, index) => {
               const question = questions[index];
-              const savedAns = savedAnswersMap.get(question._id);
+              if (!question) return qState;
+              const savedAns = savedAnswersMap.get(question._id || question.id);
 
               if (savedAns) {
                 let statusVal = 'Not Answered';
@@ -416,7 +434,7 @@ const TakeExamView = () => {
     };
 
     loadSavedProgress();
-  }, [attemptId, questions.length, examStatus.length]);
+  }, [attemptId, questions, examStatus.length]);
 
   // Auto-save descriptive answers every 15 seconds
   useEffect(() => {
@@ -773,7 +791,8 @@ const TakeExamView = () => {
     const qState = examStatus[questionIndex];
     if (!qState) return true; // Invalid index, proceed with navigation
 
-    const question = questions[questionIndex];
+    const currentQuestions = questionsRef.current;
+    const question = currentQuestions[questionIndex];
     const isAudio = question && (question.type === 'viva' || question.type === 'interview');
 
     // If not an audio question or no recordings, proceed immediately
@@ -808,8 +827,8 @@ const TakeExamView = () => {
           // Upload directly to S3 using the complete workflow
           const uploadResult = await uploadAudioToS3Complete(
             examId,
-            attemptId,
-            question._id,
+            attemptIdRef.current,
+            question._id || question.id,
             blob
           );
 
@@ -1041,7 +1060,7 @@ const TakeExamView = () => {
 
     try {
       // Use existing attemptId or fail if missing
-      const usedAttemptId = attemptId || location.state?.attemptId;
+      const usedAttemptId = attemptIdRef.current || location.state?.attemptId;
       if (!usedAttemptId) {
         showAlertOnce('No valid exam attempt found. Please join the exam via the Join button.');
         setIsSubmitting(false);
@@ -1052,30 +1071,33 @@ const TakeExamView = () => {
       const answers = [];
       const audioAnswers = []; // Collect audio answers separately
 
-      for (let index = 0; index < questions.length; index++) {
-        const question = questions[index];
-        const status = examStatus[index];
+      const currentQuestions = questionsRef.current;
+      const currentStatus = examStatusRef.current;
+
+      for (let index = 0; index < currentQuestions.length; index++) {
+        const question = currentQuestions[index];
+        const status = currentStatus[index];
 
         if (!question || status.answer === null || status.answer === undefined) continue;
 
         // MCQ: send selectedOptionIndex
         if (question.type === 'mcq' && status.answer !== null) {
           answers.push({
-            questionId: question._id,
+            questionId: question._id || question.id,
             selectedOptionIndex: status.answer
           });
         }
         // Descriptive: send answerText
         else if (question.type !== 'mcq' && status.answer?.text) {
           answers.push({
-            questionId: question._id,
+            questionId: question._id || question.id,
             answerText: status.answer.text
           });
         }
         // Audio/Interview/Viva: save for separate upload
         else if ((question.type === 'viva' || question.type === 'interview') && status.answer?.recordings?.length > 0) {
           audioAnswers.push({
-            questionId: question._id,
+            questionId: question._id || question.id,
             recordings: status.answer.recordings
           });
         }
@@ -1084,14 +1106,14 @@ const TakeExamView = () => {
       console.log(`📝 Submitting exam with ${answers.length} text/MCQ answers and ${audioAnswers.length} audio answers`);
       if (audioAnswers.length === 0) {
         console.warn(`⚠️ No audio answers collected. Check question types and recordings.`);
-        console.log(`Debug info:`, examStatus);
+        console.log(`Debug info:`, currentStatus);
       }
 
       // Submit exam (text/MCQ answers only)
       const result = await submitExam(examId, {
         answers,
         attemptId: usedAttemptId,
-        timeSpent: Math.round((3600 - remainingTime) / 60), // in minutes
+        timeSpent: Math.round((3600 - remainingTimeRef.current) / 60), // in minutes
       });
 
       console.log(`✅ Exam submitted successfully. Attempt ID: ${result.submissionId}`);
@@ -1413,6 +1435,7 @@ const TakeExamView = () => {
             onChange={(e) => {
               const newStatus = [...examStatus];
               newStatus[currentQIndex].answer = { text: e.target.value };
+              newStatus[currentQIndex].status = e.target.value.trim() !== '' ? 'Answered' : 'Not Answered';
               setExamStatus(newStatus);
             }}
             placeholder={`Enter your ${currentQuestion.type === 'short_answer' ? 'brief' : 'detailed'} answer here...`}

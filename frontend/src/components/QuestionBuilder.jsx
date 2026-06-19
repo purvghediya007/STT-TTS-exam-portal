@@ -215,7 +215,8 @@ export default function QuestionBuilder({ questions, onChange }) {
         const payload = {
           topics: [newQuestion.topicName],
           num_questions: newQuestion.numQuestions || 1,
-          difficulty: (newQuestion.difficulty || 'Easy').toLowerCase()
+          difficulty: (newQuestion.difficulty || 'Easy').toLowerCase(),
+          type: newQuestion.questionTypesToGenerate[0] || 'viva'
         }
 
         const data = await generateQuestions(payload)
@@ -223,19 +224,48 @@ export default function QuestionBuilder({ questions, onChange }) {
 
         if (data && data.topics) {
           Object.keys(data.topics).forEach(topicKey => {
-            const qsObj = data.topics[topicKey]
-            // qsObj is expected to be an object with question labels => question text
-            Object.keys(qsObj).forEach((k, i) => {
-              const qText = qsObj[k]
-              generated.push({
-                id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
-                type: newQuestion.questionTypesToGenerate[0] || 'viva',
-                text: String(qText || '').trim(),
-                marks: newQuestion.marks || 1,
-                expectedAnswer: '',
-                media: { ...newQuestion.media }
+            const qs = data.topics[topicKey]
+            
+            if (Array.isArray(qs)) {
+              // Array format (e.g. for MCQs or if we return objects)
+              qs.forEach((qItem, i) => {
+                generated.push({
+                  id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                  type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                  text: typeof qItem === 'string' ? qItem : (qItem.text || qItem.question || ''),
+                  marks: newQuestion.marks || 1,
+                  expectedAnswer: qItem.expectedAnswer || '',
+                  options: Array.isArray(qItem.options) ? qItem.options : [],
+                  media: { ...newQuestion.media }
+                })
               })
-            })
+            } else if (typeof qs === 'object' && qs !== null) {
+              // Object format (question label -> text or question label -> object)
+              Object.keys(qs).forEach((k, i) => {
+                const qVal = qs[k]
+                if (typeof qVal === 'object' && qVal !== null) {
+                  generated.push({
+                    id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                    type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                    text: qVal.text || qVal.question || '',
+                    marks: newQuestion.marks || 1,
+                    expectedAnswer: qVal.expectedAnswer || '',
+                    options: Array.isArray(qVal.options) ? qVal.options : [],
+                    media: { ...newQuestion.media }
+                  })
+                } else {
+                  generated.push({
+                    id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                    type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                    text: String(qVal || '').trim(),
+                    marks: newQuestion.marks || 1,
+                    expectedAnswer: '',
+                    options: [],
+                    media: { ...newQuestion.media }
+                  })
+                }
+              })
+            }
           })
         }
 
@@ -748,7 +778,8 @@ export default function QuestionBuilder({ questions, onChange }) {
                 <div className="flex items-center gap-2">
                   {[
                     {value: 'viva', label: 'Viva'},
-                    {value: 'interview', label: 'Interview'}
+                    {value: 'interview', label: 'Interview'},
+                    {value: 'mcq', label: 'MCQ'}
                   ].map(opt => {
                     const selected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate[0] === opt.value
                     return (
@@ -780,18 +811,20 @@ export default function QuestionBuilder({ questions, onChange }) {
 
 
         {/* Points */}
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Marks
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={newQuestion.marks}
-            onChange={(e) => setNewQuestion({ ...newQuestion, marks: parseInt(e.target.value) || 1 })}
-            className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+        {newQuestion.type !== 'file_upload' && (
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Marks
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={newQuestion.marks}
+              onChange={(e) => setNewQuestion({ ...newQuestion, marks: parseInt(e.target.value) || 1 })}
+              className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        )}
 
         {/* Media Upload (shown only for mcq/viva/interview) */}
         {(newQuestion.type === 'mcq' || newQuestion.type === 'viva' || newQuestion.type === 'interview') && (
@@ -1013,17 +1046,23 @@ export default function QuestionBuilder({ questions, onChange }) {
               Cancel Edit
             </button>
           )}
-          <button
-            type="button"
-            onClick={editingIndex !== null
-              ? () => handleUpdateQuestion(editingIndex)
-              : handleAddQuestion}
-            disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating}
-            className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-          >
-            <Plus className="w-4 h-4" />
-            {editingIndex !== null ? 'Update Question' : (generating ? 'Generating...' : 'Add Question')}
-          </button>
+          {newQuestion.type !== 'file_upload' ? (
+            <button
+              type="button"
+              onClick={editingIndex !== null
+                ? () => handleUpdateQuestion(editingIndex)
+                : handleAddQuestion}
+              disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating}
+              className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            >
+              <Plus className="w-4 h-4" />
+              {editingIndex !== null ? 'Update Question' : (generating ? 'Generating...' : 'Add Question')}
+            </button>
+          ) : (
+            <div className="text-sm text-green-700 font-medium bg-green-50 border border-green-200 rounded-lg p-3 w-full text-center">
+              Questions are parsed and imported automatically. No need to click Add Question.
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -11,6 +11,18 @@ export default function AptitudePractice() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
+  // Dynamic question count calculation and clamping
+  const maxQuestions = selectedTopic === 'mixed'
+    ? topics.reduce((sum, t) => sum + (t.count || 0), 0)
+    : (topics.find(t => t.topic === selectedTopic)?.count || 0);
+
+  useEffect(() => {
+    if (maxQuestions > 0 && questionCount > maxQuestions) {
+      setQuestionCount(maxQuestions);
+    }
+  }, [selectedTopic, topics, maxQuestions]);
+
+
   useEffect(() => {
     getTopics().then(res => {
       setTopics(res.data?.aptitude || []);
@@ -58,22 +70,33 @@ export default function AptitudePractice() {
           </select>
         </div>
 
-        {/* Question Count */}
+        {/* Question Count Input */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Questions</label>
-          <div className="flex gap-3">
-            {[10, 15, 20, 25, 30].map(n => (
-              <button
-                key={n}
-                onClick={() => setQuestionCount(n)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                  questionCount === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-semibold text-gray-700">Number of Questions</label>
+            <span className="text-xs text-gray-500 font-medium">Total Questions Available: {maxQuestions}</span>
           </div>
+          <input
+            type="number"
+            min={1}
+            max={maxQuestions}
+            value={questionCount}
+            onChange={e => {
+              const val = parseInt(e.target.value, 10);
+              if (!isNaN(val)) {
+                setQuestionCount(Math.max(1, Math.min(val, maxQuestions)));
+              } else if (e.target.value === '') {
+                setQuestionCount('');
+              }
+            }}
+            onBlur={() => {
+              if (questionCount === '' || questionCount < 1) {
+                setQuestionCount(Math.min(10, maxQuestions || 10));
+              }
+            }}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder={`Enter 1 to ${maxQuestions}`}
+          />
         </div>
 
         {/* Time Display */}

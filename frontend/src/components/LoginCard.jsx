@@ -112,7 +112,21 @@ function LoginCard() {
       }
     } catch (error) {
       console.error('Login error:', error)
-      setError('An error occurred. Please try again.')
+      let errorMsg = 'An unexpected login error occurred. Please try again.'
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMsg = 'Invalid credentials. Please verify your login details and try again.'
+        } else if (error.response.status === 400) {
+          errorMsg = error.response.data?.message || 'Invalid login details or captcha. Please try again.'
+        } else {
+          errorMsg = error.response.data?.message || `Server error (${error.response.status}). Please try again.`
+        }
+      } else if (error.request) {
+        errorMsg = 'Cannot connect to the server. Please check your internet connection.'
+      } else {
+        errorMsg = error.message || errorMsg
+      }
+      setError(errorMsg)
       fetchCaptcha()
     } finally {
       setIsLoading(false)

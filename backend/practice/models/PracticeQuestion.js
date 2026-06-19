@@ -62,6 +62,14 @@ const practiceQuestionSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    rubricGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    rubricData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   { timestamps: true }
 );
