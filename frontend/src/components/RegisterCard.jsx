@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader } from 'lucide-react'
+import { Loader, ChevronDown } from 'lucide-react'
 import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
 
@@ -14,6 +14,7 @@ const initialState = {
   branch: '',
   semester: null,
 }
+
 const availableBranches = [
   'IT',
   'CE',
@@ -33,6 +34,95 @@ const availableBranches = [
 
 const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
+// Custom Dropdown Component
+function CustomSelect({ label, value, onChange, options, placeholder, disabled }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const displayValue = options.find(opt =>
+    typeof opt === 'number' ? opt === value : opt === value
+  ) || null
+
+  return (
+    <label className="input-field">
+      <span>{label}</span>
+      <div style={{ position: 'relative' }}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={disabled}
+          style={{
+            width: '100%',
+            borderRadius: '18px',
+            border: '1px solid var(--border)',
+            padding: '0.95rem 1.1rem',
+            fontSize: '1rem',
+            color: displayValue ? 'var(--text)' : 'var(--text-muted)',
+            backgroundColor: 'var(--surface-glow)',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            opacity: disabled ? 0.6 : 1,
+          }}
+        >
+          <span>{displayValue ? (typeof displayValue === 'number' ? `Semester ${displayValue}` : displayValue) : placeholder}</span>
+          <ChevronDown size={18} style={{ color: 'var(--text-muted)' }} />
+        </button>
+
+        {isOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            marginTop: '8px',
+            backgroundColor: 'white',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            zIndex: 1000,
+            maxHeight: '280px',
+            overflowY: 'auto',
+          }}>
+            {options.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onChange(option)
+                  setIsOpen(false)
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  border: 'none',
+                  backgroundColor: displayValue === option ? 'rgb(219 234 254)' : 'white',
+                  color: displayValue === option ? 'rgb(29 78 216)' : 'var(--text)',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  transition: 'background-color 0.15s',
+                  fontWeight: displayValue === option ? 'bold' : 'normal',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgb(243 244 246)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = displayValue === option ? 'rgb(219 234 254)' : 'white'
+                }}
+              >
+                {typeof option === 'number' ? `Semester ${option}` : option}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </label>
+  )
+}
+
 export default function RegisterCard() {
   const navigate = useNavigate()
   const [form, setForm] = useState(initialState)
@@ -42,6 +132,7 @@ export default function RegisterCard() {
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -198,74 +289,24 @@ export default function RegisterCard() {
             </label>
 
             {/* Branch Selection */}
-            <label className="input-field">
-              <span>Select Branch</span>
-              <select
-                value={form.branch}
-                onChange={(e) => update('branch', e.target.value)}
-                disabled={isLoading}
-                required
-                className="input"
-                style={{
-                  borderRadius: '18px',
-                  border: '1px solid var(--border)',
-                  padding: '0.95rem 1.1rem',
-                  fontSize: '1rem',
-                  color: 'var(--text)',
-                  backgroundColor: 'var(--surface-glow)',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s, box-shadow 0.2s',
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/csvg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.95rem center',
-                  backgroundSize: '20px',
-                  paddingRight: '2.5rem',
-                }}
-              >
-                <option value="" disabled>-- Select Branch --</option>
-                {availableBranches.map((branch) => (
-                  <option key={branch} value={branch}>
-                    {branch}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CustomSelect
+              label="Select Branch"
+              value={form.branch}
+              onChange={(value) => update('branch', value)}
+              options={availableBranches}
+              placeholder="-- Select Branch --"
+              disabled={isLoading}
+            />
 
             {/* Semester Selection */}
-            <label className="input-field">
-              <span>Select Semester</span>
-              <select
-                value={form.semester || ''}
-                onChange={(e) => update('semester', e.target.value ? Number(e.target.value) : null)}
-                disabled={isLoading}
-                required
-                className="input"
-                style={{
-                  borderRadius: '18px',
-                  border: '1px solid var(--border)',
-                  padding: '0.95rem 1.1rem',
-                  fontSize: '1rem',
-                  color: 'var(--text)',
-                  backgroundColor: 'var(--surface-glow)',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s, box-shadow 0.2s',
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/csvg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.95rem center',
-                  backgroundSize: '20px',
-                  paddingRight: '2.5rem',
-                }}
-              >
-                <option value="" disabled>-- Select Semester --</option>
-                {availableSemesters.map((semester) => (
-                  <option key={semester} value={semester}>
-                    Semester {semester}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CustomSelect
+              label="Select Semester"
+              value={form.semester}
+              onChange={(value) => update('semester', value)}
+              options={availableSemesters}
+              placeholder="-- Select Semester --"
+              disabled={isLoading}
+            />
           </>
         )}
 

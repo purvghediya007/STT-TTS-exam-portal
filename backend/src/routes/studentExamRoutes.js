@@ -75,7 +75,7 @@ const mapQuestionForStudent = async (q) => {
     } catch (error) {
       console.error(
         `❌ Failed to generate presigned URL for TTS audio:`,
-        error.message
+        error.message,
       );
       // Fallback to original URL (might not work if S3 is private)
       base.ttsAudioUrl = q.ttsAudioUrl;
@@ -98,6 +98,7 @@ function transformExamForFrontend(examObj) {
     startsAt: examObj.startTime,
     endsAt: examObj.endTime,
     durationMin: examObj.durationMinutes,
+    slotDurationMin: examObj.slotDurationMinutes,
     pointsTotal: examObj.pointsTotal,
     timePerQuestionSec: examObj.timePerQuestion,
     attemptsLeft: examObj.attemptsAllowed,
@@ -205,7 +206,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -262,7 +263,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -292,7 +293,7 @@ router.get(
         .sort({ startedAt: -1 })
         .populate(
           "examId",
-          "title examCode startTime endTime durationMinutes pointsTotal resultsPublished"
+          "title examCode startTime endTime durationMinutes pointsTotal resultsPublished",
         );
 
       const submissions = attempts.map((attempt) => {
@@ -318,7 +319,78 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
+);
+
+// ---------- 0.56) GET EXAM SCOREBOARD FOR STUDENT ----------
+// GET /api/student/exams/:examId/scoreboard
+router.get(
+  "/exams/:examId/scoreboard",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const currentStudentId = req.user.sub;
+
+      const exam = await Exam.findById(examId).select(
+        "title examCode startTime endTime durationMinutes pointsTotal",
+      );
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      const attempts = await StudentExamAttempt.find({
+        examId,
+        status: { $in: ["submitted", "transcribed", "evaluated", "expired"] },
+        totalScore: { $ne: null },
+        maxScore: { $ne: null },
+      })
+        .sort({ totalScore: -1, maxScore: -1, finishedAt: 1, startedAt: 1 })
+        .populate("studentId", "username email enrollmentNumber");
+
+      const entries = attempts.map((attempt, index) => {
+        const student = attempt.studentId;
+        const percentage = attempt.maxScore
+          ? Math.round((attempt.totalScore / attempt.maxScore) * 100)
+          : 0;
+
+        return {
+          rank: index + 1,
+          studentId: student?._id || attempt.studentId,
+          studentName: student?.username || "Unknown Student",
+          enrollmentNumber: student?.enrollmentNumber || "-",
+          score: attempt.totalScore,
+          maxScore: attempt.maxScore,
+          percentage,
+          status: attempt.status,
+          finishedAt: attempt.finishedAt,
+        };
+      });
+
+      const currentUserEntry = entries.find(
+        (entry) => entry.studentId?.toString() === currentStudentId?.toString(),
+      );
+
+      return res.status(200).json({
+        exam: {
+          id: exam._id,
+          title: exam.title,
+          examCode: exam.examCode,
+          startTime: exam.startTime,
+          endTime: exam.endTime,
+          durationMinutes: exam.durationMinutes,
+          pointsTotal: exam.pointsTotal,
+        },
+        totalAttempts: entries.length,
+        currentUserRank: currentUserEntry?.rank || null,
+        currentUserScore: currentUserEntry?.score ?? null,
+        currentUserPercentage: currentUserEntry?.percentage ?? null,
+        entries,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 );
 
 // ---------- 0.56) GET EXAM SCOREBOARD FOR STUDENT ----------
@@ -438,7 +510,7 @@ router.post(
       // Generate pre-signed URL
       const presignedUrl = await generatePresignedUploadUrl(
         s3Key,
-        "audio/webm"
+        "audio/webm",
       );
 
       return res.status(200).json({
@@ -454,7 +526,7 @@ router.post(
         error: error.message,
       });
     }
-  }
+  },
 );
 
 //
@@ -507,26 +579,41 @@ router.post(
       // Update the StudentAnswer with the S3 URL
       console.log(`\n💾 Updating StudentAnswer...`);
       console.log(
-        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`
+        `   Query: { attemptId: "${attemptId}", questionId: "${questionId}" }`,
       );
       console.log(`   Update: { recordingUrl: "${audioUrl}" }`);
 
       try {
+        // Generate a presigned download URL for playback (valid for 1 hour)
+        let playbackUrl = audioUrl;
+        if (s3Key) {
+          try {
+            playbackUrl = await generatePresignedDownloadUrl(s3Key);
+            console.log(`✅ Generated presigned download URL for playback`);
+          } catch (downloadUrlError) {
+            console.error(
+              `⚠️ Failed to generate download URL, using upload URL:`,
+              downloadUrlError.message,
+            );
+            // Fall back to the provided audioUrl if download URL generation fails
+          }
+        }
+
         const answer = await StudentAnswer.findOneAndUpdate(
           { attemptId, questionId },
           {
             examId, // Required field
             studentId, // Required field
-            recordingUrls: [audioUrl], // S3 URL
-            answerText: `[Audio recording: ${audioUrl}]`,
+            recordingUrls: [playbackUrl], // Use presigned download URL for playback
+            answerText: `[Audio recording: ${playbackUrl}]`,
             s3Key: s3Key || null, // Store S3 key for later reference
           },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         if (!answer) {
           console.error(
-            `❌ Failed to create/update StudentAnswer - returned null`
+            `❌ Failed to create/update StudentAnswer - returned null`,
           );
           return res.status(500).json({
             message: "Failed to save answer to database",
@@ -536,13 +623,13 @@ router.post(
 
         console.log(`✅ StudentAnswer saved with ID: ${answer._id}`);
         console.log(
-          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`
+          `✅ All fields: attemptId=${answer.attemptId}, examId=${answer.examId}, studentId=${answer.studentId}, questionId=${answer.questionId}`,
         );
-        console.log(`✅ Audio S3 URL: ${audioUrl}\n`);
+        console.log(`✅ Audio playback URL: ${playbackUrl}\n`);
 
         return res.status(200).json({
           success: true,
-          url: audioUrl,
+          url: playbackUrl,
           message: "Audio URL stored successfully",
           answerId: answer._id,
         });
@@ -560,7 +647,7 @@ router.post(
       console.error("❌ Error storing audio URL:", error.message);
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -612,14 +699,14 @@ router.get(
 
       // Map to student-safe view (async to generate presigned URLs)
       const studentQuestions = await Promise.all(
-        questions.map(mapQuestionForStudent)
+        questions.map(mapQuestionForStudent),
       );
 
       return res.status(200).json({ questions: studentQuestions });
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -695,7 +782,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -780,6 +867,8 @@ router.post(
         status: "in_progress",
       });
       
+      // Commented out the duplicate block (lines 870-904) that returned old expired deadlines
+      /*
       // 🔥 NEW: handle reallowed attempt (reuse existing)
       if (!attempt) {
         const reallowedAttempt = await StudentExamAttempt.findOne({
@@ -815,12 +904,75 @@ router.post(
         });
         }
       } 
+      */
+
+      // 🔥 NEW: handle reallowed attempt (reuse existing)
+      if (!attempt) {
+        // Commented out old unsorted query to always target the latest attempt
+        // const reallowedAttempt = await StudentExamAttempt.findOne({
+        //   examId,
+        //   studentId,
+        //   status: "reallowed",
+        // });
+        // NEW: Sort by startedAt descending to get the latest attempt
+        const reallowedAttempt = await StudentExamAttempt.findOne({
+          examId,
+          studentId,
+          status: "reallowed",
+        }).sort({ startedAt: -1 });
+
+        if (reallowedAttempt) {
+          // reset same attempt (NO new document)
+          reallowedAttempt.status = "in_progress";
+          reallowedAttempt.startedAt = new Date();
+          reallowedAttempt.finishedAt = null;
+          reallowedAttempt.totalScore = null;
+
+          // Recalculate deadline based on current exam slot duration
+          const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
+          const recalculatedDeadline = new Date(reallowedAttempt.startedAt.getTime() + slotMinutes * 60 * 1000);
+          const expiresAt = recalculatedDeadline < exam.endTime ? recalculatedDeadline : exam.endTime;
+
+          // Persist the new deadline so questions/submit endpoints use the correct value
+          reallowedAttempt.deadlineAt = expiresAt;
+          await reallowedAttempt.save();
+
+          return res.status(200).json({
+            message: "Reattempt started",
+            attemptId: reallowedAttempt._id,
+            expiresAt: expiresAt.toISOString(),
+            remainingSeconds: Math.max(
+              0,
+              Math.floor((expiresAt - new Date()) / 1000),
+            ),
+            durationMinutes: exam.durationMinutes,
+            exam: {
+              id: exam._id,
+              title: exam.title,
+              instructions: exam.instructions,
+              timePerQuestion: exam.timePerQuestion,
+            },
+          });
+        }
+      }
 
       if (attempt) {
+        // Recalculate deadline based on current exam slot duration (in case it was changed after attempt started)
+        // Use attempt's startedAt time as the reference point
+        const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
+        const recalculatedDeadline = new Date(attempt.startedAt.getTime() + slotMinutes * 60 * 1000);
+        const currentExpiresAt = recalculatedDeadline < exam.endTime ? recalculatedDeadline : exam.endTime;
+
+        // Persist the recalculated deadline if it has changed
+        if (!attempt.deadlineAt || attempt.deadlineAt.getTime() !== currentExpiresAt.getTime()) {
+          attempt.deadlineAt = currentExpiresAt;
+          await attempt.save();
+        }
+
         return res.status(200).json({
           message: "Exam already started",
           attemptId: attempt._id.toString(),
-          expiresAt: attempt.deadlineAt.toISOString(),
+          expiresAt: currentExpiresAt.toISOString(),
           firstQuestionId: null,
         });
       }
@@ -835,12 +987,15 @@ router.post(
         });
       }
 
-      // Compute deadline: min(now + duration, exam.endTime)
-      const deadlineByDuration = new Date(
-        now.getTime() + exam.durationMinutes * 60 * 1000
+      // Compute deadline using slot duration: min(now + slot, exam.endTime)
+      // slot duration can be set per exam for flexible student timing
+      // if not set, falls back to durationMinutes for backward compatibility
+      const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
+      const deadlineBySlot = new Date(
+        now.getTime() + slotMinutes * 60 * 1000,
       );
       const deadlineAt =
-        deadlineByDuration < exam.endTime ? deadlineByDuration : exam.endTime;
+        deadlineBySlot < exam.endTime ? deadlineBySlot : exam.endTime;
 
       attempt = await StudentExamAttempt.create({
         examId,
@@ -855,6 +1010,140 @@ router.post(
         attemptId: attempt._id.toString(),
         expiresAt: deadlineAt.toISOString(),
         firstQuestionId: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+//
+// ---------- 2.5) SAVE PROGRESS DURING EXAM ----------
+// POST /api/student/exams/:examId/save-progress
+// Saves student answers dynamically without submitting/finishing the attempt
+//
+router.post(
+  "/exams/:examId/save-progress",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const studentId = req.user.sub;
+      let { attemptId, answers } = req.body;
+      const now = new Date();
+
+      if (!attemptId) {
+        return res.status(400).json({ message: "attemptId is required" });
+      }
+
+      // Verify the attempt belongs to this student and exam
+      const attempt = await StudentExamAttempt.findOne({
+        _id: attemptId,
+        studentId,
+        examId,
+      });
+
+      if (!attempt) {
+        return res.status(404).json({ message: "Active exam attempt not found" });
+      }
+
+      if (attempt.status !== "in_progress") {
+        return res.status(400).json({ message: `Cannot save progress. Attempt status is ${attempt.status}` });
+      }
+
+      // Check if attempt deadline has passed
+      if (now > attempt.deadlineAt) {
+        attempt.status = "expired";
+        await attempt.save();
+        return res.status(400).json({ message: "Attempt time is over" });
+      }
+
+      if (answers && Array.isArray(answers)) {
+        for (const answer of answers) {
+          if (!answer.questionId) continue;
+
+          const answerUpdate = {
+            attemptId: attempt._id,
+            examId,
+            studentId,
+            questionId: answer.questionId,
+          };
+
+          if (answer.selectedOptionIndex !== undefined) {
+            answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
+          }
+          if (answer.answerText !== undefined) {
+            answerUpdate.answerText = answer.answerText;
+          }
+          if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
+            answerUpdate.recordingUrls = answer.recordingUrls;
+          }
+
+          await StudentAnswer.findOneAndUpdate(
+            { attemptId: attempt._id, questionId: answer.questionId },
+            answerUpdate,
+            { upsert: true, new: true }
+          );
+        }
+      }
+
+      return res.status(200).json({
+        message: "Progress saved successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//
+// ---------- 2.6) GET SAVED ANSWERS FOR ATTEMPT ----------
+// GET /api/student/attempts/:attemptId/saved-answers
+// Retrieves all saved draft answers for a specific exam attempt
+//
+router.get(
+  "/attempts/:attemptId/saved-answers",
+  authMiddleware,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const { attemptId } = req.params;
+      const studentId = req.user.sub;
+
+      const attempt = await StudentExamAttempt.findOne({
+        _id: attemptId,
+        studentId,
+      });
+
+      if (!attempt) {
+        return res.status(404).json({ message: "Exam attempt not found" });
+      }
+
+      const savedAnswers = await StudentAnswer.find({ attemptId });
+
+      const formattedAnswers = savedAnswers.map(ans => ({
+        questionId: ans.questionId.toString(),
+        selectedOptionIndex: ans.selectedOptionIndex,
+        answerText: ans.answerText,
+        recordingUrls: ans.recordingUrls,
+        sttStatus: ans.sttStatus,
+        evaluationStatus: ans.evaluationStatus
+      }));
+
+      // ANTIGRAVITY NEW: Disable browser caching to ensure latest saved answers are always returned on re-entry
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      
+      /* Old response without Cache-Control headers:
+      return res.status(200).json({
+        attemptId,
+        answers: formattedAnswers
+      });
+      */
+      
+      return res.status(200).json({
+        attemptId,
+        answers: formattedAnswers
       });
     } catch (error) {
       next(error);
@@ -906,7 +1195,7 @@ router.get(
 
       // Map to student-safe view (async to generate presigned URLs)
       const safeQuestions = await Promise.all(
-        questions.map(mapQuestionForStudent)
+        questions.map(mapQuestionForStudent),
       );
 
       return res.status(200).json({
@@ -918,7 +1207,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -947,7 +1236,7 @@ router.post(
         "Answers from body:",
         typeof answers,
         answers ? Object.keys(answers).length : 0,
-        "questions"
+        "questions",
       );
 
       // Parse JSON if answers came as FormData field
@@ -970,7 +1259,7 @@ router.post(
       console.log("Received attemptId:", attemptId);
       console.log(
         "Is valid MongoDB ID format:",
-        /^[0-9a-f]{24}$/.test(attemptId)
+        /^[0-9a-f]{24}$/.test(attemptId),
       );
 
       // Verify the attempt belongs to this student and exam
@@ -987,11 +1276,11 @@ router.post(
           status: "in_progress",
         });
         console.log(
-          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`
+          `✅ Found attempt by studentId/examId: ${attempt ? "YES" : "NO"}`,
         );
         if (!attempt) {
           console.log(
-            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`
+            `❌ No active attempt found. AttemptId: ${attemptId}, ExamId: ${examId}, StudentId: ${studentId}`,
           );
           return res.status(400).json({
             message:
@@ -1007,7 +1296,7 @@ router.post(
 
       if (attempt.studentId.toString() !== studentId) {
         console.log(
-          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`
+          `❌ Student ID mismatch: ${attempt.studentId} vs ${studentId}`,
         );
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -1040,7 +1329,7 @@ router.post(
       console.log(
         `✅ Attempt not expired. Processing ${
           answers ? answers.length : 0
-        } answers...`
+        } answers...`,
       );
 
       // Store mediaAnswers as StudentAnswers if provided
@@ -1055,7 +1344,7 @@ router.post(
             await StudentAnswer.findOneAndUpdate(
               { attemptId: attempt._id, questionId: q._id },
               { answerText: mediaAnswer },
-              { upsert: true }
+              { upsert: true },
             );
           }
         }
@@ -1083,7 +1372,7 @@ router.post(
           if (answer.selectedOptionIndex !== undefined) {
             answerUpdate.selectedOptionIndex = answer.selectedOptionIndex;
             console.log(
-              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`
+              `    ✅ MCQ answer: option ${answer.selectedOptionIndex}`,
             );
           }
 
@@ -1091,7 +1380,7 @@ router.post(
           if (answer.answerText) {
             answerUpdate.answerText = answer.answerText;
             console.log(
-              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`
+              `    ✅ Text answer: "${answer.answerText.substring(0, 50)}..."`,
             );
           }
 
@@ -1099,11 +1388,11 @@ router.post(
           if (answer.recordingUrls && Array.isArray(answer.recordingUrls)) {
             answerUpdate.recordingUrls = answer.recordingUrls;
             console.log(
-              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`
+              `    ✅ Storing ${answer.recordingUrls.length} recording URLs for question ${answer.questionId}`,
             );
           } else {
             console.log(
-              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`
+              `    ℹ️ No audio file or recordingUrls for question ${answer.questionId}`,
             );
           }
 
@@ -1111,7 +1400,7 @@ router.post(
           await StudentAnswer.findOneAndUpdate(
             { attemptId: attempt._id, questionId: answer.questionId },
             answerUpdate,
-            { upsert: true }
+            { upsert: true },
           );
           console.log(`    ✅ Saved to DB`);
         }
@@ -1129,35 +1418,6 @@ router.post(
       await attempt.save();
       console.log(`✅ Attempt marked as submitted`);
 
-      // Push transcription job to queue (asynchronous, don't wait)
-      try {
-        await answersTranscriptionQueue.add(
-          "transcribe-answers",
-          {
-            examId,
-            studentId,
-            attemptId: attempt._id.toString(),
-          },
-          {
-            attempts: 3,
-            backoff: {
-              type: "exponential",
-              delay: 2000,
-            },
-            delay: 10000, // Wait 10 seconds before processing - gives time for audio uploads
-          }
-        );
-        console.log(
-          `✅ Transcription job queued for attempt ${attempt._id} (delayed 10s)`
-        );
-      } catch (queueError) {
-        console.error(
-          `⚠️ Failed to queue transcription job (non-critical):`,
-          queueError.message
-        );
-        // Don't fail the submission if queue fails
-      }
-
       // Return success response immediately
       console.log(`✅ SUBMISSION COMPLETE - Returning success response`);
       return res.status(200).json({
@@ -1172,7 +1432,7 @@ router.post(
       console.error("Stack:", error.stack);
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1310,7 +1570,7 @@ router.post(
         if (q.type === "mcq") {
           // Find the correct option index
           const correctOptionIndex = q.options.findIndex(
-            (opt) => opt.isCorrect === true
+            (opt) => opt.isCorrect === true,
           );
 
           const { score: mcqScore, feedback: mcqFeedback } = evaluateMCQAnswer({
@@ -1323,13 +1583,24 @@ router.post(
           feedback = mcqFeedback;
         } else {
           // Descriptive evaluation using AI
+          // OLD CALL (BACKUP)
+          // const { score: aiScore, feedback: aiFeedback } =
+          //   await evaluateAnswerWithAI({
+          //     questionText: q.text,
+          //     expectedAnswer: q.expectedAnswer,
+          //     studentAnswer: ans.answerText,
+          //     maxMarks,
+          //   });
+
           const { score: aiScore, feedback: aiFeedback } =
             await evaluateAnswerWithAI({
+              questionId: q._id,
               questionText: q.text,
               expectedAnswer: q.expectedAnswer,
               studentAnswer: ans.answerText,
               maxMarks,
             });
+
 
           score = aiScore;
           feedback = aiFeedback;
@@ -1381,7 +1652,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1402,7 +1673,7 @@ router.get(
         .sort({ startedAt: -1 })
         .populate(
           "examId",
-          "title examCode startTime endTime durationMinutes resultsPublished"
+          "title examCode startTime endTime durationMinutes resultsPublished",
         );
 
       const result = attempts.map((a) => {
@@ -1428,7 +1699,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1466,7 +1737,7 @@ router.get(
 
       const attempt = await StudentExamAttempt.findById(attemptId).populate(
         "examId",
-        "title examCode startTime endTime durationMinutes resultsPublished"
+        "title examCode startTime endTime durationMinutes resultsPublished",
       );
 
       if (!attempt) {
@@ -1493,7 +1764,7 @@ router.get(
         attemptId: attempt._id,
       }).populate(
         "questionId",
-        "text marks instruction order type options expectedAnswer"
+        "text marks instruction order type options expectedAnswer",
       );
 
       const questions = answers.map((a) => {
@@ -1539,7 +1810,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;

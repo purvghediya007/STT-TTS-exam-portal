@@ -1,0 +1,707 @@
+[
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A sum of ₹1200 is divided between A and B in the ratio 3:5. What is B's share?",
+    "options": [
+      {"text": "₹450", "isCorrect": false},
+      {"text": "₹750", "isCorrect": true},
+      {"text": "₹600", "isCorrect": false},
+      {"text": "₹800", "isCorrect": false}
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total parts = 3 + 5 = 8. B's share = 1200 × 5/8 = ₹750.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If A:B = 2:3 and B:C = 4:5, find A:B:C.",
+    "options": [
+      {"text": "8:12:15", "isCorrect": true},
+      {"text": "2:4:5", "isCorrect": false},
+      {"text": "8:6:15", "isCorrect": false},
+      {"text": "2:3:5", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "To combine, make B common. A:B = 2:3 → multiply by 4 → 8:12. B:C = 4:5 → multiply by 3 → 12:15. So A:B:C = 8:12:15.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Find the mean proportional between 4 and 16.",
+    "options": [
+      {"text": "8", "isCorrect": true},
+      {"text": "10", "isCorrect": false},
+      {"text": "12", "isCorrect": false},
+      {"text": "6", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Mean proportional of a and b = √(a × b) = √(4 × 16) = √64 = 8.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If 2A = 3B = 4C, find A:B:C.",
+    "options": [
+      {"text": "6:4:3", "isCorrect": true},
+      {"text": "3:4:6", "isCorrect": false},
+      {"text": "2:3:4", "isCorrect": false},
+      {"text": "4:3:2", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let 2A = 3B = 4C = k. Then A = k/2, B = k/3, C = k/4. Ratio A:B:C = 1/2 : 1/3 : 1/4. Multiply by LCM(2,3,4)=12 → 6:4:3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Two numbers are in the ratio 5:7. If their sum is 96, find the larger number.",
+    "options": [
+      {"text": "40", "isCorrect": false},
+      {"text": "48", "isCorrect": false},
+      {"text": "56", "isCorrect": true},
+      {"text": "60", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let numbers be 5x and 7x. 5x + 7x = 96 → 12x = 96 → x = 8. Larger number = 7 × 8 = 56.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A bag contains ₹1, ₹2, and ₹5 coins in the ratio 3:4:5. If the total amount in the bag is ₹324, find the number of ₹5 coins.",
+    "options": [
+      {"text": "45", "isCorrect": true},
+      {"text": "36", "isCorrect": false},
+      {"text": "27", "isCorrect": false},
+      {"text": "50", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let number of coins be 3x, 4x, 5x. Total value = 3x×1 + 4x×2 + 5x×5 = 3x + 8x + 25x = 36x = 324. So x = 9. Number of ₹5 coins = 5 × 9 = 45.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A and B started a business with investments of ₹40,000 and ₹60,000 respectively. If the total profit at the end of the year is ₹25,000, find A's share of the profit.",
+    "options": [
+      {"text": "₹10,000", "isCorrect": true},
+      {"text": "₹12,000", "isCorrect": false},
+      {"text": "₹15,000", "isCorrect": false},
+      {"text": "₹8,000", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Ratio of investments = 40000:60000 = 2:3. A's share = 25000 × 2/5 = ₹10,000.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The ratio of incomes of A and B is 5:4 and the ratio of their expenditures is 3:2. If each saves ₹2000, find A's income.",
+    "options": [
+      {"text": "₹5,000", "isCorrect": true},
+      {"text": "₹4,000", "isCorrect": false},
+      {"text": "₹6,000", "isCorrect": false},
+      {"text": "₹8,000", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let incomes be 5x and 4x, expenditures be 3y and 2y. Savings: 5x − 3y = 2000 ...(1), 4x − 2y = 2000 ...(2). From (2): y = (4x−2000)/2 = 2x−1000. Substituting in (1): 5x − 3(2x−1000) = 2000 → 5x − 6x + 3000 = 2000 → x = 1000. A's income = 5 × 1000 = ₹5,000.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "In a mixture of 60 litres, the ratio of milk to water is 2:1. How much water must be added to make the ratio 1:2?",
+    "options": [
+      {"text": "40 litres", "isCorrect": false},
+      {"text": "50 litres", "isCorrect": false},
+      {"text": "60 litres", "isCorrect": true},
+      {"text": "30 litres", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Milk = 60 × 2/3 = 40 L, Water = 60 × 1/3 = 20 L. Let x litres of water be added. New ratio: 40/(20+x) = 1/2. Cross multiply: 80 = 20 + x → x = 60 litres.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Find the third proportional to 4 and 12.",
+    "options": [
+      {"text": "36", "isCorrect": true},
+      {"text": "48", "isCorrect": false},
+      {"text": "24", "isCorrect": false},
+      {"text": "16", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Third proportional to a and b means a:b = b:x. So 4:12 = 12:x → x = 12×12/4 = 144/4 = 36.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If A:B = 3:4 and B:C = 5:6, find A:C.",
+    "options": [
+      {"text": "5:8", "isCorrect": true},
+      {"text": "3:6", "isCorrect": false},
+      {"text": "15:24", "isCorrect": false},
+      {"text": "4:5", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "A/C = (A/B) × (B/C) = (3/4) × (5/6) = 15/24 = 5/8. So A:C = 5:8.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A and B invest in a business in the ratio 3:5. A invests for 8 months and B invests for the entire year. What is the ratio of their profits?",
+    "options": [
+      {"text": "2:5", "isCorrect": true},
+      {"text": "3:5", "isCorrect": false},
+      {"text": "8:12", "isCorrect": false},
+      {"text": "1:3", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Profit ratio = (Investment × Time). A's share = 3 × 8 = 24. B's share = 5 × 12 = 60. Ratio = 24:60 = 2:5.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "₹3600 is divided among A, B, and C in the ratio 2:3:4. What is C's share?",
+    "options": [
+      {"text": "₹1,200", "isCorrect": false},
+      {"text": "₹1,400", "isCorrect": false},
+      {"text": "₹1,600", "isCorrect": true},
+      {"text": "₹1,800", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total parts = 2 + 3 + 4 = 9. C's share = 3600 × 4/9 = ₹1,600.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If x:y = 3:4, find the value of (4x + 5y):(5x + 2y).",
+    "options": [
+      {"text": "32:23", "isCorrect": true},
+      {"text": "23:32", "isCorrect": false},
+      {"text": "12:7", "isCorrect": false},
+      {"text": "7:12", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let x = 3k, y = 4k. Numerator = 4(3k) + 5(4k) = 12k + 20k = 32k. Denominator = 5(3k) + 2(4k) = 15k + 8k = 23k. Ratio = 32:23.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Two alloys contain gold and silver in ratios 3:7 and 5:3 respectively. In what ratio should they be mixed to get a new alloy with gold and silver in ratio 2:3?",
+    "options": [
+      {"text": "9:4", "isCorrect": true},
+      {"text": "4:9", "isCorrect": false},
+      {"text": "2:3", "isCorrect": false},
+      {"text": "3:2", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Gold fraction in alloy 1 = 3/10, alloy 2 = 5/8, desired = 2/5. By alligation: Ratio = (5/8 − 2/5) : (2/5 − 3/10) = (25−16)/40 : (4−3)/10 = 9/40 : 1/10 = 9/40 : 4/40 = 9:4.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The present ages of A and B are in the ratio 5:3. After 6 years, the ratio of their ages will be 7:5. Find A's present age.",
+    "options": [
+      {"text": "15 years", "isCorrect": true},
+      {"text": "20 years", "isCorrect": false},
+      {"text": "25 years", "isCorrect": false},
+      {"text": "30 years", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let ages be 5x and 3x. After 6 years: (5x+6)/(3x+6) = 7/5. Cross multiply: 25x + 30 = 21x + 42 → 4x = 12 → x = 3. A's age = 5 × 3 = 15 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If a:b = 2:3, b:c = 4:5, c:d = 6:7, find a:d.",
+    "options": [
+      {"text": "16:35", "isCorrect": true},
+      {"text": "35:16", "isCorrect": false},
+      {"text": "12:35", "isCorrect": false},
+      {"text": "8:21", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "a/d = (a/b) × (b/c) × (c/d) = (2/3) × (4/5) × (6/7) = 48/105 = 16/35. So a:d = 16:35.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A container has 80 litres of milk. 8 litres of milk is taken out and replaced with water. This process is repeated 2 more times. How much milk remains in the container?",
+    "options": [
+      {"text": "58.32 litres", "isCorrect": true},
+      {"text": "60 litres", "isCorrect": false},
+      {"text": "56.5 litres", "isCorrect": false},
+      {"text": "52.48 litres", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "After n replacements, milk remaining = Initial × (1 − replaced/total)^n = 80 × (1 − 8/80)³ = 80 × (9/10)³ = 80 × 729/1000 = 58.32 litres.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "₹510 is divided among A, B, and C such that A gets 2/3 of what B gets and B gets 1/4 of what C gets. Find C's share.",
+    "options": [
+      {"text": "₹360", "isCorrect": true},
+      {"text": "₹300", "isCorrect": false},
+      {"text": "₹270", "isCorrect": false},
+      {"text": "₹420", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "B = C/4. A = 2B/3 = 2C/12 = C/6. Total = C/6 + C/4 + C = (2C + 3C + 12C)/12 = 17C/12 = 510. C = 510 × 12/17 = ₹360. Verify: C=360, B=90, A=60. Sum = 510 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "In a mixture of 40 litres, milk and water are in the ratio 3:1. How much milk should be added to make the ratio 4:1?",
+    "options": [
+      {"text": "5 litres", "isCorrect": false},
+      {"text": "8 litres", "isCorrect": false},
+      {"text": "10 litres", "isCorrect": true},
+      {"text": "12 litres", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Milk = 40 × 3/4 = 30 L, Water = 40 × 1/4 = 10 L. Let x litres of milk be added. (30+x)/10 = 4/1 → 30 + x = 40 → x = 10 litres.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If the ratio of boys to girls in a class is 5:3 and total number of students is 64, find the number of girls.",
+    "options": [
+      {"text": "24", "isCorrect": true},
+      {"text": "32", "isCorrect": false},
+      {"text": "40", "isCorrect": false},
+      {"text": "16", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Total parts = 5 + 3 = 8. Number of girls = 64 × 3/8 = 24.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A, B, and C share a profit of ₹5,400. A receives 1/3 of the total and B receives 1/4 of the total. Find C's share.",
+    "options": [
+      {"text": "₹2,250", "isCorrect": true},
+      {"text": "₹2,400", "isCorrect": false},
+      {"text": "₹1,800", "isCorrect": false},
+      {"text": "₹1,650", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "A = 5400/3 = ₹1,800. B = 5400/4 = ₹1,350. C = 5400 − 1800 − 1350 = ₹2,250.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The salaries of A, B, and C are in the ratio 2:3:5. If increments of 15%, 10%, and 20% are given respectively, find the new ratio of their salaries.",
+    "options": [
+      {"text": "23:33:60", "isCorrect": true},
+      {"text": "2:3:6", "isCorrect": false},
+      {"text": "10:11:20", "isCorrect": false},
+      {"text": "46:66:125", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "New salaries: A = 2 × 1.15 = 2.30, B = 3 × 1.10 = 3.30, C = 5 × 1.20 = 6.00. Multiply by 10: 23:33:60.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Two numbers are in the ratio 3:5. When 9 is subtracted from each, the ratio becomes 12:23. Find the smaller number.",
+    "options": [
+      {"text": "33", "isCorrect": true},
+      {"text": "30", "isCorrect": false},
+      {"text": "27", "isCorrect": false},
+      {"text": "36", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let numbers be 3x and 5x. (3x−9)/(5x−9) = 12/23. Cross multiply: 69x − 207 = 60x − 108 → 9x = 99 → x = 11. Smaller number = 3 × 11 = 33. Verify: (33−9)/(55−9) = 24/46 = 12/23 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "Find the fourth proportional to 3, 7, and 12.",
+    "options": [
+      {"text": "28", "isCorrect": true},
+      {"text": "21", "isCorrect": false},
+      {"text": "24", "isCorrect": false},
+      {"text": "36", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Fourth proportional: 3:7 = 12:x → x = 7 × 12/3 = 84/3 = 28.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "15 workers can complete a piece of work in 20 days. How many workers are needed to complete the same work in 12 days?",
+    "options": [
+      {"text": "20", "isCorrect": false},
+      {"text": "25", "isCorrect": true},
+      {"text": "30", "isCorrect": false},
+      {"text": "18", "isCorrect": false}
+    ],
+    "correctAnswer": 1,
+    "explanation": "Workers and days are inversely proportional. Workers × Days = constant. 15 × 20 = x × 12 → x = 300/12 = 25 workers.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A mixture contains alcohol and water in the ratio 4:3. If 5 litres of water is added to the mixture, the ratio becomes 4:5. Find the quantity of alcohol in the mixture.",
+    "options": [
+      {"text": "10 litres", "isCorrect": true},
+      {"text": "12 litres", "isCorrect": false},
+      {"text": "15 litres", "isCorrect": false},
+      {"text": "8 litres", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let alcohol = 4x, water = 3x. After adding 5L water: 4x/(3x+5) = 4/5. Cross multiply: 20x = 12x + 20 → 8x = 20 → x = 2.5. Alcohol = 4 × 2.5 = 10 litres.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A and B enter a partnership. A invests ₹36,000 for 4 months and B invests ₹42,000 for the entire year. Find the ratio of their profits.",
+    "options": [
+      {"text": "2:7", "isCorrect": true},
+      {"text": "3:7", "isCorrect": false},
+      {"text": "6:7", "isCorrect": false},
+      {"text": "1:4", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Profit ratio = Investment × Time. A = 36000 × 4 = 144000. B = 42000 × 12 = 504000. Ratio = 144000:504000 = 144:504 = 2:7.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The present ages of Ravi and Suresh are in the ratio 5:7. After 10 years, the ratio will become 3:4. Find Ravi's present age.",
+    "options": [
+      {"text": "40 years", "isCorrect": false},
+      {"text": "45 years", "isCorrect": false},
+      {"text": "50 years", "isCorrect": true},
+      {"text": "55 years", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 5x and 7x. (5x+10)/(7x+10) = 3/4 → 20x + 40 = 21x + 30 → x = 10. Ravi's age = 5 × 10 = 50 years. Verify: (50+10)/(70+10) = 60/80 = 3/4 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If A:B = 1:2 and B:C = 3:4, find A:B:C.",
+    "options": [
+      {"text": "3:6:8", "isCorrect": true},
+      {"text": "1:2:4", "isCorrect": false},
+      {"text": "3:4:8", "isCorrect": false},
+      {"text": "1:3:4", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Make B common. A:B = 1:2 → multiply by 3 → 3:6. B:C = 3:4 → multiply by 2 → 6:8. So A:B:C = 3:6:8.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A milkman mixes 20 litres of water with 80 litres of milk. After mixing, he sells the entire mixture at the cost price of milk. What is his profit percentage?",
+    "options": [
+      {"text": "20%", "isCorrect": false},
+      {"text": "25%", "isCorrect": true},
+      {"text": "30%", "isCorrect": false},
+      {"text": "15%", "isCorrect": false}
+    ],
+    "correctAnswer": 1,
+    "explanation": "He sells 100 litres at cost price of milk per litre. His actual cost is only 80 litres of milk. Profit = (100 − 80)/80 × 100 = 25%.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If 3a = 4b = 6c, find a:b:c.",
+    "options": [
+      {"text": "4:3:2", "isCorrect": true},
+      {"text": "2:3:4", "isCorrect": false},
+      {"text": "3:4:6", "isCorrect": false},
+      {"text": "6:4:3", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let 3a = 4b = 6c = k. a = k/3, b = k/4, c = k/6. Ratio = 1/3 : 1/4 : 1/6. Multiply by LCM(3,4,6)=12 → 4:3:2.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The ratio of two numbers is 4:5 and their HCF is 6. Find their LCM.",
+    "options": [
+      {"text": "120", "isCorrect": true},
+      {"text": "60", "isCorrect": false},
+      {"text": "180", "isCorrect": false},
+      {"text": "90", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Numbers are 4×6 = 24 and 5×6 = 30. LCM = (24 × 30)/HCF = (24 × 30)/6 = 120. (Or: LCM = HCF × 4 × 5 = 6 × 20 = 120, since 4 and 5 are coprime).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A and B started a business. A invested ₹20,000 for the first 6 months and then increased to ₹30,000 for the remaining 6 months. B invested ₹30,000 throughout the year. Find the ratio of their profits.",
+    "options": [
+      {"text": "5:6", "isCorrect": true},
+      {"text": "1:1", "isCorrect": false},
+      {"text": "2:3", "isCorrect": false},
+      {"text": "5:7", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "A's investment-time = 20000×6 + 30000×6 = 120000 + 180000 = 300000. B's investment-time = 30000×12 = 360000. Ratio = 300000:360000 = 5:6.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "In what ratio must a grocer mix two varieties of rice costing ₹40/kg and ₹60/kg to get a mixture worth ₹52/kg?",
+    "options": [
+      {"text": "2:3", "isCorrect": true},
+      {"text": "3:2", "isCorrect": false},
+      {"text": "1:2", "isCorrect": false},
+      {"text": "4:5", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "By alligation rule: Ratio = (Dearer − Mean) : (Mean − Cheaper) = (60 − 52) : (52 − 40) = 8:12 = 2:3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If x:y = 5:2, find x²:y².",
+    "options": [
+      {"text": "25:4", "isCorrect": true},
+      {"text": "5:2", "isCorrect": false},
+      {"text": "10:4", "isCorrect": false},
+      {"text": "25:2", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "If x:y = 5:2, then x²:y² = 5²:2² = 25:4.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The incomes of A and B are in the ratio 3:2, and their expenditures are in the ratio 5:3. If each saves ₹1,000, find A's income.",
+    "options": [
+      {"text": "₹6,000", "isCorrect": true},
+      {"text": "₹5,000", "isCorrect": false},
+      {"text": "₹4,000", "isCorrect": false},
+      {"text": "₹3,000", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Incomes: 3x, 2x. Expenditures: 5y, 3y. 3x − 5y = 1000 ...(1), 2x − 3y = 1000 ...(2). From (2): y = (2x−1000)/3. Sub in (1): 3x − 5(2x−1000)/3 = 1000 → 9x − 10x + 5000 = 3000 → x = 2000. A's income = 3 × 2000 = ₹6,000.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The ratio of ages of A and B is 4:3 currently. Six years ago, the ratio was 3:2. Find the sum of their current ages.",
+    "options": [
+      {"text": "28 years", "isCorrect": false},
+      {"text": "35 years", "isCorrect": false},
+      {"text": "42 years", "isCorrect": true},
+      {"text": "49 years", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 4x and 3x. Six years ago: (4x−6)/(3x−6) = 3/2. Cross multiply: 8x − 12 = 9x − 18 → x = 6. Current ages: 24 and 18. Sum = 42.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A, B, and C share a profit of ₹6,600 in the ratio 2:4:5. If B gives ₹100 from his share to C, find B's new share.",
+    "options": [
+      {"text": "₹2,300", "isCorrect": true},
+      {"text": "₹2,500", "isCorrect": false},
+      {"text": "₹2,100", "isCorrect": false},
+      {"text": "₹2,200", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Total parts = 11. B's original share = 6600 × 4/11 = ₹2,400. After giving ₹100 to C, B's new share = 2400 − 100 = ₹2,300.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A sum of money is divided among A, B, and C such that for every ₹2 A gets, B gets ₹3, and for every ₹4 B gets, C gets ₹5. Find A:B:C.",
+    "options": [
+      {"text": "8:12:15", "isCorrect": true},
+      {"text": "2:3:5", "isCorrect": false},
+      {"text": "8:15:12", "isCorrect": false},
+      {"text": "2:4:5", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "A:B = 2:3, B:C = 4:5. Make B common: A:B = 2×4:3×4 = 8:12, B:C = 4×3:5×3 = 12:15. So A:B:C = 8:12:15.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "In a school, the ratio of boys to girls is 3:2. If 50 boys and 50 girls join the school, the ratio becomes 7:5. Find the original number of students.",
+    "options": [
+      {"text": "400", "isCorrect": false},
+      {"text": "450", "isCorrect": false},
+      {"text": "500", "isCorrect": true},
+      {"text": "550", "isCorrect": false}
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let boys = 3x, girls = 2x. (3x+50)/(2x+50) = 7/5. Cross multiply: 15x + 250 = 14x + 350 → x = 100. Original students = 5 × 100 = 500.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If the ratio of areas of two circles is 4:9, find the ratio of their radii.",
+    "options": [
+      {"text": "2:3", "isCorrect": true},
+      {"text": "4:9", "isCorrect": false},
+      {"text": "16:81", "isCorrect": false},
+      {"text": "1:3", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Area = πr². Ratio of areas = r₁²:r₂² = 4:9. So r₁:r₂ = √4:√9 = 2:3.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "A certain amount is distributed among P, Q, and R in the ratio 5:7:11. If Q's share exceeds P's share by ₹800, find the total amount.",
+    "options": [
+      {"text": "₹8,200", "isCorrect": false},
+      {"text": "₹9,200", "isCorrect": true},
+      {"text": "₹7,600", "isCorrect": false},
+      {"text": "₹10,400", "isCorrect": false}
+    ],
+    "correctAnswer": 1,
+    "explanation": "Q − P = 7x − 5x = 2x = 800 → x = 400. Total = (5+7+11) × 400 = 23 × 400 = ₹9,200.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "The speed of a bus and a car are in the ratio 3:4. If the car covers 240 km in 3 hours, what distance will the bus cover in 5 hours?",
+    "options": [
+      {"text": "250 km", "isCorrect": false},
+      {"text": "300 km", "isCorrect": true},
+      {"text": "320 km", "isCorrect": false},
+      {"text": "280 km", "isCorrect": false}
+    ],
+    "correctAnswer": 1,
+    "explanation": "Car's speed = 240/3 = 80 km/h. Bus speed : Car speed = 3:4 → Bus speed = 80 × 3/4 = 60 km/h. Distance in 5 hours = 60 × 5 = 300 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "In a class, the number of boys is more than girls by 12% of the total students. What is the ratio of boys to girls?",
+    "options": [
+      {"text": "14:11", "isCorrect": true},
+      {"text": "11:14", "isCorrect": false},
+      {"text": "28:22", "isCorrect": false},
+      {"text": "6:5", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let total = 100. Boys − Girls = 12. Boys + Girls = 100. So Boys = 56, Girls = 44. Ratio = 56:44 = 14:11.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "₹4,830 is divided among Arun, Bimal, and Chetan such that if ₹5, ₹10, and ₹15 are added to their respective shares, the resulting amounts are in the ratio 5:4:3. Find Arun's share.",
+    "options": [
+      {"text": "₹2,020", "isCorrect": true},
+      {"text": "₹2,025", "isCorrect": false},
+      {"text": "₹2,010", "isCorrect": false},
+      {"text": "₹2,000", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Total after additions = 4830 + 5 + 10 + 15 = 4860. Arun's new share = 4860 × 5/12 = 2025. Arun's actual share = 2025 − 5 = ₹2,020.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ratio_proportion",
+    "question": "If A's salary is 25% more than B's salary, find the ratio of B's salary to A's salary.",
+    "options": [
+      {"text": "4:5", "isCorrect": true},
+      {"text": "5:4", "isCorrect": false},
+      {"text": "3:4", "isCorrect": false},
+      {"text": "5:6", "isCorrect": false}
+    ],
+    "correctAnswer": 0,
+    "explanation": "Let B's salary = 100. A's salary = 125. B:A = 100:125 = 4:5.",
+    "difficulty": "easy",
+    "marks": 1
+  }
+]

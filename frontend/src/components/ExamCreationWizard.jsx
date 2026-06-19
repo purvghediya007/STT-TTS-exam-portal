@@ -52,6 +52,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     startsAt: initialExam?.startsAt ? new Date(initialExam.startsAt).toISOString().slice(0, 16) : '',
     endsAt: initialExam?.endsAt ? new Date(initialExam.endsAt).toISOString().slice(0, 16) : '',
     durationMin: initialExam?.durationMin || 60,
+    slotDurationMin: initialExam?.slotDurationMin || 60,
     timePerQuestionSec: initialExam?.timePerQuestionSec || null,
     pointsTotal: initialExam?.pointsTotal || (questions.length > 0 ? questions.reduce((sum, q) => sum + (q.marks || 1), 0) : 100),
     attemptsLeft: initialExam?.attemptsLeft || 1,
@@ -192,6 +193,13 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       if (diffMinutes < 1) {
         newErrors.durationMin = 'Time range must be at least 1 minute'
       }
+
+      // Validate slot duration
+      if (!timeSettings.slotDurationMin || timeSettings.slotDurationMin <= 0) {
+        newErrors.slotDurationMin = 'Student slot duration must be greater than 0'
+      } else if (timeSettings.slotDurationMin > diffMinutes) {
+        newErrors.slotDurationMin = `Slot duration cannot be greater than exam window (${Math.floor(diffMinutes)} minutes)`
+      }
     }
 
     // Validate total points (auto-calculated from questions)
@@ -217,6 +225,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         questions,
         startsAt: new Date(timeSettings.startsAt).toISOString(),
         endsAt: new Date(timeSettings.endsAt).toISOString(),
+        slotDurationMin: timeSettings.slotDurationMin,
         settingsSummary: {
           strictMode: timeSettings.strictMode,
           attemptsLeft: timeSettings.attemptsLeft,

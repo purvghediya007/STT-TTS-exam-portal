@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam } from '../services/api';
+import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam, saveExamProgress, getSavedAnswers } from '../services/api';
 import { uploadAudioToS3Complete } from '../services/s3AudioUpload';
 
 // --- No Mock Data - Fetch from Backend ---
@@ -93,7 +93,16 @@ const TakeExamView = () => {
   const [error, setError] = useState(null);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [examStatus, setExamStatus] = useState([]);
+
+  // Ref to keep track of the latest examStatus without triggering dependency loops
+  const examStatusRef = useRef([]);
+  useEffect(() => {
+    examStatusRef.current = examStatus;
+  }, [examStatus]);
+
   const [remainingTime, setRemainingTime] = useState(3600);
+  const [deadlineAt, setDeadlineAt] = useState(null);
+  const [startedAt, setStartedAt] = useState(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [mediaPermissionStatus, setMediaPermissionStatus] = useState('pending');
@@ -105,6 +114,7 @@ const TakeExamView = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMinimizeWarning, setShowMinimizeWarning] = useState(false);
   const [reRecordUsed, setReRecordUsed] = useState(0); // Track re-records used globally
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false); // Track audio upload status during navigation
 
   // REMOVED: [isSpeaking] state for Text-to-Speech
 
@@ -163,10 +173,8 @@ const TakeExamView = () => {
         }));
         setExamStatus(initialStatus);
 
-        // Set exam duration
-        if (summary?.durationMin) {
-          setRemainingTime(summary.durationMin * 60);
-        }
+        // Do NOT set remaining time from exam window duration here
+        // It will be set based on student's personal deadline when exam starts
         setLoading(false);
       } catch (err) {
         console.error('Error loading exam:', err);
@@ -239,26 +247,49 @@ const TakeExamView = () => {
   }, [loading, error, questions.length, isExamStarted, startExam]);
 
   // If the user reached this page directly without an attemptId, request one from the backend
+  // Fetch exam deadline on component mount and whenever examId changes
   useEffect(() => {
-    const ensureAttempt = async () => {
-      if (attemptId) return;
-      if (!examId) return;
+    if (!examId) return;
+
+    const fetchDeadline = async () => {
       try {
         const res = await apiStartExam(examId);
+        console.log('🕐 API Response from startExam:', res);
         const newAttempt = res?.attemptId || res?.attempt_id;
-        if (newAttempt) setAttemptId(newAttempt);
+        if (newAttempt && !attemptId) {
+          setAttemptId(newAttempt);
+        }
+
+        // Extract deadline from expiresAt field
+        const expiresAtStr = res?.expiresAt;
+
+        if (expiresAtStr) {
+          const deadline = new Date(expiresAtStr);
+          console.log('📅 Setting deadline to:', deadline.toISOString());
+          console.log('⏰ Current time:', new Date().toISOString());
+          setDeadlineAt(deadline);
+          setStartedAt(new Date());
+
+          // Calculate remaining seconds from deadline
+          const secondsRemaining = Math.floor((deadline - new Date()) / 1000);
+          console.log('⏱️ Initial remaining seconds:', secondsRemaining, `(${Math.floor(secondsRemaining / 60)} minutes)`);
+          setRemainingTime(Math.max(0, secondsRemaining));
+        } else {
+          console.warn('⚠️ No expiresAt field in API response:', res);
+        }
       } catch (err) {
-        console.warn('Could not create attempt automatically:', err);
-        // do not block the user; showStartPrompt will guide them to start via Join
+        console.warn('Could not fetch exam deadline:', err);
       }
     };
-    ensureAttempt();
+
+    fetchDeadline();
   }, [examId, attemptId]);
 
   // Derived state - use questions from state instead of mockExamData
   const currentQuestion = questions[currentQIndex];
   const currentQState = examStatus[currentQIndex];
   const totalQuestions = questions.length;
+  const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
   const progressPercent = examStatus.length > 0
     ? Math.round((examStatus.filter(q => q.status !== 'Not Answered').length / totalQuestions) * 100)
     : 0;
@@ -269,22 +300,178 @@ const TakeExamView = () => {
   const activeAudioIndex = isAudioQuestion && currentQState ? currentQState.answer.activeIndex : null;
   const activeAudioURL = activeAudioIndex !== null && currentRecordings[activeAudioIndex] ? currentRecordings[activeAudioIndex] : null;
 
+  // Helper function to check if URL is already uploaded to S3
+  const isS3Url = (url) => {
+    if (!url) return false;
+    return url.startsWith('https://') && (url.includes('.s3') || url.includes('amazonaws.com'));
+  };
+
+  // Helper to save answers progress to backend
+  const saveAnswerProgress = async (updatedStatus = examStatusRef.current) => {
+    const usedAttemptId = attemptId || location.state?.attemptId;
+    if (!examId || !usedAttemptId || questions.length === 0 || updatedStatus.length === 0) return;
+
+    try {
+      const answers = [];
+      for (let index = 0; index < questions.length; index++) {
+        const question = questions[index];
+        const status = updatedStatus[index];
+
+        if (!question || !status || status.answer === null || status.answer === undefined) continue;
+
+        if (question.type === 'mcq' && status.answer !== null) {
+          answers.push({
+            questionId: question._id,
+            selectedOptionIndex: status.answer
+          });
+        } else if (question.type !== 'mcq' && question.type !== 'viva' && question.type !== 'interview' && status.answer?.text) {
+          answers.push({
+            questionId: question._id,
+            answerText: status.answer.text
+          });
+        } else if ((question.type === 'viva' || question.type === 'interview') && status.answer?.recordings?.length > 0) {
+          const s3Urls = status.answer.recordings.filter(url => isS3Url(url));
+          if (s3Urls.length > 0) {
+            answers.push({
+              questionId: question._id,
+              recordingUrls: s3Urls
+            });
+          }
+        }
+      }
+
+      if (answers.length > 0) {
+        console.log(`💾 Saving progress for ${answers.length} answers...`);
+        await saveExamProgress(examId, {
+          attemptId: usedAttemptId,
+          answers
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ Progress save failed:', err);
+    }
+  };
+
+  // Load saved progress if attemptId and questions are available
+  useEffect(() => {
+    const loadSavedProgress = async () => {
+      if (!attemptId || questions.length === 0 || examStatus.length === 0) return;
+      try {
+        console.log('📂 Fetching saved progress for attempt:', attemptId);
+        const progressRes = await getSavedAnswers(attemptId);
+        if (progressRes && Array.isArray(progressRes.answers)) {
+          const savedAnswersMap = new Map();
+          progressRes.answers.forEach(ans => {
+            savedAnswersMap.set(ans.questionId, ans);
+          });
+
+          console.log(`✅ Loaded ${progressRes.answers.length} saved answers from DB.`);
+
+          setExamStatus(prevStatus => {
+            return prevStatus.map((qState, index) => {
+              const question = questions[index];
+              const savedAns = savedAnswersMap.get(question._id);
+
+              if (savedAns) {
+                let statusVal = 'Not Answered';
+                let answerVal = null;
+
+                if (question.type === 'mcq') {
+                  if (savedAns.selectedOptionIndex !== undefined && savedAns.selectedOptionIndex !== null) {
+                    answerVal = savedAns.selectedOptionIndex;
+                    statusVal = 'Answered';
+                  }
+                } else if (question.type === 'viva' || question.type === 'interview') {
+                  if (savedAns.recordingUrls && savedAns.recordingUrls.length > 0) {
+                    answerVal = {
+                      recordings: savedAns.recordingUrls,
+                      activeIndex: savedAns.recordingUrls.length - 1
+                    };
+                    statusVal = 'Answered';
+                  } else {
+                    answerVal = { recordings: [], activeIndex: null };
+                  }
+                } else {
+                  if (savedAns.answerText) {
+                    answerVal = { text: savedAns.answerText };
+                    statusVal = 'Answered';
+                  } else {
+                    answerVal = { text: '' };
+                  }
+                }
+
+                return {
+                  ...qState,
+                  status: statusVal,
+                  answer: answerVal
+                };
+              }
+              return qState;
+            });
+          });
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not load saved progress:', err);
+      }
+    };
+
+    loadSavedProgress();
+  }, [attemptId, questions.length, examStatus.length]);
+
+  // Auto-save descriptive answers every 15 seconds
+  useEffect(() => {
+    if (!isExamStarted || questions.length === 0) return;
+
+    const autoSaveInterval = setInterval(() => {
+      console.log('⏰ 15s Auto-save interval triggered');
+      saveAnswerProgress(examStatusRef.current);
+    }, 15000);
+
+    return () => clearInterval(autoSaveInterval);
+  }, [isExamStarted, questions.length]);
+
 
   // --- Timer & Security Effects ---
   useEffect(() => {
+    // If no deadline is set yet, don't start the timer
+    if (!deadlineAt) {
+      console.log('⏰ Timer waiting for deadline...');
+      return;
+    }
+
     if (remainingTime <= 0) {
       showAlertOnce("Time is up! The exam will now be submitted automatically.");
       // REMOVED: SpeechSynthesis cleanup
       return;
     }
+
+    console.log('⏰ Timer started with deadline:', deadlineAt.toISOString());
     const timer = setInterval(() => {
-      setRemainingTime(prevTime => prevTime - 1);
+      if (!deadlineAt) return;
+      const now = new Date();
+      const secondsRemaining = Math.floor((deadlineAt - now) / 1000);
+      const timeToDisplay = Math.max(0, secondsRemaining);
+
+      if (timeToDisplay <= 0) {
+        clearInterval(timer);
+        setRemainingTime(0);
+        // Auto-submit the exam when time runs out
+        if (!hasAutoSubmittedRef.current) {
+          hasAutoSubmittedRef.current = true;
+          console.log('⏰ Time is up! Auto-submitting exam...');
+          triggerAutoSubmitFlow();
+        }
+        return;
+      }
+
+      setRemainingTime(timeToDisplay);
     }, 1000);
+
     return () => {
       clearInterval(timer);
       // REMOVED: SpeechSynthesis cleanup
     };
-  }, [remainingTime]);
+  }, [deadlineAt]);
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
@@ -524,6 +711,7 @@ const TakeExamView = () => {
           const src = currentQuestion.ttsAudioUrl.startsWith('http') ? currentQuestion.ttsAudioUrl : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
           if (audioRef.current) {
             audioRef.current.src = src;
+            audioRef.current.onended = () => setIsPlaying(false);
             await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
           }
         } else if (window.speechSynthesis) {
@@ -564,9 +752,11 @@ const TakeExamView = () => {
       newStatus = 'Answered';
     }
 
-    setExamStatus(prevStatus => prevStatus.map((q, index) =>
+    const nextStatus = examStatus.map((q, index) =>
       index === currentQIndex ? { ...q, answer: newAnswer, status: newStatus } : q
-    ));
+    );
+    setExamStatus(nextStatus);
+    saveAnswerProgress(nextStatus);
   };
 
   const stopMediaStream = useCallback(() => {
@@ -578,7 +768,114 @@ const TakeExamView = () => {
     setIsStreamActive(false);
   }, []);
 
-  const handleNavigation = (index) => {
+  // --- Upload Audio Before Navigation ---
+  const uploadCurrentQuestionAudio = async (questionIndex) => {
+    const qState = examStatus[questionIndex];
+    if (!qState) return true; // Invalid index, proceed with navigation
+
+    const question = questions[questionIndex];
+    const isAudio = question && (question.type === 'viva' || question.type === 'interview');
+
+    // If not an audio question or no recordings, proceed immediately
+    if (!isAudio || !qState.answer || qState.answer.recordings.length === 0) {
+      return true;
+    }
+
+    setIsUploadingAudio(true);
+    console.log(`\n📤 Uploading audio for question ${questionIndex + 1}...`);
+    let uploadSuccessful = true;
+    const uploadedUrls = [];
+
+    try {
+      // Upload all recordings for this question
+      for (let i = 0; i < qState.answer.recordings.length; i++) {
+        const recordingUrl = qState.answer.recordings[i];
+
+        // Skip if already an S3 URL (already uploaded)
+        if (isS3Url(recordingUrl)) {
+          uploadedUrls.push(recordingUrl);
+          continue;
+        }
+
+        try {
+          console.log(`   Recording ${i + 1}/${qState.answer.recordings.length}...`);
+
+          // Convert blob URL to file
+          const response = await fetch(recordingUrl);
+          const blob = await response.blob();
+          console.log(`   ✅ Blob fetched. Size: ${blob.size} bytes`);
+
+          // Upload directly to S3 using the complete workflow
+          const uploadResult = await uploadAudioToS3Complete(
+            examId,
+            attemptId,
+            question._id,
+            blob
+          );
+
+          console.log(`   ✅ Recording ${i + 1} uploaded successfully`);
+          uploadedUrls.push(uploadResult.url);
+        } catch (error) {
+          console.error(`   ❌ Error uploading recording ${i + 1}:`, error.message);
+          uploadSuccessful = false;
+          // Keep the blob URL if upload fails, will retry on next navigation or at submission
+          uploadedUrls.push(recordingUrl);
+        }
+      }
+
+      // Update examStatus with uploaded S3 URLs
+      if (uploadedUrls.length > 0) {
+        const nextStatus = examStatus.map((q, idx) => {
+          if (idx === questionIndex) {
+            return {
+              ...q,
+              answer: {
+                ...q.answer,
+                recordings: uploadedUrls
+              }
+            };
+          }
+          return q;
+        });
+        setExamStatus(nextStatus);
+        console.log(`✅ Audio upload complete for question ${questionIndex + 1}`);
+        // Save progress with the newly uploaded S3 URLs
+        await saveAnswerProgress(nextStatus);
+      }
+    } catch (error) {
+      console.error(`❌ Unexpected error during audio upload:`, error);
+      uploadSuccessful = false;
+    } finally {
+      setIsUploadingAudio(false);
+    }
+
+    // Return true to allow navigation even if upload fails (with warning)
+    if (!uploadSuccessful) {
+      console.warn(`⚠️ Some audio files failed to upload. They will be retried at submission.`);
+    }
+    return true; // Always allow navigation
+  };
+
+  const handleNavigation = async (index) => {
+    // Prevent navigation while uploading
+    if (isUploadingAudio) {
+      console.log('⏳ Upload in progress, please wait...');
+      return;
+    }
+
+    // Upload audio from current question before navigating
+    if (currentQIndex !== index) {
+      const canProceed = await uploadCurrentQuestionAudio(currentQIndex);
+      if (!canProceed) return; // Should not happen but safety check
+
+      // Save progress for text/MCQ/non-audio questions since they don't trigger upload
+      const question = questions[currentQIndex];
+      const isAudio = question && (question.type === 'viva' || question.type === 'interview');
+      if (!isAudio || !examStatus[currentQIndex]?.answer || examStatus[currentQIndex]?.answer?.recordings?.length === 0) {
+        saveAnswerProgress(examStatus);
+      }
+    }
+
     stopMediaStream();
     // REMOVED: SpeechSynthesis cleanup
 
@@ -812,6 +1109,12 @@ const TakeExamView = () => {
             const recordingUrl = audioAnswer.recordings[i];
             console.log(`   🎙️ Recording ${i + 1}: ${recordingUrl.substring(0, 50)}...`);
 
+            // Skip if already an S3 URL (already uploaded during navigation)
+            if (isS3Url(recordingUrl)) {
+              audioUploadCount++;
+              continue;
+            }
+
             try {
               // Convert blob URL to file
               const response = await fetch(recordingUrl);
@@ -990,38 +1293,111 @@ const TakeExamView = () => {
 
           {currentRecordings.length > 0 && (
             <div className="mt-6 border-t pt-4">
-              <p className="font-semibold text-gray-700 mb-3">Review and Select Your Final Answer:</p>
-              <div className="flex flex-wrap gap-3">
-                {currentRecordings.map((_, index) => {
-                  const allowedReRecords = examSummary?.allowedReRecords || 0;
-                  const canReRecord = allowedReRecords === 0 || reRecordUsed < allowedReRecords;
+              {/* Separate view for uploaded S3 URLs vs blob URLs */}
+              {(() => {
+                const uploadedUrls = currentRecordings.filter(url => isS3Url(url));
+                const pendingUrls = currentRecordings.filter(url => !isS3Url(url));
 
-                  return (
-                    <div key={index} className="relative">
-                      <button
-                        onClick={() => setActiveAudio(index)}
-                        className={`py-2 px-4 rounded-lg font-medium transition duration-200 border-2 ${activeAudioIndex === index
-                          ? 'bg-blue-600 text-white border-blue-700 shadow-md'
-                          : 'bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300'
-                          }`}
-                      >
-                        Recording {index + 1} {activeAudioIndex === index && '(Active)'}
-                      </button>
-                      <button
-                        onClick={() => removeSpecificRecording(index)}
-                        disabled={!canReRecord}
-                        title={canReRecord ? "Remove Clip" : "Re-record limit reached"}
-                        className={`absolute top-[-8px] right-[-8px] ${canReRecord
-                          ? 'bg-red-500 hover:bg-red-700'
-                          : 'bg-gray-400 cursor-not-allowed'
-                          } text-white w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center transition`}
-                      >
-                        ×
-                      </button>
+                return (
+                  <>
+                    {/* Already Uploaded Audio Section */}
+                    {uploadedUrls.length > 0 && (
+                      <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                        <div className="flex items-center mb-3">
+                          <span className="text-2xl mr-2">✅</span>
+                          <p className="font-bold text-green-700">Uploaded Audio ({uploadedUrls.length})</p>
+                        </div>
+                        <div className="space-y-2">
+                          {uploadedUrls.map((url, idx) => (
+                            <div key={`uploaded-${idx}`} className="flex items-center justify-between bg-white p-3 rounded-lg border border-green-100">
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="text-sm font-semibold text-gray-600 min-w-24">Upload #{idx + 1}</span>
+                                <audio
+                                  controls
+                                  src={url}
+                                  className="flex-1 h-8"
+                                  controlsList="nodownload"
+                                  crossOrigin="anonymous"
+                                  onError={() => console.error('Audio load error for:', url)}
+                                  onLoadedMetadata={() => console.log('Audio loaded:', url)}
+                                />
+                              </div>
+                              <span className="ml-2 text-xs text-green-600 font-semibold whitespace-nowrap">Uploaded</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Audio (Not yet uploaded) Section */}
+                    {pendingUrls.length > 0 && (
+                      <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                        <div className="flex items-center mb-3">
+                          <span className="text-2xl mr-2">⏳</span>
+                          <p className="font-bold text-yellow-700">Recording (Not Yet Uploaded) ({pendingUrls.length})</p>
+                        </div>
+                        <p className="text-sm text-yellow-600 mb-3">These will be uploaded when you move to the next question or submit the exam.</p>
+                        <div className="space-y-2">
+                          {pendingUrls.map((url, idx) => (
+                            <div key={`pending-${idx}`} className="flex items-center justify-between bg-white p-3 rounded-lg border border-yellow-100">
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="text-sm font-semibold text-gray-600 min-w-24">Record #{uploadedUrls.length + idx + 1}</span>
+                                <audio
+                                  controls
+                                  src={url}
+                                  className="flex-1 h-8"
+                                  controlsList="nodownload"
+                                  crossOrigin="anonymous"
+                                  onError={() => console.error('Audio load error for:', url)}
+                                  onLoadedMetadata={() => console.log('Audio loaded:', url)}
+                                />
+                              </div>
+                              <span className="ml-2 text-xs text-yellow-600 font-semibold whitespace-nowrap animate-pulse">Pending...</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Review Section for Recording Management */}
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="font-semibold text-gray-700 mb-3 text-sm">Manage Recordings:</p>
+                      <div className="flex flex-wrap gap-3">
+                        {currentRecordings.map((url, index) => {
+                          const allowedReRecords = examSummary?.allowedReRecords || 0;
+                          const canReRecord = allowedReRecords === 0 || reRecordUsed < allowedReRecords;
+                          const isUploaded = isS3Url(url);
+
+                          return (
+                            <div key={index} className="relative">
+                              <button
+                                onClick={() => setActiveAudio(index)}
+                                className={`py-2 px-3 rounded-lg font-medium transition duration-200 border-2 text-sm ${activeAudioIndex === index
+                                  ? 'bg-blue-600 text-white border-blue-700 shadow-md'
+                                  : 'bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300'
+                                  }`}
+                              >
+                                {isUploaded ? '✅' : '⏳'} #{index + 1} {activeAudioIndex === index && '(Active)'}
+                              </button>
+                              <button
+                                onClick={() => removeSpecificRecording(index)}
+                                disabled={!canReRecord}
+                                title={canReRecord ? 'Remove Clip' : 'Re-record limit reached'}
+                                className={`absolute top-[-8px] right-[-8px] ${canReRecord
+                                  ? 'bg-red-500 hover:bg-red-700'
+                                  : 'bg-gray-400 cursor-not-allowed'
+                                  } text-white w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center transition`}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -1253,6 +1629,12 @@ const TakeExamView = () => {
                 {formatTime(remainingTime)}
               </p>
             </div>
+            <div className="text-center">
+              <p className="text-xs lg:text-sm font-medium text-gray-500">Total Marks</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-800">
+                {totalMarks}
+              </p>
+            </div>
             <div className="hidden sm:block">
               <p className="text-xs lg:text-sm font-medium text-gray-500">Progress</p>
               <div className="w-24 lg:w-32 bg-gray-200 rounded-full h-2">
@@ -1320,48 +1702,72 @@ const TakeExamView = () => {
                   <div className="text-xl font-semibold text-gray-800 mb-6 leading-relaxed flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <span className="flex-1">{currentQuestion?.text}</span>
 
-                    <div className="flex-shrink-0">
-                      <button
-                        onClick={async () => {
-                          try {
-                            // If a generated TTS audio URL exists, play it via the shared audio element
-                            if (currentQuestion?.ttsAudioUrl) {
-                              const src = currentQuestion.ttsAudioUrl.startsWith('http')
-                                ? currentQuestion.ttsAudioUrl
-                                : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
-                              if (audioRef.current) {
-                                audioRef.current.src = src;
-                                await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
-                              }
+                    <div className="flex-shrink-0 flex gap-2">
+                      {isPlaying ? (
+                        <button
+                          onClick={() => {
+                            if (audioRef.current) {
+                              try {
+                                audioRef.current.pause();
+                                audioRef.current.currentTime = 0;
+                              } catch (e) { }
                             }
-                            // Otherwise fallback to Web Speech API (browser TTS)
-                            else if (window.speechSynthesis) {
+                            if (window.speechSynthesis) {
                               window.speechSynthesis.cancel();
-                              const utter = new SpeechSynthesisUtterance(currentQuestion?.text || '');
-                              utter.rate = 1;
-                              utter.pitch = 1;
-                              utter.onend = () => setIsPlaying(false);
-                              window.speechSynthesis.speak(utter);
-                              setIsPlaying(true);
                             }
-                          } catch (err) {
-                            console.warn('TTS play failed', err);
-                          }
-                        }}
-                        disabled={!(currentQuestion?.ttsAudioUrl || (typeof window !== 'undefined' && window.speechSynthesis))}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-full shadow-md shadow-blue-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="w-5 h-5"
+                            setIsPlaying(false);
+                          }}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-sm font-bold rounded-full shadow-md shadow-red-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 1 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-                          <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 4.5 4.5 0 0 1 0 6.364.75.75 0 0 1-1.06-1.06 3 3 0 0 0 0-4.242.75.75 0 0 1 0-1.062Z" />
-                        </svg>
-                        Listen Question
-                      </button>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" />
+                          </svg>
+                          Stop Listening
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            try {
+                              // If a generated TTS audio URL exists, play it via the shared audio element
+                              if (currentQuestion?.ttsAudioUrl) {
+                                const src = currentQuestion.ttsAudioUrl.startsWith('http')
+                                  ? currentQuestion.ttsAudioUrl
+                                  : `http://localhost:3001${currentQuestion.ttsAudioUrl}`;
+                                if (audioRef.current) {
+                                  audioRef.current.src = src;
+                                  audioRef.current.onended = () => setIsPlaying(false);
+                                  await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
+                                }
+                              }
+                              // Otherwise fallback to Web Speech API (browser TTS)
+                              else if (window.speechSynthesis) {
+                                window.speechSynthesis.cancel();
+                                const utter = new SpeechSynthesisUtterance(currentQuestion?.text || '');
+                                utter.rate = 1;
+                                utter.pitch = 1;
+                                utter.onend = () => setIsPlaying(false);
+                                window.speechSynthesis.speak(utter);
+                                setIsPlaying(true);
+                              }
+                            } catch (err) {
+                              console.warn('TTS play failed', err);
+                            }
+                          }}
+                          disabled={!(currentQuestion?.ttsAudioUrl || (typeof window !== 'undefined' && window.speechSynthesis))}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-full shadow-md shadow-blue-200 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 1 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
+                            <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 4.5 4.5 0 0 1 0 6.364.75.75 0 0 1-1.06-1.06 3 3 0 0 0 0-4.242.75.75 0 0 1 0-1.062Z" />
+                          </svg>
+                          Listen Question
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1376,19 +1782,27 @@ const TakeExamView = () => {
                 <div className="mt-10 pt-6 border-t flex justify-between">
                   <button
                     onClick={() => handleNavigation(currentQIndex - 1)}
-                    disabled={currentQIndex === 0}
-                    className="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 disabled:opacity-50 transition"
+                    disabled={currentQIndex === 0 || isUploadingAudio}
+                    className="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
                   >
-                    &larr; Previous
+                    {isUploadingAudio && currentQIndex > 0 ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>&larr; Previous</>
+                    )}
                   </button>
 
                   <div className="space-x-4">
                     <button
                       onClick={() => handleStatusChange(currentQState.status === 'Marked for Review' ? 'Answered' : 'Marked for Review')}
+                      disabled={isUploadingAudio}
                       className={`px-6 py-2 font-semibold rounded-lg shadow-md transition ${currentQState.status === 'Marked for Review'
                         ? 'bg-yellow-600 text-white hover:bg-yellow-700'
                         : 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300'
-                        }`}
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       {currentQState.status === 'Marked for Review' ? 'Unmark for Review' : '🚩 Mark for Review'}
                     </button>
@@ -1396,12 +1810,20 @@ const TakeExamView = () => {
 
                   <button
                     onClick={() => currentQIndex === totalQuestions - 1 ? setShowSubmitModal(true) : handleNavigation(currentQIndex + 1)}
-                    className={`px-6 py-2 font-semibold rounded-lg shadow-md transition ${currentQIndex === totalQuestions - 1
+                    disabled={isUploadingAudio}
+                    className={`px-6 py-2 font-semibold rounded-lg shadow-md transition flex items-center gap-2 ${currentQIndex === totalQuestions - 1
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {currentQIndex === totalQuestions - 1 ? 'Submit Exam' : 'Next Question \u2192'}
+                    {isUploadingAudio ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      currentQIndex === totalQuestions - 1 ? 'Submit Exam' : 'Next Question →'
+                    )}
                   </button>
                 </div>
               </>

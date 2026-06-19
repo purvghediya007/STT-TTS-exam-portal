@@ -1,0 +1,677 @@
+[
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the HCF of 36 and 84?",
+    "options": [
+      { "text": "6", "isCorrect": false },
+      { "text": "12", "isCorrect": true },
+      { "text": "18", "isCorrect": false },
+      { "text": "24", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "36 = 2² × 3² and 84 = 2² × 3 × 7. HCF = 2² × 3 = 4 × 3 = 12.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the LCM of 12, 15, and 20?",
+    "options": [
+      { "text": "30", "isCorrect": false },
+      { "text": "60", "isCorrect": true },
+      { "text": "120", "isCorrect": false },
+      { "text": "180", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "12 = 2² × 3, 15 = 3 × 5, 20 = 2² × 5. LCM = 2² × 3 × 5 = 60.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the greatest number that divides both 43 and 91, leaving a remainder of 1 in each case.",
+    "options": [
+      { "text": "4", "isCorrect": false },
+      { "text": "6", "isCorrect": true },
+      { "text": "7", "isCorrect": false },
+      { "text": "14", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "The number divides (43 − 1) = 42 and (91 − 1) = 90. HCF(42, 90): 42 = 2 × 3 × 7, 90 = 2 × 3² × 5. HCF = 2 × 3 = 6.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the unit digit of 7⁷⁵?",
+    "options": [
+      { "text": "1", "isCorrect": false },
+      { "text": "7", "isCorrect": false },
+      { "text": "3", "isCorrect": true },
+      { "text": "9", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Unit digits of powers of 7 cycle: 7¹=7, 7²=9, 7³=3, 7⁴=1 (cycle length 4). 75 mod 4 = 3. So unit digit = unit digit of 7³ = 3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "How many trailing zeros are there in 100! (100 factorial)?",
+    "options": [
+      { "text": "20", "isCorrect": false },
+      { "text": "22", "isCorrect": false },
+      { "text": "24", "isCorrect": true },
+      { "text": "25", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Count factors of 5 in 100!: ⌊100/5⌋ + ⌊100/25⌋ + ⌊100/125⌋ = 20 + 4 + 0 = 24 trailing zeros.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "If a number is divisible by both 3 and 5, it must also be divisible by:",
+    "options": [
+      { "text": "8", "isCorrect": false },
+      { "text": "10", "isCorrect": false },
+      { "text": "15", "isCorrect": true },
+      { "text": "30", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Since 3 and 5 are coprime (HCF = 1), a number divisible by both must be divisible by their LCM = 3 × 5 = 15.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the remainder when 2³¹ is divided by 5?",
+    "options": [
+      { "text": "1", "isCorrect": false },
+      { "text": "2", "isCorrect": false },
+      { "text": "3", "isCorrect": true },
+      { "text": "4", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Remainders of powers of 2 mod 5 cycle: 2¹=2, 2²=4, 2³=3, 2⁴=1 (cycle length 4). 31 mod 4 = 3. So remainder = 3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The product of two numbers is 2028 and their HCF is 13. How many such pairs of numbers exist?",
+    "options": [
+      { "text": "1", "isCorrect": false },
+      { "text": "2", "isCorrect": true },
+      { "text": "3", "isCorrect": false },
+      { "text": "4", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let numbers be 13m and 13n where gcd(m, n) = 1. Then 13m × 13n = 2028 → 169mn = 2028 → mn = 12. Coprime factor pairs of 12: (1,12) and (3,4). So 2 pairs exist: (13,156) and (39,52).",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the largest 4-digit number that is exactly divisible by 88?",
+    "options": [
+      { "text": "9944", "isCorrect": true },
+      { "text": "9900", "isCorrect": false },
+      { "text": "9956", "isCorrect": false },
+      { "text": "9988", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Largest 4-digit number = 9999. Dividing: 9999 ÷ 88 = 113.625. So 113 × 88 = 9944.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the sum of the first 50 natural numbers?",
+    "options": [
+      { "text": "1225", "isCorrect": false },
+      { "text": "1275", "isCorrect": true },
+      { "text": "1325", "isCorrect": false },
+      { "text": "1250", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Sum = n(n+1)/2 = 50 × 51 / 2 = 1275.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the smallest number which when divided by 12, 15, and 20 leaves a remainder of 5 in each case.",
+    "options": [
+      { "text": "55", "isCorrect": false },
+      { "text": "60", "isCorrect": false },
+      { "text": "65", "isCorrect": true },
+      { "text": "75", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "LCM(12, 15, 20) = 60. The smallest number leaving remainder 5 = 60 + 5 = 65.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "A two-digit number has its digits differing by 4 and the sum of its digits is 10. If the number obtained by reversing the digits is subtracted from the original number, the result is 36. What is the original number?",
+    "options": [
+      { "text": "37", "isCorrect": false },
+      { "text": "62", "isCorrect": false },
+      { "text": "73", "isCorrect": true },
+      { "text": "84", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let tens digit = a, units digit = b. a + b = 10 and a − b = 4 (since original − reversed = 9(a−b) = 36 → a − b = 4). Solving: a = 7, b = 3. Number = 73. Verify: 73 − 37 = 36 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "How many numbers between 1 and 100 (inclusive) are divisible by 7?",
+    "options": [
+      { "text": "12", "isCorrect": false },
+      { "text": "13", "isCorrect": false },
+      { "text": "14", "isCorrect": true },
+      { "text": "15", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "The numbers are 7, 14, 21, ..., 98. Count = ⌊100/7⌋ = 14.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Two numbers are in the ratio 2:3 and their LCM is 48. What is the sum of the two numbers?",
+    "options": [
+      { "text": "32", "isCorrect": false },
+      { "text": "36", "isCorrect": false },
+      { "text": "40", "isCorrect": true },
+      { "text": "48", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let numbers be 2k and 3k. Since gcd(2,3) = 1, LCM(2k, 3k) = 6k. 6k = 48 → k = 8. Numbers: 16 and 24. Sum = 16 + 24 = 40.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the unit digit of 3⁶⁵ × 6⁵⁹ × 7⁷¹?",
+    "options": [
+      { "text": "2", "isCorrect": false },
+      { "text": "6", "isCorrect": false },
+      { "text": "8", "isCorrect": false },
+      { "text": "4", "isCorrect": true }
+    ],
+    "correctAnswer": 3,
+    "explanation": "Unit digit of 3⁶⁵: cycle (3,9,7,1), 65 mod 4 = 1 → unit digit 3. Unit digit of 6⁵⁹: always 6. Unit digit of 7⁷¹: cycle (7,9,3,1), 71 mod 4 = 3 → unit digit 3. Product: 3 × 6 × 3 = 54. Unit digit = 4.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The sum of two numbers is 25 and their product is 144. What is the larger number?",
+    "options": [
+      { "text": "12", "isCorrect": false },
+      { "text": "14", "isCorrect": false },
+      { "text": "16", "isCorrect": true },
+      { "text": "18", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "x + y = 25, xy = 144. Using quadratic: x² − 25x + 144 = 0. Discriminant = 625 − 576 = 49. x = (25 ± 7)/2 → x = 16 or 9. The larger number is 16.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "A number when divided by 899 gives a remainder of 63. What will be the remainder when the same number is divided by 29?",
+    "options": [
+      { "text": "3", "isCorrect": false },
+      { "text": "4", "isCorrect": false },
+      { "text": "5", "isCorrect": true },
+      { "text": "7", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "N = 899q + 63. Note 899 = 29 × 31. So N = 29 × 31q + 63. Now 63 = 29 × 2 + 5. So N = 29(31q + 2) + 5. Remainder when divided by 29 = 5.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the remainder when 17²³ is divided by 16?",
+    "options": [
+      { "text": "1", "isCorrect": true },
+      { "text": "3", "isCorrect": false },
+      { "text": "5", "isCorrect": false },
+      { "text": "15", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "17 ≡ 1 (mod 16). Therefore 17²³ ≡ 1²³ ≡ 1 (mod 16). Remainder = 1.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the HCF of 2³ × 3² × 5 and 2² × 3⁴ × 5².",
+    "options": [
+      { "text": "90", "isCorrect": false },
+      { "text": "180", "isCorrect": true },
+      { "text": "360", "isCorrect": false },
+      { "text": "720", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "HCF = 2^min(3,2) × 3^min(2,4) × 5^min(1,2) = 2² × 3² × 5¹ = 4 × 9 × 5 = 180.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "How many prime numbers are there between 40 and 60?",
+    "options": [
+      { "text": "3", "isCorrect": false },
+      { "text": "4", "isCorrect": false },
+      { "text": "5", "isCorrect": true },
+      { "text": "6", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Primes between 40 and 60: 41, 43, 47, 53, 59. Total = 5.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The sum of three consecutive even numbers is 54. What is the largest of the three?",
+    "options": [
+      { "text": "16", "isCorrect": false },
+      { "text": "18", "isCorrect": false },
+      { "text": "20", "isCorrect": true },
+      { "text": "22", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let the numbers be x, x+2, x+4. Sum: 3x + 6 = 54 → 3x = 48 → x = 16. Numbers: 16, 18, 20. Largest = 20.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "A perfect square ends in the digit 6. The number whose square it is must end in:",
+    "options": [
+      { "text": "4 or 6", "isCorrect": true },
+      { "text": "2 or 8", "isCorrect": false },
+      { "text": "3 or 7", "isCorrect": false },
+      { "text": "1 or 9", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Check unit digits of squares: 4² = 16 (ends in 6), 6² = 36 (ends in 6). No other single digit squared gives a unit digit of 6. So the number ends in 4 or 6.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the greatest number that divides 263, 935, and 1383, leaving the same remainder in each case.",
+    "options": [
+      { "text": "112", "isCorrect": false },
+      { "text": "168", "isCorrect": false },
+      { "text": "224", "isCorrect": true },
+      { "text": "336", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Take pairwise differences: 935 − 263 = 672, 1383 − 935 = 448, 1383 − 263 = 1120. HCF(672, 448, 1120): 672 = 2⁵ × 3 × 7, 448 = 2⁶ × 7, 1120 = 2⁵ × 5 × 7. HCF = 2⁵ × 7 = 32 × 7 = 224.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the value of 1³ + 2³ + 3³ + … + 10³?",
+    "options": [
+      { "text": "2025", "isCorrect": false },
+      { "text": "2500", "isCorrect": false },
+      { "text": "3025", "isCorrect": true },
+      { "text": "3500", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Sum of cubes of first n natural numbers = [n(n+1)/2]². For n = 10: [10 × 11 / 2]² = 55² = 3025.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the smallest prime number greater than 50?",
+    "options": [
+      { "text": "51", "isCorrect": false },
+      { "text": "53", "isCorrect": true },
+      { "text": "57", "isCorrect": false },
+      { "text": "59", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "51 = 3 × 17 (not prime). 52 is even. 53 is not divisible by 2, 3, 5, or 7 (√53 ≈ 7.28). So 53 is prime.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Which of the following numbers is divisible by 11?",
+    "options": [
+      { "text": "123456", "isCorrect": false },
+      { "text": "1234321", "isCorrect": true },
+      { "text": "987654", "isCorrect": false },
+      { "text": "876543", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Divisibility by 11: alternating sum of digits = 0 or multiple of 11. For 1234321: (1+3+3+1) − (2+4+2) = 8 − 8 = 0. So 1234321 is divisible by 11. Verify others: 123456 → (1+3+5)−(2+4+6) = 9−12 = −3 ✗. 987654 → (9+7+5)−(8+6+4) = 21−18 = 3 ✗. 876543 → (8+6+4)−(7+5+3) = 18−15 = 3 ✗.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "How many trailing zeros are there in 250! (250 factorial)?",
+    "options": [
+      { "text": "50", "isCorrect": false },
+      { "text": "58", "isCorrect": false },
+      { "text": "62", "isCorrect": true },
+      { "text": "65", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Count factors of 5: ⌊250/5⌋ + ⌊250/25⌋ + ⌊250/125⌋ + ⌊250/625⌋ = 50 + 10 + 2 + 0 = 62.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The product of two numbers is 4107. If the HCF of these numbers is 37, what is the greater number?",
+    "options": [
+      { "text": "74", "isCorrect": false },
+      { "text": "111", "isCorrect": true },
+      { "text": "148", "isCorrect": false },
+      { "text": "185", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let numbers = 37m and 37n with gcd(m,n) = 1. Product: 37m × 37n = 1369mn = 4107 → mn = 3. Coprime pairs: (1, 3). Numbers: 37 × 1 = 37 and 37 × 3 = 111. Greater = 111.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the remainder when 1! + 2! + 3! + … + 100! is divided by 5?",
+    "options": [
+      { "text": "1", "isCorrect": false },
+      { "text": "2", "isCorrect": false },
+      { "text": "3", "isCorrect": true },
+      { "text": "4", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "5! = 120 and all factorials from 5! onwards are divisible by 5. So we only need: 1! + 2! + 3! + 4! = 1 + 2 + 6 + 24 = 33. 33 mod 5 = 3.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the unit digit of 2¹⁰⁰?",
+    "options": [
+      { "text": "2", "isCorrect": false },
+      { "text": "4", "isCorrect": false },
+      { "text": "6", "isCorrect": true },
+      { "text": "8", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Unit digits of powers of 2 cycle: 2, 4, 8, 6 (cycle length 4). 100 mod 4 = 0, which corresponds to the 4th position in the cycle. Unit digit = 6.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the largest 5-digit number that is exactly divisible by 12?",
+    "options": [
+      { "text": "99984", "isCorrect": false },
+      { "text": "99996", "isCorrect": true },
+      { "text": "99960", "isCorrect": false },
+      { "text": "99948", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Largest 5-digit number = 99999. 99999 ÷ 12 = 8333.25. So 8333 × 12 = 99996.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Two numbers are in the ratio 3:4 and their LCM is 84. What is the smaller number?",
+    "options": [
+      { "text": "18", "isCorrect": false },
+      { "text": "21", "isCorrect": true },
+      { "text": "24", "isCorrect": false },
+      { "text": "28", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let numbers be 3k and 4k. Since gcd(3,4) = 1, LCM(3k, 4k) = 12k. 12k = 84 → k = 7. Smaller number = 3 × 7 = 21.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the sum of all prime numbers between 1 and 20?",
+    "options": [
+      { "text": "58", "isCorrect": false },
+      { "text": "73", "isCorrect": false },
+      { "text": "77", "isCorrect": true },
+      { "text": "82", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Primes between 1 and 20: 2, 3, 5, 7, 11, 13, 17, 19. Sum = 2 + 3 + 5 + 7 + 11 + 13 + 17 + 19 = 77.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "If N = 2³ × 3 × 5² × 7, how many positive divisors does N have?",
+    "options": [
+      { "text": "32", "isCorrect": false },
+      { "text": "36", "isCorrect": false },
+      { "text": "48", "isCorrect": true },
+      { "text": "56", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Number of divisors = (3+1)(1+1)(2+1)(1+1) = 4 × 2 × 3 × 2 = 48.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the smallest number which when diminished by 7 is divisible by each of 12, 16, 18, 21, and 28?",
+    "options": [
+      { "text": "1008", "isCorrect": false },
+      { "text": "1015", "isCorrect": true },
+      { "text": "1022", "isCorrect": false },
+      { "text": "1003", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "N − 7 must be divisible by LCM(12,16,18,21,28). 12 = 2²×3, 16 = 2⁴, 18 = 2×3², 21 = 3×7, 28 = 2²×7. LCM = 2⁴ × 3² × 7 = 16 × 9 × 7 = 1008. N = 1008 + 7 = 1015.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The difference between the squares of two consecutive odd numbers is always divisible by:",
+    "options": [
+      { "text": "4", "isCorrect": false },
+      { "text": "6", "isCorrect": false },
+      { "text": "8", "isCorrect": true },
+      { "text": "12", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let the consecutive odd numbers be (2n−1) and (2n+1). Difference of squares = (2n+1)² − (2n−1)² = [(2n+1)+(2n−1)][(2n+1)−(2n−1)] = 4n × 2 = 8n. This is always divisible by 8.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the number nearest to 9217 which is exactly divisible by 88.",
+    "options": [
+      { "text": "9152", "isCorrect": false },
+      { "text": "9196", "isCorrect": false },
+      { "text": "9240", "isCorrect": true },
+      { "text": "9284", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "9217 ÷ 88 = 104.738... Lower multiple: 104 × 88 = 9152 (difference = 65). Upper multiple: 105 × 88 = 9240 (difference = 23). Nearest = 9240.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the value of √(0.0004)?",
+    "options": [
+      { "text": "0.002", "isCorrect": false },
+      { "text": "0.02", "isCorrect": true },
+      { "text": "0.2", "isCorrect": false },
+      { "text": "2", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "0.0004 = 4 × 10⁻⁴. √(4 × 10⁻⁴) = 2 × 10⁻² = 0.02.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "If x and y are two odd positive integers with x > y, which of the following is always odd?",
+    "options": [
+      { "text": "x + y", "isCorrect": false },
+      { "text": "x − y", "isCorrect": false },
+      { "text": "x × y", "isCorrect": true },
+      { "text": "x² − y²", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "odd + odd = even, odd − odd = even, odd × odd = odd, x² − y² = (x+y)(x−y) = even × even = even. Only x × y is always odd.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "The HCF of two numbers is 23 and their LCM is 1449. If one number is 161, find the other.",
+    "options": [
+      { "text": "189", "isCorrect": false },
+      { "text": "207", "isCorrect": true },
+      { "text": "223", "isCorrect": false },
+      { "text": "253", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "HCF × LCM = Product of numbers. 23 × 1449 = 33327. Other number = 33327 / 161 = 207. Verify: 161 = 7 × 23, 207 = 9 × 23. HCF = 23 ✓. LCM = 23 × 7 × 9 = 1449 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the next number in the series: 2, 6, 18, 54, ?",
+    "options": [
+      { "text": "108", "isCorrect": false },
+      { "text": "128", "isCorrect": false },
+      { "text": "162", "isCorrect": true },
+      { "text": "180", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "This is a geometric progression with common ratio = 3. Next term = 54 × 3 = 162.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the value of √1296?",
+    "options": [
+      { "text": "32", "isCorrect": false },
+      { "text": "34", "isCorrect": false },
+      { "text": "36", "isCorrect": true },
+      { "text": "38", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "36 × 36 = 1296. So √1296 = 36.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "Find the smallest number which when divided by 15 gives remainder 2, by 20 gives remainder 7, by 35 gives remainder 22, and by 40 gives remainder 27.",
+    "options": [
+      { "text": "747", "isCorrect": false },
+      { "text": "827", "isCorrect": true },
+      { "text": "907", "isCorrect": false },
+      { "text": "667", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "In each case, divisor − remainder = 13 (15−2=13, 20−7=13, 35−22=13, 40−27=13). So N + 13 is divisible by 15, 20, 35, and 40. LCM(15,20,35,40): 15=3×5, 20=2²×5, 35=5×7, 40=2³×5. LCM = 2³ × 3 × 5 × 7 = 840. N + 13 = 840 → N = 827.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "If the sum of first n natural numbers is 325, find n.",
+    "options": [
+      { "text": "20", "isCorrect": false },
+      { "text": "25", "isCorrect": true },
+      { "text": "30", "isCorrect": false },
+      { "text": "35", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "n(n+1)/2 = 325 → n² + n − 650 = 0 → (n − 25)(n + 26) = 0. Since n > 0, n = 25. Verify: 25 × 26/2 = 325 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "numbers",
+    "question": "What is the cube root of 2744?",
+    "options": [
+      { "text": "12", "isCorrect": false },
+      { "text": "14", "isCorrect": true },
+      { "text": "16", "isCorrect": false },
+      { "text": "18", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "14³ = 14 × 14 × 14 = 196 × 14 = 2744. So ∛2744 = 14.",
+    "difficulty": "easy",
+    "marks": 1
+  }
+]

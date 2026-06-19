@@ -5,8 +5,13 @@ const Question = require("../models/Question");
 const Student = require("../models/Student");
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/requireRole");
+// const StudentExamAttempt = require("../models/StudentExamAttempt");
 const StudentExamAttempt = require("../models/StudentExamAttempt");
+const StudentAnswer = require("../models/StudentAnswer");
 const aiQueue = require("../queues/aiQueue");
+// const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
+const answersTranscriptionQueue = require("../queues/answersTranscriptionQueue");
+const answersEvaluationQueue = require("../queues/answersEvaluationQueue");
 
 const router = express.Router();
 
@@ -205,6 +210,7 @@ router.put(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
       } = req.body;
 
       if (title != null) exam.title = title;
@@ -220,6 +226,7 @@ router.put(
       if (startsAt != null) exam.startTime = new Date(startsAt);
       if (endsAt != null) exam.endTime = new Date(endsAt);
       if (durationMin != null) exam.durationMinutes = durationMin;
+      if (slotDurationMin != null) exam.slotDurationMinutes = slotDurationMin;
 
       await exam.save();
       await exam.populate("teacherId", "name email username");
@@ -465,6 +472,7 @@ router.post(
         startsAt,
         endsAt,
         durationMin,
+        slotDurationMin,
         pointsTotal,
         settingsSummary,
         questions,
@@ -476,6 +484,7 @@ router.post(
       console.log("draftId:", draftId);
       console.log("questions received:", questions);
       console.log("questions length:", questions ? questions.length : 0);
+      console.log("slotDurationMin:", slotDurationMin);
 
       if (!startsAt || !endsAt) {
         return res
@@ -516,6 +525,7 @@ router.post(
       draft.startTime = new Date(startsAt);
       draft.endTime = new Date(endsAt);
       draft.durationMinutes = durationMin;
+      if (slotDurationMin != null) draft.slotDurationMinutes = slotDurationMin;
       draft.pointsTotal = pointsTotal;
       if (settingsSummary) {
         draft.settings = { ...draft.settings, ...settingsSummary };
@@ -835,12 +845,12 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
  * GET /api/faculty/exams/:examId/evaluation-status
- * Check if all student attempts for an exam are evaluated
+ * Get the evaluation status/progress for an exam's submissions
  */
 router.get(
   "/exams/:examId/evaluation-status",
@@ -851,56 +861,131 @@ router.get(
       const { examId } = req.params;
       const teacherId = req.user.sub;
 
-      // Verify exam belongs to this teacher
-      const exam = await Exam.findOne({ _id: examId, teacherId });
+      // Verify exam belongs to teacher
+      const exam = await Exam.findById(examId);
       if (!exam) {
         return res.status(404).json({ message: "Exam not found" });
       }
-
-      // Get all attempts for this exam
-      const allAttempts = await StudentExamAttempt.find({ examId });
-
-      if (allAttempts.length === 0) {
-        return res.status(200).json({
-          allEvaluated: false,
-          totalAttempts: 0,
-          evaluatedAttempts: 0,
-          pendingAttempts: 0,
-          resultsPublished: exam.resultsPublished || false,
-          message: "No student attempts found",
-        });
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({ message: "Forbidden: Not your exam" });
       }
 
-      // Count attempts by status
-      const evaluatedAttempts = allAttempts.filter(
-        (a) => a.status === "evaluated",
-      ).length;
-      const pendingAttempts = allAttempts.filter(
-        (a) => a.status !== "evaluated" && a.status !== "expired",
+      // Fetch all attempts for this exam
+      const attempts = await StudentExamAttempt.find({ examId });
+
+      const totalAttempts = attempts.length;
+      const evaluatedAttempts = attempts.filter((a) => a.status === "evaluated").length;
+      
+      // Pending are those that have been submitted (or are currently transcribing/evaluating) but not fully evaluated yet
+      const pendingAttempts = attempts.filter((a) => 
+        ["submitted", "transcribed"].includes(a.status)
       ).length;
 
-      const allEvaluated =
-        evaluatedAttempts === allAttempts.length && allAttempts.length > 0;
+      // Find if there are any failed answers for this exam (including previous falsely completed ones due to errors)
+      const failedAnswersCount = await StudentAnswer.countDocuments({
+        examId,
+        $or: [
+          { sttStatus: "failed" },
+          { evaluationStatus: "failed" },
+          { evaluationFeedback: { $regex: /FastAPI error|Fallback also failed/i } }
+        ]
+      });
+      const hasFailures = failedAnswersCount > 0;
+
+      // const allEvaluated = totalAttempts > 0 && evaluatedAttempts === totalAttempts;
+      const allEvaluated = totalAttempts > 0 && evaluatedAttempts === totalAttempts && !hasFailures;
+      // const evaluationStarted = totalAttempts > 0 && (evaluatedAttempts > 0 || pendingAttempts > 0);
+      const evaluationStarted = totalAttempts > 0 && exam.evaluationStarted === true;
 
       return res.status(200).json({
         allEvaluated,
-        totalAttempts: allAttempts.length,
+        evaluationStarted,
+        totalAttempts,
         evaluatedAttempts,
         pendingAttempts,
-        resultsPublished: exam.resultsPublished || false,
-        message: allEvaluated
-          ? "All attempts evaluated"
-          : `${pendingAttempts} attempt(s) still pending evaluation`,
+        hasFailures,
+        resultsPublished: exam.resultsPublished === true,
+        message: allEvaluated 
+          ? "All attempts have been successfully evaluated." 
+          : `${evaluatedAttempts}/${totalAttempts} attempts evaluated.`,
       });
     } catch (error) {
       next(error);
     }
-  },
+  }
+);
+
+/**
+ * POST /api/faculty/exams/:examId/start-evaluation
+ * Start background transcription & evaluation for all submitted attempts
+ */
+router.post(
+  "/exams/:examId/start-evaluation",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const teacherId = req.user.sub;
+
+      // Verify exam belongs to teacher
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({ message: "Forbidden: Not your exam" });
+      }
+
+      // Find all attempts in "submitted" status (not evaluated or transcribed yet)
+      const submittedAttempts = await StudentExamAttempt.find({
+        examId,
+        status: "submitted",
+      });
+
+      console.log(`[Evaluation] Starting evaluation for exam ${examId}. Found ${submittedAttempts.length} submitted attempts.`);
+
+      // Added: Set evaluationStarted flag on exam and save it
+      exam.evaluationStarted = true;
+      await exam.save();
+
+      let queuedCount = 0;
+      for (const attempt of submittedAttempts) {
+        // Queue transcription job which will chain into evaluation worker automatically
+        await answersTranscriptionQueue.add(
+          "transcribe-answers",
+          {
+            examId,
+            studentId: attempt.studentId.toString(),
+            attemptId: attempt._id.toString(),
+          },
+          {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+            removeOnComplete: true,
+          }
+        );
+        queuedCount++;
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully queued ${queuedCount} attempts for evaluation.`,
+        queuedCount,
+      });
+    } catch (error) {
+      console.error("❌ Error starting exam evaluation:", error);
+      next(error);
+    }
+  }
 );
 
 /**
  * POST /api/faculty/exams/:examId/publish-results
- * Publish results for an exam (only allowed if all attempts are evaluated)
+ * Publish evaluation results for all students
  */
 router.post(
   "/exams/:examId/publish-results",
@@ -911,61 +996,161 @@ router.post(
       const { examId } = req.params;
       const teacherId = req.user.sub;
 
-      // Verify exam belongs to this teacher
-      const exam = await Exam.findOne({ _id: examId, teacherId });
+      // Verify exam belongs to teacher
+      const exam = await Exam.findById(examId);
       if (!exam) {
         return res.status(404).json({ message: "Exam not found" });
       }
-
-      // Check if results already published
-      if (exam.resultsPublished) {
-        return res.status(200).json({
-          success: true,
-          message: "Results already published",
-          resultsPublished: true,
-          resultPublishedAt: exam.resultPublishedAt,
-        });
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({ message: "Forbidden: Not your exam" });
       }
 
-      // Get all attempts for this exam
-      const allAttempts = await StudentExamAttempt.find({ examId });
-
-      if (allAttempts.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "No student attempts found for this exam",
-        });
-      }
-
-      // Check if all attempts are evaluated
-      const unevaluatedAttempts = allAttempts.filter(
-        (a) => a.status !== "evaluated" && a.status !== "expired",
-      );
-
-      if (unevaluatedAttempts.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Cannot publish results. ${unevaluatedAttempts.length} attempt(s) still pending evaluation.`,
-          pendingCount: unevaluatedAttempts.length,
-          totalAttempts: allAttempts.length,
-        });
-      }
-
-      // Publish results
+      // Set resultsPublished flag to true
       exam.resultsPublished = true;
       exam.resultPublishedAt = new Date();
       await exam.save();
 
+      console.log(`[Evaluation] Results published for exam ${examId}`);
+
       return res.status(200).json({
         success: true,
-        message: "Results published successfully",
+        message: "Exam results published successfully.",
         resultsPublished: true,
         resultPublishedAt: exam.resultPublishedAt,
       });
     } catch (error) {
       next(error);
     }
-  },
+  }
+);
+
+/**
+ * POST /api/faculty/exams/:examId/retry-failed-evaluation
+ * Retry background evaluation/transcription only for attempts/answers that failed
+ */
+router.post(
+  "/exams/:examId/retry-failed-evaluation",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId } = req.params;
+      const teacherId = req.user.sub;
+
+      // Verify exam belongs to teacher
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({ message: "Forbidden: Not your exam" });
+      }
+
+      // Fetch all attempts for this exam
+      const attempts = await StudentExamAttempt.find({ examId });
+
+      let retriedAttemptsCount = 0;
+      let retriedAnswersCount = 0;
+
+      for (const attempt of attempts) {
+        // Find failed answers for this attempt (including previous falsely completed ones due to errors)
+        const failedAnswers = await StudentAnswer.find({
+          attemptId: attempt._id,
+          $or: [
+            { sttStatus: "failed" },
+            { evaluationStatus: "failed" },
+            { evaluationFeedback: { $regex: /FastAPI error|Fallback also failed/i } }
+          ]
+        });
+
+        if (failedAnswers.length === 0) {
+          continue; // No failures in this attempt, skip
+        }
+
+        let needsSTT = false;
+
+        for (const answer of failedAnswers) {
+          if (answer.sttStatus === "failed") {
+            // Reset STT status so it can be re-transcribed
+            answer.sttStatus = "pending";
+            answer.sttError = null;
+            needsSTT = true;
+          }
+          if (answer.evaluationStatus === "failed" || (answer.evaluationFeedback && /FastAPI error|Fallback also failed/i.test(answer.evaluationFeedback))) {
+            // Reset evaluation status so it can be re-evaluated
+            answer.evaluationStatus = "pending";
+            answer.evaluationFeedback = null;
+          }
+          await answer.save();
+          retriedAnswersCount++;
+        }
+
+        // Re-queue based on where it failed
+        if (needsSTT) {
+          // Change attempt status back to submitted
+          attempt.status = "submitted";
+          await attempt.save();
+
+          await answersTranscriptionQueue.add(
+            "transcribe-answers",
+            {
+              examId,
+              studentId: attempt.studentId.toString(),
+              attemptId: attempt._id.toString(),
+            },
+            {
+              attempts: 3,
+              backoff: {
+                type: "exponential",
+                delay: 2000,
+              },
+              removeOnComplete: true,
+            }
+          );
+        } else {
+          // STT was successful, only evaluation failed
+          attempt.status = "transcribed";
+          await attempt.save();
+
+          await answersEvaluationQueue.add(
+            "answers-evaluation",
+            {
+              examId,
+              studentId: attempt.studentId.toString(),
+              attemptId: attempt._id.toString(),
+            },
+            {
+              attempts: 3,
+              backoff: {
+                type: "exponential",
+                delay: 2000,
+              },
+              removeOnComplete: true,
+            }
+          );
+        }
+
+        retriedAttemptsCount++;
+      }
+
+      // If we retried any attempts, make sure evaluationStarted remains true
+      if (retriedAttemptsCount > 0) {
+        exam.evaluationStarted = true;
+        await exam.save();
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully queued ${retriedAttemptsCount} attempts (${retriedAnswersCount} answers) for retry.`,
+        retriedAttemptsCount,
+        retriedAnswersCount,
+      });
+    } catch (error) {
+      console.error("❌ Error retrying failed evaluations:", error);
+      next(error);
+    }
+  }
 );
 
 module.exports = router;
+

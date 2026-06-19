@@ -52,8 +52,24 @@ new Worker(
         try {
           console.log("🎧 BEFORE TTS CALL");
 
+          // OLD TTS API CALL (BACKUP)
+          // const ttsRes = await axios.post(
+          //   "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/tts/synthesize",
+          //   {
+          //     question_id: question._id.toString(),
+          //     text: question.text,
+          //     language: "en",
+          //     slow: false,
+          //   },
+          //   {
+          //     timeout: 30000, // ⏱ increased
+          //     responseType: "arraybuffer", // ✅ binary MP3
+          //   },
+          // );
+
+          const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
           const ttsRes = await axios.post(
-            "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/tts/synthesize",
+            `${aiServiceUrl}/api/v1/tts/synthesize`,
             {
               question_id: question._id.toString(),
               text: question.text,
@@ -65,6 +81,7 @@ new Worker(
               responseType: "arraybuffer", // ✅ binary MP3
             },
           );
+
 
           console.log("🎧 AFTER TTS CALL");
 

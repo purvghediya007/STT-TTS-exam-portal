@@ -103,7 +103,7 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <Clock className="w-4 h-4 inline mr-1" />
-            Duration (minutes) <span className="text-gray-500 text-xs">(Auto-calculated)</span>
+            Exam Window Duration (minutes) <span className="text-gray-500 text-xs">(Auto-calculated)</span>
           </label>
           <input
             type="number"
@@ -113,12 +113,38 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Automatically calculated from start and end time
+            Time between exam start and end time (entire exam period)
           </p>
           {errors.durationMin && (
             <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
               <AlertCircle className="w-4 h-4" />
               {errors.durationMin}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Clock className="w-4 h-4 inline mr-1" />
+            Student Slot Duration (minutes) <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={timeSettings.slotDurationMin || ''}
+            onChange={(e) => handleChange('slotDurationMin', e.target.value ? parseInt(e.target.value) : null)}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors.slotDurationMin ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="e.g., 60 for 1 hour"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Each student gets this much time from when they start (cannot exceed exam window)
+          </p>
+          {errors.slotDurationMin && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.slotDurationMin}
             </p>
           )}
         </div>
@@ -216,24 +242,46 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <Settings className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-blue-900 mb-1">Exam Status Preview</p>
-              <p className="text-xs text-blue-700">
-                {(() => {
+            <div className="w-full">
+              <p className="text-sm font-semibold text-blue-900 mb-2">Exam Configuration Preview</p>
+              
+              {/* Status */}
+              <p className="text-xs text-blue-700 mb-2">
+                <span className="font-semibold">Status:</span> {(() => {
                   const start = new Date(timeSettings.startsAt)
                   const end = new Date(timeSettings.endsAt)
                   const now = new Date()
                   
                   if (start > now) {
-                    return 'Status: Upcoming - Exam will be available when start time is reached'
+                    return 'Upcoming - Exam will be available when start time is reached'
                   } else if (now >= start && now < end) {
-                    return 'Status: Available - Exam is currently live'
+                    return 'Available - Exam is currently live'
                   } else if (end <= now) {
-                    return 'Status: Finished - Exam has ended'
+                    return 'Finished - Exam has ended'
                   }
                   return 'Status will be set automatically based on dates'
                 })()}
               </p>
+
+              {/* Exam Window */}
+              <p className="text-xs text-blue-700 mb-2">
+                <span className="font-semibold">Exam Window:</span> {new Date(timeSettings.startsAt).toLocaleString()} → {new Date(timeSettings.endsAt).toLocaleString()}
+              </p>
+
+              {/* Slot Duration */}
+              {timeSettings.slotDurationMin && (
+                <div className="bg-white border border-blue-200 rounded p-2 mt-2">
+                  <p className="text-xs text-blue-700 mb-1">
+                    <span className="font-semibold">Student Slot Duration:</span> {timeSettings.slotDurationMin} minutes
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Each student who joins gets {timeSettings.slotDurationMin} minutes from their start time (but cannot exceed exam end time)
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    <strong>Example:</strong> If slot is 1 hour and exam ends at 3:00 PM, a student joining at 2:30 PM will finish at 3:00 PM (not 3:30 PM)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -32,10 +32,20 @@ def health():
     return {"status": "ok"}
 
 
-app.include_router(question_generation.router)
-app.include_router(rubrics.router)
-app.include_router(tts.router)
-app.include_router(stt.router)
-app.include_router(evaluation.router)
-app.include_router(mcq_evaluation.router)
+# OLD ROUTER REGISTRATIONS (BACKUP)
+# app.include_router(question_generation.router)
+# app.include_router(rubrics.router)
+# app.include_router(tts.router)
+# app.include_router(stt.router)
+# app.include_router(evaluation.router)
+# app.include_router(mcq_evaluation.router)
+
+# NEW ROUTER REGISTRATIONS WITH PREFIX
+app.include_router(question_generation.router, prefix="/api/v1")
+app.include_router(rubrics.router, prefix="/api/v1")
+app.include_router(tts.router, prefix="/api/v1")
+app.include_router(stt.router, prefix="/api/v1")
+app.include_router(evaluation.router, prefix="/api/v1")
+app.include_router(mcq_evaluation.router, prefix="/api/v1")
+
 

@@ -1,0 +1,677 @@
+[
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "Ravi is 5 years older than Sita. If Sita is currently 20 years old, how old is Ravi?",
+    "options": [
+      { "text": "15 years", "isCorrect": false },
+      { "text": "25 years", "isCorrect": true },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "30 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Ravi's age = Sita's age + 5 = 20 + 5 = 25 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A father is 3 times as old as his son. If the son is 12 years old, what is the father's age?",
+    "options": [
+      { "text": "30 years", "isCorrect": false },
+      { "text": "36 years", "isCorrect": true },
+      { "text": "48 years", "isCorrect": false },
+      { "text": "42 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Father's age = 3 × Son's age = 3 × 12 = 36 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The present ages of A and B are in the ratio 5:3. After 6 years, their ages will be in the ratio 7:5. What is A's present age?",
+    "options": [
+      { "text": "10 years", "isCorrect": false },
+      { "text": "15 years", "isCorrect": true },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "25 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let ages be 5x and 3x. After 6 years: (5x+6)/(3x+6) = 7/5. Cross-multiplying: 25x + 30 = 21x + 42 → 4x = 12 → x = 3. A's age = 5 × 3 = 15 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A father is 3 times as old as his son. After 15 years, the father will be twice as old as his son. What is the father's present age?",
+    "options": [
+      { "text": "30 years", "isCorrect": false },
+      { "text": "36 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": true },
+      { "text": "60 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let son's age = S. Father = 3S. After 15 years: 3S + 15 = 2(S + 15) → 3S + 15 = 2S + 30 → S = 15. Father's age = 3 × 15 = 45 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The sum of the ages of A and B is 40 years. A is 10 years older than B. What is A's age?",
+    "options": [
+      { "text": "20 years", "isCorrect": false },
+      { "text": "25 years", "isCorrect": true },
+      { "text": "30 years", "isCorrect": false },
+      { "text": "15 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A + B = 40 and A = B + 10. Substituting: B + 10 + B = 40 → 2B = 30 → B = 15. A = 15 + 10 = 25 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ratio of present ages of P and Q is 3:4. Five years ago, the ratio of their ages was 5:7. What is P's present age?",
+    "options": [
+      { "text": "25 years", "isCorrect": false },
+      { "text": "30 years", "isCorrect": true },
+      { "text": "35 years", "isCorrect": false },
+      { "text": "40 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let ages be 3x and 4x. Five years ago: (3x−5)/(4x−5) = 5/7. Cross-multiplying: 21x − 35 = 20x − 25 → x = 10. P's age = 3 × 10 = 30 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A is twice as old as B. Five years ago, A was three times as old as B. What is B's present age?",
+    "options": [
+      { "text": "8 years", "isCorrect": false },
+      { "text": "10 years", "isCorrect": true },
+      { "text": "12 years", "isCorrect": false },
+      { "text": "15 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "A = 2B. Five years ago: 2B − 5 = 3(B − 5) → 2B − 5 = 3B − 15 → B = 10. So A = 20. Verification: 5 years ago A was 15 and B was 5; 15 = 3 × 5 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of 5 members of a family is 24 years. If the youngest member is 4 years old, what was the average age of the family just before the youngest member was born?",
+    "options": [
+      { "text": "20 years", "isCorrect": false },
+      { "text": "22 years", "isCorrect": false },
+      { "text": "25 years", "isCorrect": true },
+      { "text": "28 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total age of 5 members = 5 × 24 = 120. Four years ago (when youngest was born), there were 4 members. Their total age then = 120 − 4 (youngest's current age) − 4 × 4 (each of 4 members was 4 years younger) = 120 − 4 − 16 = 100. Average = 100/4 = 25 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The difference between the ages of two persons is 10 years. 15 years ago, the elder one was twice as old as the younger one. What is the present age of the elder person?",
+    "options": [
+      { "text": "25 years", "isCorrect": false },
+      { "text": "30 years", "isCorrect": false },
+      { "text": "35 years", "isCorrect": true },
+      { "text": "40 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let elder = E, younger = Y. E − Y = 10. Fifteen years ago: E − 15 = 2(Y − 15) → E − 15 = 2Y − 30 → E = 2Y − 15. Substituting: 2Y − 15 − Y = 10 → Y = 25. E = 25 + 10 = 35 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A man's present age is 125% of what it was 10 years ago, but 83⅓% of what it will be after 10 years. What is his present age?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": false },
+      { "text": "50 years", "isCorrect": true },
+      { "text": "60 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let present age = A. From first condition: A = (5/4)(A − 10) → 4A = 5A − 50 → A = 50. Verification with second condition: 83⅓% = 5/6. A = (5/6)(A + 10) → 6A = 5A + 50 → A = 50 ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "Six years ago, the ratio of ages of A and B was 6:5. Four years from now, the ratio will be 11:10. What is B's present age?",
+    "options": [
+      { "text": "14 years", "isCorrect": false },
+      { "text": "16 years", "isCorrect": true },
+      { "text": "18 years", "isCorrect": false },
+      { "text": "20 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Six years ago: (A−6)/(B−6) = 6/5 → 5A − 30 = 6B − 36 → 5A = 6B − 6 … (i). Four years hence: (A+4)/(B+4) = 11/10 → 10A + 40 = 11B + 44 → 10A = 11B + 4 … (ii). From (i): A = (6B−6)/5. Substituting in (ii): 10(6B−6)/5 = 11B + 4 → 12B − 12 = 11B + 4 → B = 16. A = (96−6)/5 = 18.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The sum of the ages of 5 children born at intervals of 3 years each is 50 years. What is the age of the youngest child?",
+    "options": [
+      { "text": "2 years", "isCorrect": false },
+      { "text": "4 years", "isCorrect": true },
+      { "text": "6 years", "isCorrect": false },
+      { "text": "8 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let youngest = x. Ages are x, x+3, x+6, x+9, x+12. Sum = 5x + 30 = 50 → 5x = 20 → x = 4 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A father's age is 3 times the sum of the ages of his 2 children. After 5 years, his age will be twice the sum of their ages. What is the father's present age?",
+    "options": [
+      { "text": "36 years", "isCorrect": false },
+      { "text": "40 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": true },
+      { "text": "50 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let sum of children's ages = S. Father = 3S. After 5 years: 3S + 5 = 2(S + 10) → 3S + 5 = 2S + 20 → S = 15. Father's age = 3 × 15 = 45 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ages of A, B, and C are in the ratio 3:5:7. If the sum of their ages is 90 years, what is B's age?",
+    "options": [
+      { "text": "18 years", "isCorrect": false },
+      { "text": "24 years", "isCorrect": false },
+      { "text": "30 years", "isCorrect": true },
+      { "text": "42 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 3x, 5x, 7x. Sum: 3x + 5x + 7x = 15x = 90 → x = 6. B's age = 5 × 6 = 30 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The product of the ages of Ankit and Nikita is 240. If twice the age of Nikita is more than Ankit's age by 4 years, what is Nikita's age?",
+    "options": [
+      { "text": "10 years", "isCorrect": false },
+      { "text": "12 years", "isCorrect": true },
+      { "text": "14 years", "isCorrect": false },
+      { "text": "16 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let Nikita = N, Ankit = A. A × N = 240 and 2N = A + 4 → A = 2N − 4. Substituting: (2N − 4) × N = 240 → 2N² − 4N − 240 = 0 → N² − 2N − 120 = 0 → (N − 12)(N + 10) = 0. Since age is positive, N = 12. A = 2(12) − 4 = 20. Verify: 20 × 12 = 240 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "Rahul was 4 times as old as his son 8 years ago. After 8 years from now, Rahul will be twice as old as his son. What is the son's present age?",
+    "options": [
+      { "text": "12 years", "isCorrect": false },
+      { "text": "14 years", "isCorrect": false },
+      { "text": "16 years", "isCorrect": true },
+      { "text": "18 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let son = S, Rahul = R. Eight years ago: R − 8 = 4(S − 8) → R = 4S − 24. After 8 years: R + 8 = 2(S + 8). Substituting: 4S − 24 + 8 = 2S + 16 → 4S − 16 = 2S + 16 → 2S = 32 → S = 16. R = 4(16) − 24 = 40. Verify: 8 years ago: 32 and 8 (4 times ✓). After 8 years: 48 and 24 (twice ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ages of Arun and Deepak are in the ratio 8:3. Six years hence, their ages will be in the ratio 9:4. What is Arun's present age?",
+    "options": [
+      { "text": "32 years", "isCorrect": false },
+      { "text": "40 years", "isCorrect": false },
+      { "text": "48 years", "isCorrect": true },
+      { "text": "56 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 8x and 3x. After 6 years: (8x + 6)/(3x + 6) = 9/4. Cross-multiplying: 32x + 24 = 27x + 54 → 5x = 30 → x = 6. Arun's age = 8 × 6 = 48 years. Verify: (48+6)/(18+6) = 54/24 = 9/4 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A is as much younger than B as he is older than C. If the sum of the ages of B and C is 50 years, what is A's age?",
+    "options": [
+      { "text": "20 years", "isCorrect": false },
+      { "text": "25 years", "isCorrect": true },
+      { "text": "30 years", "isCorrect": false },
+      { "text": "35 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "B − A = A − C → B + C = 2A. Given B + C = 50, so 2A = 50 → A = 25 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "10 years ago, the age of a mother was 3 times the age of her son. After 10 years, the mother's age will be twice that of her son. What is the mother's present age?",
+    "options": [
+      { "text": "50 years", "isCorrect": false },
+      { "text": "60 years", "isCorrect": false },
+      { "text": "70 years", "isCorrect": true },
+      { "text": "80 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let mother = M, son = S. Ten years ago: M − 10 = 3(S − 10) → M = 3S − 20. After 10 years: M + 10 = 2(S + 10). Substituting: 3S − 20 + 10 = 2S + 20 → 3S − 10 = 2S + 20 → S = 30. M = 3(30) − 20 = 70. Verify: 10 years ago 60 and 20 (3 times ✓). After 10 years 80 and 40 (twice ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of a class of 30 students is 14 years. When the teacher's age is included, the average increases by 1 year. What is the teacher's age?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "42 years", "isCorrect": false },
+      { "text": "44 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": true }
+    ],
+    "correctAnswer": 3,
+    "explanation": "Total age of 30 students = 30 × 14 = 420. With teacher, 31 people with average 15: total = 31 × 15 = 465. Teacher's age = 465 − 420 = 45 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The present age of a person is 2/5 of his father's present age. After 10 years, the person's age will be half of his father's age. What is the father's present age?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": false },
+      { "text": "50 years", "isCorrect": true },
+      { "text": "55 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let father = F, person = P. P = 2F/5. After 10 years: P + 10 = (F + 10)/2. Substituting: 2F/5 + 10 = (F + 10)/2. Multiply by 10: 4F + 100 = 5F + 50 → F = 50. P = 2(50)/5 = 20. Verify: After 10 years: 30 = 60/2 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "When Rahul was born, his father was 32 years old. When Rahul's father was born, Rahul's grandfather was 28 years old. If Rahul is now 32 years old, what is the sum of the present ages of his father and grandfather?",
+    "options": [
+      { "text": "140 years", "isCorrect": false },
+      { "text": "148 years", "isCorrect": false },
+      { "text": "156 years", "isCorrect": true },
+      { "text": "160 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Rahul is 32. Father = 32 + 32 = 64 years. Grandfather = 64 + 28 = 92 years. Sum = 64 + 92 = 156 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ages of A, B, and C are in the ratio 2:3:5. If the sum of the ages of A and C is 56 years, what is B's age?",
+    "options": [
+      { "text": "18 years", "isCorrect": false },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "24 years", "isCorrect": true },
+      { "text": "30 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 2x, 3x, 5x. A + C = 2x + 5x = 7x = 56 → x = 8. B's age = 3 × 8 = 24 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A man is 24 years older than his son. In 2 years, his age will be twice the age of his son. What is the son's present age?",
+    "options": [
+      { "text": "18 years", "isCorrect": false },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "22 years", "isCorrect": true },
+      { "text": "24 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let son = S. Man = S + 24. In 2 years: S + 24 + 2 = 2(S + 2) → S + 26 = 2S + 4 → S = 22. Man = 46. Verify: In 2 years: 48 and 24 (twice ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ages of two persons differ by 16 years. If 6 years ago, the elder one was 3 times as old as the younger one, what is the present age of the younger person?",
+    "options": [
+      { "text": "12 years", "isCorrect": false },
+      { "text": "14 years", "isCorrect": true },
+      { "text": "16 years", "isCorrect": false },
+      { "text": "18 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let elder = E, younger = Y. E − Y = 16. Six years ago: E − 6 = 3(Y − 6) → E = 3Y − 12. Substituting: 3Y − 12 − Y = 16 → 2Y = 28 → Y = 14. E = 30. Verify: 6 years ago: 24 and 8 (3 times ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "If 6 years are subtracted from Ajay's present age and the remainder is divided by 18, the present age of Rahul is obtained. Rahul is 2 years younger than Denu whose age is 5 years. What is Ajay's present age?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "48 years", "isCorrect": false },
+      { "text": "54 years", "isCorrect": false },
+      { "text": "60 years", "isCorrect": true }
+    ],
+    "correctAnswer": 3,
+    "explanation": "Denu's age = 5. Rahul = 5 − 2 = 3. (Ajay − 6)/18 = 3 → Ajay − 6 = 54 → Ajay = 60 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of 10 persons increases by 2 years when 2 persons aged 18 and 20 are replaced by 2 new persons. What is the average age of the 2 new persons?",
+    "options": [
+      { "text": "25 years", "isCorrect": false },
+      { "text": "27 years", "isCorrect": false },
+      { "text": "29 years", "isCorrect": true },
+      { "text": "31 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Increase in total age = 10 × 2 = 20. Sum of new persons − sum of replaced persons = 20. Sum of new persons = 18 + 20 + 20 = 58. Average of new persons = 58/2 = 29 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The present ages of three friends are in the ratio 2:3:4. Twelve years ago, their ages were in the ratio 1:2:3. What is the present age of the youngest friend?",
+    "options": [
+      { "text": "16 years", "isCorrect": false },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "24 years", "isCorrect": true },
+      { "text": "28 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let ages be 2x, 3x, 4x. Twelve years ago: (2x−12):(3x−12):(4x−12) = 1:2:3. From first two: (2x−12)/1 = (3x−12)/2 → 4x − 24 = 3x − 12 → x = 12. Youngest = 2 × 12 = 24 years. Verify: 12 years ago: 12, 24, 36 = 1:2:3 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A is 2 years older than B who is twice as old as C. If the total of the ages of A, B, and C is 27 years, how old is B?",
+    "options": [
+      { "text": "8 years", "isCorrect": false },
+      { "text": "10 years", "isCorrect": true },
+      { "text": "12 years", "isCorrect": false },
+      { "text": "14 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "B = 2C. A = B + 2 = 2C + 2. Total: (2C + 2) + 2C + C = 27 → 5C + 2 = 27 → 5C = 25 → C = 5. B = 2 × 5 = 10 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "One year ago, the ratio of Gaurav's and Sachin's ages was 6:7. Four years hence, this ratio would become 7:8. How old is Sachin now?",
+    "options": [
+      { "text": "28 years", "isCorrect": false },
+      { "text": "32 years", "isCorrect": false },
+      { "text": "36 years", "isCorrect": true },
+      { "text": "40 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "One year ago: (G−1)/(S−1) = 6/7 → 7G − 7 = 6S − 6 → 7G = 6S + 1 … (i). Four years hence: (G+4)/(S+4) = 7/8 → 8G + 32 = 7S + 28 → 8G = 7S − 4 … (ii). From (i): G = (6S+1)/7. Substituting in (ii): 8(6S+1)/7 = 7S − 4 → 48S + 8 = 49S − 28 → S = 36. G = (216+1)/7 = 31. Verify: 1 year ago: 30/35 = 6/7 ✓. After 4 years: 35/40 = 7/8 ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The total age of a married couple at the time of their marriage was 50 years. After marriage, they had twins. What would be the average age of the family 15 years after the marriage?",
+    "options": [
+      { "text": "25 years", "isCorrect": false },
+      { "text": "26.5 years", "isCorrect": false },
+      { "text": "27.5 years", "isCorrect": true },
+      { "text": "30 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "After 15 years, husband and wife's total age = 50 + 2 × 15 = 80. Twins are 15 years old each, so their total = 30. Family total = 80 + 30 = 110. Average = 110/4 = 27.5 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A man is 4 times as old as his son. After 16 years, he will be only twice as old as his son. What is the son's present age?",
+    "options": [
+      { "text": "6 years", "isCorrect": false },
+      { "text": "8 years", "isCorrect": true },
+      { "text": "10 years", "isCorrect": false },
+      { "text": "12 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let son = S. Father = 4S. After 16 years: 4S + 16 = 2(S + 16) → 4S + 16 = 2S + 32 → 2S = 16 → S = 8. Father = 32. Verify: After 16 years: 48 and 24 (twice ✓).",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "In 10 years, A will be twice as old as B was 10 years ago. If A is currently 9 years older than B, what is B's present age?",
+    "options": [
+      { "text": "33 years", "isCorrect": false },
+      { "text": "36 years", "isCorrect": false },
+      { "text": "39 years", "isCorrect": true },
+      { "text": "42 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "A = B + 9. In 10 years, A's age = A + 10. Ten years ago, B's age = B − 10. Condition: A + 10 = 2(B − 10). Substituting: B + 9 + 10 = 2B − 20 → B + 19 = 2B − 20 → B = 39. A = 48. Verify: 48 + 10 = 58 = 2 × (39 − 10) = 2 × 29 = 58 ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The sum of the ages of a mother and her daughter is 50 years. Also, 5 years ago, the mother's age was 7 times the daughter's age. What is the daughter's present age?",
+    "options": [
+      { "text": "8 years", "isCorrect": false },
+      { "text": "10 years", "isCorrect": true },
+      { "text": "12 years", "isCorrect": false },
+      { "text": "14 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "M + D = 50. Five years ago: M − 5 = 7(D − 5) → M = 7D − 30. Substituting: 7D − 30 + D = 50 → 8D = 80 → D = 10. M = 40. Verify: 5 years ago: 35 and 5 (7 times ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "Five years ago, the average age of A, B, C, and D was 45 years. With E joining the group now, the average age of all five is 49 years. How old is E?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "42 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": true },
+      { "text": "49 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "5 years ago, total of A, B, C, D = 4 × 45 = 180. Their current total = 180 + 4 × 5 = 200. Now with E: total of 5 = 5 × 49 = 245. E's age = 245 − 200 = 45 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The ratio of a father's age to his son's age is 7:3. The product of their ages is 756. What is the father's age?",
+    "options": [
+      { "text": "35 years", "isCorrect": false },
+      { "text": "42 years", "isCorrect": true },
+      { "text": "49 years", "isCorrect": false },
+      { "text": "56 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let ages be 7x and 3x. Product: 7x × 3x = 21x² = 756 → x² = 36 → x = 6. Father = 7 × 6 = 42 years. Son = 18 years. Verify: 42 × 18 = 756 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "8 years hence, Ravi's age will be 3 times his age 8 years ago. What is Ravi's present age?",
+    "options": [
+      { "text": "12 years", "isCorrect": false },
+      { "text": "14 years", "isCorrect": false },
+      { "text": "16 years", "isCorrect": true },
+      { "text": "18 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "R + 8 = 3(R − 8) → R + 8 = 3R − 24 → 32 = 2R → R = 16 years. Verify: 16 + 8 = 24 = 3 × (16 − 8) = 3 × 8 = 24 ✓.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A father said to his son, 'I was as old as you are at the present at the time of your birth.' If the father's present age is 38 years, what is the son's present age?",
+    "options": [
+      { "text": "17 years", "isCorrect": false },
+      { "text": "19 years", "isCorrect": true },
+      { "text": "21 years", "isCorrect": false },
+      { "text": "23 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "At the time of son's birth, father's age = Son's current age. The difference in their ages = Father's age − Son's age = Son's age (since father was son's current age when son was born, i.e., son's age years ago). So Father = 2 × Son → 38 = 2S → S = 19 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The present ages of X and Y are in the ratio 5:6. Seven years hence, the ratio will be 6:7. What is X's present age?",
+    "options": [
+      { "text": "30 years", "isCorrect": false },
+      { "text": "35 years", "isCorrect": true },
+      { "text": "40 years", "isCorrect": false },
+      { "text": "45 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let ages be 5a and 6a. Seven years hence: (5a + 7)/(6a + 7) = 6/7. Cross-multiplying: 35a + 49 = 36a + 42 → a = 7. X's age = 5 × 7 = 35 years. Verify: After 7 years: 42/49 = 6/7 ✓.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of a family of 6 members is 22 years. If the youngest member is 7 years old, what was the average age of the family at the time of the birth of the youngest member?",
+    "options": [
+      { "text": "16 years", "isCorrect": false },
+      { "text": "18 years", "isCorrect": true },
+      { "text": "20 years", "isCorrect": false },
+      { "text": "22 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total age now = 6 × 22 = 132. Seven years ago (when youngest was born), there were 5 members. Their total age then = 132 − 7 (youngest's current age) − 5 × 7 (each of 5 members was 7 years younger) = 132 − 7 − 35 = 90. Average = 90/5 = 18 years.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of 30 students in a class is 15 years. If the teacher's age is included, the average becomes 16 years. What is the teacher's age?",
+    "options": [
+      { "text": "40 years", "isCorrect": false },
+      { "text": "44 years", "isCorrect": false },
+      { "text": "46 years", "isCorrect": true },
+      { "text": "48 years", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total age of 30 students = 30 × 15 = 450. With teacher: 31 × 16 = 496. Teacher's age = 496 − 450 = 46 years.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A mother is 20 years older than her child. After 5 years, the mother will be 3 times as old as her child. What is the child's present age?",
+    "options": [
+      { "text": "3 years", "isCorrect": false },
+      { "text": "5 years", "isCorrect": true },
+      { "text": "7 years", "isCorrect": false },
+      { "text": "10 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "M = C + 20. After 5 years: C + 20 + 5 = 3(C + 5) → C + 25 = 3C + 15 → 10 = 2C → C = 5. M = 25. Verify: After 5 years: 30 and 10 (3 times ✓).",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "A father is 30 years older than his son. In 12 years, the father will be 3 times as old as his son. What is the son's present age?",
+    "options": [
+      { "text": "3 years", "isCorrect": true },
+      { "text": "5 years", "isCorrect": false },
+      { "text": "7 years", "isCorrect": false },
+      { "text": "9 years", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "F = S + 30. In 12 years: S + 30 + 12 = 3(S + 12) → S + 42 = 3S + 36 → 6 = 2S → S = 3. F = 33. Verify: In 12 years: 45 and 15 (3 times ✓).",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "The average age of a group of persons is 30 years. A person aged 60 leaves the group and is replaced by a person aged 36. The new average decreases by 2 years. How many persons are in the group?",
+    "options": [
+      { "text": "10", "isCorrect": false },
+      { "text": "12", "isCorrect": true },
+      { "text": "15", "isCorrect": false },
+      { "text": "18", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Change in total age = 36 − 60 = −24. Average decreases by 2, so n × 2 = 24 → n = 12 persons.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "ages",
+    "question": "In a family of 4, excluding the youngest, the average age of the remaining 3 is 42 years. Excluding the eldest, the average age of the remaining 3 is 28 years. If the eldest member is 48 years old, find the age of the youngest member.",
+    "options": [
+      { "text": "4 years", "isCorrect": false },
+      { "text": "6 years", "isCorrect": true },
+      { "text": "8 years", "isCorrect": false },
+      { "text": "10 years", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Sum without youngest = 3 × 42 = 126. Sum without eldest = 3 × 28 = 84. Total of all 4 = 126 + youngest = 84 + eldest. So 126 + youngest = 84 + 48 = 132. Youngest = 132 − 126 = 6 years. Verify: Without youngest: 132 − 6 = 126, avg = 42 ✓. Without eldest: 132 − 48 = 84, avg = 28 ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  }
+]

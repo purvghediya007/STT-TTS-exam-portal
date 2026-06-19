@@ -1,0 +1,662 @@
+[
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Convert 72 km/hr into m/s.",
+    "options": [
+      { "text": "20 m/s", "isCorrect": true },
+      { "text": "18 m/s", "isCorrect": false },
+      { "text": "25 m/s", "isCorrect": false },
+      { "text": "15 m/s", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "To convert km/hr to m/s, multiply by 5/18.\n72 × 5/18 = (72 × 5) / 18 = 360 / 18 = 20 m/s.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Convert 25 m/s into km/hr.",
+    "options": [
+      { "text": "72 km/hr", "isCorrect": false },
+      { "text": "90 km/hr", "isCorrect": true },
+      { "text": "80 km/hr", "isCorrect": false },
+      { "text": "100 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "To convert m/s to km/hr, multiply by 18/5.\n25 × 18/5 = (25 × 18) / 5 = 450 / 5 = 90 km/hr.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Convert 36 km/hr into m/s.",
+    "options": [
+      { "text": "12 m/s", "isCorrect": false },
+      { "text": "15 m/s", "isCorrect": false },
+      { "text": "10 m/s", "isCorrect": true },
+      { "text": "8 m/s", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "To convert km/hr to m/s, multiply by 5/18.\n36 × 5/18 = 180/18 = 10 m/s.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man covers half the distance of his journey at 40 km/hr and the other half at 60 km/hr. What is his average speed for the entire journey?",
+    "options": [
+      { "text": "50 km/hr", "isCorrect": false },
+      { "text": "48 km/hr", "isCorrect": true },
+      { "text": "45 km/hr", "isCorrect": false },
+      { "text": "52 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "When equal distances are covered at two different speeds, average speed = 2S₁S₂ / (S₁ + S₂).\nAverage speed = 2 × 40 × 60 / (40 + 60) = 4800 / 100 = 48 km/hr.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Suresh travels from city A to city B at 30 km/hr and returns at 20 km/hr. What is his average speed for the round trip?",
+    "options": [
+      { "text": "25 km/hr", "isCorrect": false },
+      { "text": "22 km/hr", "isCorrect": false },
+      { "text": "24 km/hr", "isCorrect": true },
+      { "text": "26 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "For a round trip (equal distances), average speed = 2S₁S₂ / (S₁ + S₂).\nAverage speed = 2 × 30 × 20 / (30 + 20) = 1200 / 50 = 24 km/hr.\nNote: Average speed is NOT the arithmetic mean of speeds.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A car travels the first 120 km at 60 km/hr and the next 180 km at 90 km/hr. What is the average speed for the entire journey?",
+    "options": [
+      { "text": "75 km/hr", "isCorrect": true },
+      { "text": "72 km/hr", "isCorrect": false },
+      { "text": "78 km/hr", "isCorrect": false },
+      { "text": "80 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "Total distance = 120 + 180 = 300 km.\nTime for first part = 120/60 = 2 hours.\nTime for second part = 180/90 = 2 hours.\nTotal time = 4 hours.\nAverage speed = 300/4 = 75 km/hr.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train 250 m long passes a pole in 10 seconds. What is the speed of the train in km/hr?",
+    "options": [
+      { "text": "72 km/hr", "isCorrect": false },
+      { "text": "80 km/hr", "isCorrect": false },
+      { "text": "90 km/hr", "isCorrect": true },
+      { "text": "100 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "When a train passes a pole, the distance covered = length of the train.\nSpeed = 250/10 = 25 m/s.\nConverting to km/hr: 25 × 18/5 = 90 km/hr.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train running at 36 km/hr crosses a telegraph post in 15 seconds. What is the length of the train?",
+    "options": [
+      { "text": "120 m", "isCorrect": false },
+      { "text": "150 m", "isCorrect": true },
+      { "text": "180 m", "isCorrect": false },
+      { "text": "200 m", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Speed = 36 km/hr = 36 × 5/18 = 10 m/s.\nWhen crossing a pole/post, distance = length of train.\nLength = speed × time = 10 × 15 = 150 m.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train 300 m long passes a platform 200 m long in 25 seconds. What is the speed of the train in km/hr?",
+    "options": [
+      { "text": "64 km/hr", "isCorrect": false },
+      { "text": "68 km/hr", "isCorrect": false },
+      { "text": "72 km/hr", "isCorrect": true },
+      { "text": "76 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total distance = length of train + length of platform = 300 + 200 = 500 m.\nSpeed = 500/25 = 20 m/s.\nConverting to km/hr: 20 × 18/5 = 72 km/hr.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train 120 m long running at 54 km/hr takes 20 seconds to pass a platform. What is the length of the platform?",
+    "options": [
+      { "text": "150 m", "isCorrect": false },
+      { "text": "180 m", "isCorrect": true },
+      { "text": "200 m", "isCorrect": false },
+      { "text": "160 m", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Speed = 54 × 5/18 = 15 m/s.\nTotal distance covered = 15 × 20 = 300 m.\nLength of platform = Total distance − Length of train = 300 − 120 = 180 m.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train running at 54 km/hr passes a platform in 20 seconds and a man standing on the platform in 12 seconds. What is the length of the platform?",
+    "options": [
+      { "text": "100 m", "isCorrect": false },
+      { "text": "110 m", "isCorrect": false },
+      { "text": "120 m", "isCorrect": true },
+      { "text": "130 m", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Speed = 54 × 5/18 = 15 m/s.\nLength of train = speed × time to pass man = 15 × 12 = 180 m.\nTrain + platform = speed × time to pass platform = 15 × 20 = 300 m.\nPlatform length = 300 − 180 = 120 m.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two trains of lengths 200 m and 300 m are running in opposite directions at speeds of 54 km/hr and 36 km/hr respectively. In how many seconds will they cross each other?",
+    "options": [
+      { "text": "15 sec", "isCorrect": false },
+      { "text": "20 sec", "isCorrect": true },
+      { "text": "25 sec", "isCorrect": false },
+      { "text": "18 sec", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Total distance = 200 + 300 = 500 m.\nRelative speed (opposite direction) = 54 + 36 = 90 km/hr = 90 × 5/18 = 25 m/s.\nTime = 500/25 = 20 seconds.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two trains of lengths 100 m and 150 m are running in the same direction at 72 km/hr and 36 km/hr respectively. In how many seconds will the faster train completely pass the slower train?",
+    "options": [
+      { "text": "20 sec", "isCorrect": false },
+      { "text": "30 sec", "isCorrect": false },
+      { "text": "25 sec", "isCorrect": true },
+      { "text": "35 sec", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Total distance = 100 + 150 = 250 m.\nRelative speed (same direction) = 72 − 36 = 36 km/hr = 36 × 5/18 = 10 m/s.\nTime = 250/10 = 25 seconds.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two trains start at the same time from stations A and B, 300 km apart, towards each other at speeds of 50 km/hr and 40 km/hr. After how long will they meet?",
+    "options": [
+      { "text": "3 hours", "isCorrect": false },
+      { "text": "3 hours 20 minutes", "isCorrect": true },
+      { "text": "3 hours 30 minutes", "isCorrect": false },
+      { "text": "4 hours", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Relative speed = 50 + 40 = 90 km/hr.\nTime = 300/90 = 10/3 hours = 3 hours 20 minutes.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two trains start simultaneously from two stations and travel towards each other. After passing each other, they take 9 hours and 16 hours respectively to reach the other station. What is the ratio of their speeds?",
+    "options": [
+      { "text": "3 : 4", "isCorrect": false },
+      { "text": "4 : 3", "isCorrect": true },
+      { "text": "9 : 16", "isCorrect": false },
+      { "text": "16 : 9", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "If two trains take 'a' and 'b' hours respectively to reach their destinations after crossing, then the ratio of their speeds = √b : √a.\nRatio = √16 : √9 = 4 : 3.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "The speed of a boat in still water is 10 km/hr and the speed of the stream is 2 km/hr. How long will it take to travel 48 km upstream?",
+    "options": [
+      { "text": "4 hours", "isCorrect": false },
+      { "text": "5 hours", "isCorrect": false },
+      { "text": "6 hours", "isCorrect": true },
+      { "text": "8 hours", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Upstream speed = Speed in still water − Speed of stream = 10 − 2 = 8 km/hr.\nTime = Distance / Speed = 48 / 8 = 6 hours.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man rows upstream 12 km in 4 hours and downstream 20 km in 4 hours. Find his speed in still water.",
+    "options": [
+      { "text": "3 km/hr", "isCorrect": false },
+      { "text": "5 km/hr", "isCorrect": false },
+      { "text": "4 km/hr", "isCorrect": true },
+      { "text": "6 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Upstream speed = 12/4 = 3 km/hr.\nDownstream speed = 20/4 = 5 km/hr.\nSpeed in still water = (Downstream + Upstream) / 2 = (5 + 3) / 2 = 4 km/hr.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man can row 6 km/hr in still water. If the river current is 2 km/hr, he rows to a place and comes back. The total time is 1.5 hours. How far is the place?",
+    "options": [
+      { "text": "3 km", "isCorrect": false },
+      { "text": "4 km", "isCorrect": true },
+      { "text": "5 km", "isCorrect": false },
+      { "text": "6 km", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Downstream speed = 6 + 2 = 8 km/hr.\nUpstream speed = 6 − 2 = 4 km/hr.\nLet distance = d km.\nd/8 + d/4 = 1.5\n(d + 2d)/8 = 1.5\n3d/8 = 1.5\nd = 4 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A boat can travel 30 km upstream and return in 4 hours 30 minutes. If the speed of the boat in still water is 15 km/hr, find the speed of the stream.",
+    "options": [
+      { "text": "3 km/hr", "isCorrect": false },
+      { "text": "4 km/hr", "isCorrect": false },
+      { "text": "5 km/hr", "isCorrect": true },
+      { "text": "6 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let speed of stream = x km/hr.\n30/(15 − x) + 30/(15 + x) = 4.5\n30(15 + x + 15 − x) / ((15 − x)(15 + x)) = 4.5\n30 × 30 / (225 − x²) = 4.5\n900 / (225 − x²) = 4.5\n225 − x² = 200\nx² = 25\nx = 5 km/hr.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A boat covers 24 km upstream and 36 km downstream in 6 hours. It also covers 36 km upstream and 24 km downstream in 6.5 hours. Find the speed of the current.",
+    "options": [
+      { "text": "1 km/hr", "isCorrect": false },
+      { "text": "2 km/hr", "isCorrect": true },
+      { "text": "3 km/hr", "isCorrect": false },
+      { "text": "4 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let 1/(b−c) = x and 1/(b+c) = y.\n24x + 36y = 6 …(1)\n36x + 24y = 6.5 …(2)\nAdding: 60x + 60y = 12.5 → x + y = 5/24.\nSubtracting (1) from (2): 12x − 12y = 0.5 → x − y = 1/24.\nSolving: x = 1/8, y = 1/12.\nb − c = 8, b + c = 12 → b = 10, c = 2 km/hr.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "On a circular track of 600 m, A and B start from the same point at speeds of 6 m/s and 4 m/s respectively in opposite directions. After how many seconds will they first meet?",
+    "options": [
+      { "text": "40 sec", "isCorrect": false },
+      { "text": "50 sec", "isCorrect": false },
+      { "text": "60 sec", "isCorrect": true },
+      { "text": "100 sec", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "When moving in opposite directions, relative speed = 6 + 4 = 10 m/s.\nThey meet when they together cover the full track.\nTime = 600/10 = 60 seconds.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two runners start from the same point on a circular track of 600 m. A runs at 6 m/s and B runs at 4 m/s in the same direction. After how many seconds will they first meet?",
+    "options": [
+      { "text": "200 sec", "isCorrect": false },
+      { "text": "300 sec", "isCorrect": true },
+      { "text": "150 sec", "isCorrect": false },
+      { "text": "600 sec", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "When moving in the same direction, relative speed = 6 − 4 = 2 m/s.\nThe faster one must gain a full lap (600 m) over the slower one.\nTime = 600/2 = 300 seconds.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "If Ramesh walks at 5 km/hr, he reaches his office 10 minutes late. If he walks at 6 km/hr, he reaches 10 minutes early. What is the distance to his office?",
+    "options": [
+      { "text": "8 km", "isCorrect": false },
+      { "text": "10 km", "isCorrect": true },
+      { "text": "12 km", "isCorrect": false },
+      { "text": "15 km", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Difference in time = 10 + 10 = 20 minutes = 1/3 hour.\nd/5 − d/6 = 1/3\n(6d − 5d)/30 = 1/3\nd/30 = 1/3\nd = 10 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man walks at 3/4 of his usual speed and reaches his destination 20 minutes late. What is his usual time to reach the destination?",
+    "options": [
+      { "text": "40 minutes", "isCorrect": false },
+      { "text": "50 minutes", "isCorrect": false },
+      { "text": "60 minutes", "isCorrect": true },
+      { "text": "80 minutes", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let usual time = t minutes.\nAt 3/4 speed, time taken = t / (3/4) = 4t/3.\n4t/3 − t = 20\nt/3 = 20\nt = 60 minutes.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Priya walks at 6 km/hr and reaches her school 15 minutes early. If she walks at 4 km/hr, she reaches 15 minutes late. What is the distance to her school?",
+    "options": [
+      { "text": "4 km", "isCorrect": false },
+      { "text": "5 km", "isCorrect": false },
+      { "text": "6 km", "isCorrect": true },
+      { "text": "8 km", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Difference in time = 15 + 15 = 30 minutes = 1/2 hour.\nd/4 − d/6 = 1/2\n(3d − 2d)/12 = 1/2\nd/12 = 1/2\nd = 6 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Amit cycles at 15 km/hr and reaches his office 10 minutes late. If he cycles at 20 km/hr, he reaches 5 minutes early. What is the distance to his office?",
+    "options": [
+      { "text": "12 km", "isCorrect": false },
+      { "text": "15 km", "isCorrect": true },
+      { "text": "18 km", "isCorrect": false },
+      { "text": "20 km", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Difference in time = 10 + 5 = 15 minutes = 1/4 hour.\nd/15 − d/20 = 1/4\n(4d − 3d)/60 = 1/4\nd/60 = 1/4\nd = 15 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "In a 100 m race, A beats B by 10 m. What is the ratio of A's speed to B's speed?",
+    "options": [
+      { "text": "10 : 9", "isCorrect": true },
+      { "text": "9 : 10", "isCorrect": false },
+      { "text": "11 : 10", "isCorrect": false },
+      { "text": "5 : 4", "isCorrect": false }
+    ],
+    "correctAnswer": 0,
+    "explanation": "When A finishes 100 m, B has covered 90 m (beaten by 10 m).\nSince they ran for the same time, ratio of speeds = ratio of distances.\nA : B = 100 : 90 = 10 : 9.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "In a 1 km race, A beats B by 100 m and B beats C by 100 m. By how many metres does A beat C in the same race?",
+    "options": [
+      { "text": "200 m", "isCorrect": false },
+      { "text": "180 m", "isCorrect": false },
+      { "text": "190 m", "isCorrect": true },
+      { "text": "195 m", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "When A finishes 1000 m, B is at 900 m → Speed ratio A:B = 10:9.\nWhen B finishes 1000 m, C is at 900 m → Speed ratio B:C = 10:9.\nWhen A finishes 1000 m, B is at 900 m. At that instant, C has covered 900 × 9/10 = 810 m.\nA beats C by 1000 − 810 = 190 m.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A runs 4/3 times as fast as B. If A gives B a head start of 60 m, how long must the race be so that they finish at the same time?",
+    "options": [
+      { "text": "200 m", "isCorrect": false },
+      { "text": "240 m", "isCorrect": true },
+      { "text": "280 m", "isCorrect": false },
+      { "text": "300 m", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Speed ratio A : B = 4 : 3.\nLet total race distance = d. A covers d metres, B covers (d − 60) metres in the same time.\nDistance ratio = Speed ratio: d/(d − 60) = 4/3.\n3d = 4(d − 60) = 4d − 240.\nd = 240 m.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A car covers a distance in 40 minutes at 60 km/hr. At what speed should it travel to cover the same distance in 30 minutes?",
+    "options": [
+      { "text": "70 km/hr", "isCorrect": false },
+      { "text": "75 km/hr", "isCorrect": false },
+      { "text": "80 km/hr", "isCorrect": true },
+      { "text": "90 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Distance = 60 × (40/60) = 40 km.\nRequired speed = 40 / (30/60) = 40 × 2 = 80 km/hr.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A bus covers a certain distance at 60 km/hr in 5 hours. To cover the same distance in 4 hours, what should be its speed?",
+    "options": [
+      { "text": "72 km/hr", "isCorrect": false },
+      { "text": "75 km/hr", "isCorrect": true },
+      { "text": "80 km/hr", "isCorrect": false },
+      { "text": "70 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Distance = 60 × 5 = 300 km.\nRequired speed = 300 / 4 = 75 km/hr.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two cars start from the same point at the same time. One goes north at 60 km/hr and the other goes east at 80 km/hr. How far apart are they after 2 hours?",
+    "options": [
+      { "text": "180 km", "isCorrect": false },
+      { "text": "200 km", "isCorrect": true },
+      { "text": "220 km", "isCorrect": false },
+      { "text": "250 km", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "After 2 hours:\nNorth car = 60 × 2 = 120 km.\nEast car = 80 × 2 = 160 km.\nDistance apart = √(120² + 160²) = √(14400 + 25600) = √40000 = 200 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A train covers 360 km at a uniform speed. Had the speed been 5 km/hr more, it would have taken 1 hour less. What is the speed of the train?",
+    "options": [
+      { "text": "36 km/hr", "isCorrect": false },
+      { "text": "40 km/hr", "isCorrect": true },
+      { "text": "45 km/hr", "isCorrect": false },
+      { "text": "48 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let speed = s km/hr.\n360/s − 360/(s + 5) = 1\n360(s + 5 − s) / [s(s + 5)] = 1\n1800 = s² + 5s\ns² + 5s − 1800 = 0\n(s + 45)(s − 40) = 0\ns = 40 km/hr (rejecting negative value).\nVerification: 360/40 = 9 hrs, 360/45 = 8 hrs, difference = 1 hr ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A thief is spotted by a policeman from a distance of 200 m. The thief starts running at 8 km/hr and the policeman chases at 10 km/hr. In how many minutes will the policeman catch the thief?",
+    "options": [
+      { "text": "5 min", "isCorrect": false },
+      { "text": "6 min", "isCorrect": true },
+      { "text": "8 min", "isCorrect": false },
+      { "text": "10 min", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Relative speed = 10 − 8 = 2 km/hr = 2 × 1000/60 = 100/3 m/min.\nTime = 200 / (100/3) = 200 × 3/100 = 6 minutes.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Anil walks at 5 km/hr. Three hours after he starts, Sunil cycles after him at 20 km/hr. How far from the starting point does Sunil catch Anil?",
+    "options": [
+      { "text": "15 km", "isCorrect": false },
+      { "text": "25 km", "isCorrect": false },
+      { "text": "20 km", "isCorrect": true },
+      { "text": "30 km", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "In 3 hours, Anil covers 5 × 3 = 15 km.\nRelative speed of Sunil over Anil = 20 − 5 = 15 km/hr.\nTime for Sunil to catch up = 15/15 = 1 hour.\nDistance from start = 20 × 1 = 20 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Without stoppages, a bus travels at 80 km/hr. With stoppages, it covers an average of 60 km/hr. How many minutes per hour does the bus stop?",
+    "options": [
+      { "text": "12 min", "isCorrect": false },
+      { "text": "15 min", "isCorrect": true },
+      { "text": "18 min", "isCorrect": false },
+      { "text": "20 min", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Due to stoppages, the bus covers 80 − 60 = 20 km less per hour.\nTime to cover 20 km at 80 km/hr = 20/80 hours = 1/4 hour = 15 minutes.\nThe bus stops for 15 minutes every hour.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Excluding stoppages, the speed of a train is 45 km/hr and including stoppages it is 36 km/hr. For how many minutes does the train stop per hour?",
+    "options": [
+      { "text": "10 min", "isCorrect": false },
+      { "text": "12 min", "isCorrect": true },
+      { "text": "15 min", "isCorrect": false },
+      { "text": "18 min", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Due to stoppages, distance lost = 45 − 36 = 9 km per hour.\nTime to cover 9 km at 45 km/hr = 9/45 hours = 1/5 hour = 12 minutes.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A person walks 6 km north and then 8 km east. How far is he from his starting point?",
+    "options": [
+      { "text": "14 km", "isCorrect": false },
+      { "text": "12 km", "isCorrect": false },
+      { "text": "10 km", "isCorrect": true },
+      { "text": "11 km", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "This forms a right-angled triangle with legs 6 km and 8 km.\nDistance = √(6² + 8²) = √(36 + 64) = √100 = 10 km.",
+    "difficulty": "easy",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man travels 600 km in 8 hours, partly by train at 100 km/hr and partly by car at 60 km/hr. What distance did he travel by train?",
+    "options": [
+      { "text": "200 km", "isCorrect": false },
+      { "text": "250 km", "isCorrect": false },
+      { "text": "300 km", "isCorrect": true },
+      { "text": "350 km", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let distance by train = d km.\nd/100 + (600 − d)/60 = 8\n(60d + 100(600 − d)) / 6000 = 8\n60d + 60000 − 100d = 48000\n−40d = −12000\nd = 300 km.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Suresh covers half the distance of a 240 km journey at 40 km/hr and the remaining half at 60 km/hr. What is the total time taken?",
+    "options": [
+      { "text": "4 hours", "isCorrect": false },
+      { "text": "5 hours", "isCorrect": true },
+      { "text": "6 hours", "isCorrect": false },
+      { "text": "4.5 hours", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Half distance = 120 km.\nTime for first half = 120/40 = 3 hours.\nTime for second half = 120/60 = 2 hours.\nTotal time = 3 + 2 = 5 hours.",
+    "difficulty": "medium",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two persons A and B are 60 km apart. They start cycling towards each other at 10 km/hr and 20 km/hr. A fly starts flying at A towards B at 30 km/hr, and keeps flying back and forth between them until they meet. What total distance does the fly cover?",
+    "options": [
+      { "text": "30 km", "isCorrect": false },
+      { "text": "40 km", "isCorrect": false },
+      { "text": "50 km", "isCorrect": false },
+      { "text": "60 km", "isCorrect": true }
+    ],
+    "correctAnswer": 3,
+    "explanation": "Time for A and B to meet = 60 / (10 + 20) = 2 hours.\nThe fly flies continuously for these 2 hours at 30 km/hr.\nDistance = 30 × 2 = 60 km.\n(The fly's back-and-forth path doesn't matter; only total time and its speed matter.)",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "The ratio of speeds of A and B is 3 : 4. A takes 30 minutes more than B to reach a destination. How long does B take?",
+    "options": [
+      { "text": "60 min", "isCorrect": false },
+      { "text": "90 min", "isCorrect": true },
+      { "text": "120 min", "isCorrect": false },
+      { "text": "75 min", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Speed ratio A : B = 3 : 4 → Time ratio A : B = 4 : 3.\nLet A's time = 4x, B's time = 3x.\n4x − 3x = 30 → x = 30.\nB's time = 3 × 30 = 90 minutes.\nVerification: A's time = 120 min. A's speed is 3/4 of B's, so A takes 4/3 of B's time = 120 min ✓.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "Two persons start from places 60 km apart and walk towards each other. One walks 2 km/hr faster than the other. They meet after 6 hours. Find the speed of the slower person.",
+    "options": [
+      { "text": "3 km/hr", "isCorrect": false },
+      { "text": "4 km/hr", "isCorrect": true },
+      { "text": "5 km/hr", "isCorrect": false },
+      { "text": "6 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 1,
+    "explanation": "Let slower speed = s km/hr, faster = (s + 2) km/hr.\n6s + 6(s + 2) = 60\n12s + 12 = 60\n12s = 48\ns = 4 km/hr.",
+    "difficulty": "hard",
+    "marks": 1
+  },
+  {
+    "category": "aptitude",
+    "topic": "time_speed_distance",
+    "question": "A man covers 3/4 of a distance at 20 km/hr and the remaining 1/4 at 60 km/hr. What is his average speed for the entire journey?",
+    "options": [
+      { "text": "20 km/hr", "isCorrect": false },
+      { "text": "22 km/hr", "isCorrect": false },
+      { "text": "24 km/hr", "isCorrect": true },
+      { "text": "30 km/hr", "isCorrect": false }
+    ],
+    "correctAnswer": 2,
+    "explanation": "Let total distance = d.\nTime for 3d/4 at 20 km/hr = 3d/80.\nTime for d/4 at 60 km/hr = d/240.\nTotal time = 3d/80 + d/240 = (9d + d)/240 = 10d/240 = d/24.\nAverage speed = d / (d/24) = 24 km/hr.",
+    "difficulty": "hard",
+    "marks": 1
+  }
+]

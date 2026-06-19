@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, Image, Video, FileText, X, Check, Upload } from 'lucide-react'
-import { uploadMedia, deleteMedia, generateQuestions } from '../services/api'
+import { uploadMedia, deleteMedia, generateQuestions, API_BASE_URL } from '../services/api'
 
 /**
  * QuestionBuilder - Component for building MCQ, Viva, and Interview questions
@@ -10,6 +10,54 @@ export default function QuestionBuilder({ questions, onChange }) {
   const [editingIndex, setEditingIndex] = useState(null)
   const [uploadingMedia, setUploadingMedia] = useState(null) // Track which media type is uploading
   const [generating, setGenerating] = useState(false)
+  // Modified: Added parsingFile state and handleQuestionBankUploadAndParse helper function to upload and parse question bank files
+  const [parsingFile, setParsingFile] = useState(false)
+
+  const handleQuestionBankUploadAndParse = async (file) => {
+    if (!file) return
+
+    setParsingFile(true)
+    try {
+      console.log(`Uploading question bank: ${file.name}`)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`${API_BASE_URL}/upload/parse-questions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.message || 'Failed to parse file')
+      }
+
+      const resData = await response.json()
+      if (resData.success && Array.isArray(resData.questions)) {
+        console.log(`Parsed ${resData.questions.length} questions successfully`)
+        if (resData.questions.length === 0) {
+          alert('No questions could be extracted from the file. Please ensure it follows a standard format.')
+        } else {
+          // Append to existing questions list
+          onChange([...questions, ...resData.questions])
+          alert(`Successfully parsed and added ${resData.questions.length} questions from ${file.name}!`)
+        }
+      } else {
+        throw new Error('Invalid response structure')
+      }
+    } catch (error) {
+      console.error('Error parsing question bank:', error)
+      alert(`Error parsing file: ${error.message}`)
+    } finally {
+      setParsingFile(false)
+      // Reset form
+      setNewQuestion(prev => ({ ...prev, file: null, fileDescription: '' }))
+    }
+  }
+
   const [newQuestion, setNewQuestion] = useState({
     type: 'viva', // default to Viva (MCQ removed from creator)
     text: '', // Changed from 'question' to match backend
@@ -576,17 +624,21 @@ export default function QuestionBuilder({ questions, onChange }) {
         )}
         {/* --- End MCQ Options Input --- */}
 
-        {/* File / Excel Upload UI (frontend-only) */}
+        {/* File / Excel Upload UI (Modified: now handles real-time parsing on upload) */}
         {newQuestion.type === 'file_upload' && (
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">Upload PDF or Excel containing Questions & Answers</label>
 
             <label htmlFor="file-upload-input" className="border-2 border-dashed border-gray-300 rounded-md p-4 flex items-center gap-4 cursor-pointer">
               <div className="flex-shrink-0">
-                <Upload className="w-6 h-6 text-blue-600" />
+                {parsingFile ? (
+                  <span className="inline-block w-6 h-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                ) : (
+                  <Upload className="w-6 h-6 text-blue-600" />
+                )}
               </div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">Click to select a file</div>
+                <div className="text-sm font-medium text-gray-900">{parsingFile ? 'Uploading and parsing file...' : 'Click to select a file'}</div>
                 <div className="text-xs text-gray-500">Accepted: .pdf, .xlsx, .xls, .csv</div>
                 <input
                   id="file-upload-input"
@@ -594,11 +646,15 @@ export default function QuestionBuilder({ questions, onChange }) {
                   accept=".pdf,.xlsx,.xls,.csv"
                   onChange={(e) => {
                     const f = e.target.files[0]
-                    setNewQuestion(prev => ({ ...prev, file: f || null }))
+                    if (f) {
+                      handleQuestionBankUploadAndParse(f)
+                    }
                   }}
                   className="hidden"
+                  disabled={parsingFile}
                 />
 
+                {/* Commented out original metadata display and manual upload flow
                 {newQuestion.file ? (
                   <div className="mt-3 flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
                     <div className="flex items-center gap-3">
@@ -619,9 +675,11 @@ export default function QuestionBuilder({ questions, onChange }) {
                 ) : (
                   <div className="mt-2 text-xs text-gray-500">No file selected</div>
                 )}
+                */}
               </div>
             </label>
 
+            {/* Commented out original textarea instructions input
             <textarea
               placeholder="Optional instructions for this upload"
               value={newQuestion.fileDescription}
@@ -629,8 +687,9 @@ export default function QuestionBuilder({ questions, onChange }) {
               rows={3}
               className="w-full mt-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            */}
 
-            <p className="mt-2 text-xs text-gray-500">Faculty can upload question banks. AI processing will be handled later.</p>
+            <p className="mt-2 text-xs text-gray-500">Faculty can upload question banks. The system will automatically parse the questions and add them to the list below.</p>
           </div>
         )}
 

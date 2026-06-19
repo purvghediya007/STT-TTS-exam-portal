@@ -61,6 +61,12 @@ const examSchema = new mongoose.Schema(
       type: Number,
       min: 1,
     },
+    // slot duration - each student gets this time from when they start
+    // if not set, defaults to durationMinutes for backward compatibility
+    slotDurationMinutes: {
+      type: Number,
+      min: 1,
+    },
     // Exam marks breakdown
     marks: {
       mcq: {
@@ -107,6 +113,10 @@ const examSchema = new mongoose.Schema(
     },
     // Results publication status
     resultsPublished: {
+      type: Boolean,
+      default: false,
+    },
+    evaluationStarted: {
       type: Boolean,
       default: false,
     },

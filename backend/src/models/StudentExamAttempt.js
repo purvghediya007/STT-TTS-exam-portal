@@ -15,7 +15,14 @@ const studentExamAttemptSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["in_progress", "submitted", "transcribed", "evaluated", "expired","reallowed"],
+      enum: [
+        "in_progress",
+        "submitted",
+        "transcribed",
+        "evaluated",
+        "expired",
+        "reallowed",
+      ],
       default: "in_progress",
     },
     startedAt: {
@@ -38,14 +45,14 @@ const studentExamAttemptSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 studentExamAttemptSchema.index({ examId: 1, studentId: 1 }, { unique: true });
 
 const StudentExamAttempt = mongoose.model(
   "StudentExamAttempt",
-  studentExamAttemptSchema
+  studentExamAttemptSchema,
 );
 
 module.exports = StudentExamAttempt;
