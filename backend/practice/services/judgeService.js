@@ -54,6 +54,60 @@ function ensureTempDir() {
 }
 
 /**
+ * Clean up error output by removing internal UUID paths and temp directory absolute paths,
+ * replacing them with friendly generic filenames for student readability.
+ */
+function sanitizeError(text, submissionDir) {
+  if (!text) return "";
+  let result = text;
+
+  if (submissionDir) {
+    // Normalize and replace all occurrences of submissionDir path
+    const normalizedDir = submissionDir.replace(/\\/g, "/");
+    result = result.replace(
+      new RegExp(normalizedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+      "solution",
+    );
+
+    const doubleEscapedDir = submissionDir.replace(/\\/g, "\\\\");
+    result = result.replace(
+      new RegExp(
+        doubleEscapedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+        "gi",
+      ),
+      "solution",
+    );
+
+    result = result.replace(
+      new RegExp(submissionDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+      "solution",
+    );
+  }
+
+  // Replace temp base path
+  const tempBaseNormalized = TEMP_BASE.replace(/\\/g, "/");
+  result = result.replace(
+    new RegExp(
+      tempBaseNormalized.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+      "gi",
+    ),
+    "tmp",
+  );
+  result = result.replace(
+    new RegExp(TEMP_BASE.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+    "tmp",
+  );
+
+  // Replace any standard uuid patterns
+  result = result.replace(
+    /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi,
+    "code",
+  );
+
+  return result;
+}
+
+/**
  * Execute a docker command and return result
  * @returns {Promise<{stdout, stderr, exitCode, timedOut}>}
  */
@@ -70,7 +124,11 @@ function dockerRun(args, timeoutMs = 10000) {
         resolve({
           stdout: stdout || "",
           stderr: stderr || "",
-          exitCode: error?.code || 0,
+          exitCode: error
+            ? error.code !== null && error.code !== undefined
+              ? error.code
+              : -1
+            : 0,
           timedOut: error?.killed || false,
           signal: error?.signal || null,
         });
@@ -115,7 +173,11 @@ function localRun(cmd, args, options, timeoutMs = 10000) {
         resolve({
           stdout: stdout || "",
           stderr: stderr || "",
-          exitCode: error?.code || 0,
+          exitCode: error
+            ? error.code !== null && error.code !== undefined
+              ? error.code
+              : -1
+            : 0,
           timedOut: error?.killed || false,
           signal: error?.signal || null,
         });
@@ -150,25 +212,28 @@ async function runLocalCode(
     console.log(
       `[Judge] Compiling locally using: ${compileCmd} ${compileArgs.join(" ")}`,
     );
+    // Increased timeout to 30 seconds for slower CPUs (Render free tier)
     const compileResult = await localRun(
       compileCmd,
       compileArgs,
       { cwd: submissionDir },
-      (cpuTimeLimit + 5) * 1000,
+      30000,
     );
 
     if (
       compileResult.exitCode !== 0 ||
+      compileResult.timedOut ||
       compileResult.stderr.toLowerCase().includes("error")
     ) {
+      const rawError = compileResult.timedOut
+        ? "Compilation timed out after 30 seconds"
+        : compileResult.stderr.trim() ||
+          `Local compilation failed with exit code ${compileResult.exitCode}`;
+      const friendlyError = sanitizeError(rawError, submissionDir);
       return {
         stdout: "",
-        stderr:
-          compileResult.stderr.trim() ||
-          `Local compilation failed with exit code ${compileResult.exitCode}`,
-        compileOutput:
-          compileResult.stderr.trim() ||
-          `Local compilation failed with exit code ${compileResult.exitCode}`,
+        stderr: friendlyError,
+        compileOutput: friendlyError,
         statusId: 6, // Compilation Error
         status: "Compilation Error",
         time: Date.now() - startTime,
@@ -187,6 +252,23 @@ async function runLocalCode(
       runCmd = path.join(submissionDir, "solution.exe");
     } else {
       runCmd = path.join(submissionDir, "solution");
+    }
+
+    // Safety: Verify file exists before trying to run it or set permissions
+    if (!fs.existsSync(runCmd)) {
+      return {
+        stdout: "",
+        stderr:
+          "Executable binary not found. Compilation failed to generate output binary.",
+        compileOutput: "Executable binary not found.",
+        statusId: 6, // Compilation Error
+        status: "Compilation Error",
+        time: Date.now() - startTime,
+        memory: 0,
+      };
+    }
+
+    if (!isWindows) {
       // Add executable permission on Linux/Mac
       try {
         fs.chmodSync(runCmd, 0o755);
@@ -232,9 +314,10 @@ async function runLocalCode(
   }
 
   if (runResult.exitCode !== 0 && runResult.stderr) {
+    const friendlyError = sanitizeError(runResult.stderr.trim(), submissionDir);
     return {
       stdout: runResult.stdout.trim(),
-      stderr: runResult.stderr.trim(),
+      stderr: friendlyError,
       compileOutput: "",
       statusId: 11, // Runtime Error
       status: "Runtime Error (NZEC)",
@@ -245,7 +328,7 @@ async function runLocalCode(
 
   return {
     stdout: runResult.stdout.trim(),
-    stderr: runResult.stderr.trim(),
+    stderr: sanitizeError(runResult.stderr.trim(), submissionDir),
     compileOutput: "",
     statusId: 3, // Accepted
     status: "Accepted",

@@ -543,91 +543,98 @@ router.post(
 
       // Save questions if provided
       if (questions && Array.isArray(questions) && questions.length > 0) {
-        console.log("Saving", questions.length, "questions...");
+        // Filter out any frontend-only helper questions (like 'file_upload') to prevent Mongoose validation errors
+        const validQuestions = questions.filter(q => ["mcq", "viva", "interview"].includes(q?.type));
+        console.log("Saving", validQuestions.length, "valid questions (out of", questions.length, "received)...");
+
         // Delete existing questions for this exam
         await Question.deleteMany({ examId: draftId });
 
-        // Insert new questions
-        const questionsToInsert = questions.map((q, index) => {
-          console.log("Mapping question:", q);
+        if (validQuestions.length > 0) {
+          // Insert new questions
+          const questionsToInsert = validQuestions.map((q, index) => {
+            console.log("Mapping question:", q);
 
-          // Extract URLs from media objects
-          const getMediaUrl = (mediaObj) => {
-            if (!mediaObj) return "";
-            if (typeof mediaObj === "string") return mediaObj; // Already a URL
-            if (mediaObj.url) return mediaObj.url; // Cloudinary upload object
-            return "";
-          };
+            // Extract URLs from media objects
+            const getMediaUrl = (mediaObj) => {
+              if (!mediaObj) return "";
+              if (typeof mediaObj === "string") return mediaObj; // Already a URL
+              if (mediaObj.url) return mediaObj.url; // Cloudinary upload object
+              return "";
+            };
 
-          const mapped = {
-            examId: draftId,
-            teacherId: teacherId,
-            text: q.text || q.title || q.question || "",
-            type: q.type || "long_answer",
-            marks: q.marks || q.points || 1,
-            expectedAnswer: q.expectedAnswer || "",
-            instruction: q.instruction || "",
-            media: {
-              imageUrl: getMediaUrl(q.media?.imageUrl || q.media?.image),
-              fileUrl: getMediaUrl(q.media?.fileUrl || q.media?.video),
-            },
-            order: q.order !== undefined ? q.order : index + 1,
-            perQuestionSettings: {
-              thinkTimeSeconds: q.perQuestionSettings?.thinkTimeSeconds,
-              answerTimeSeconds: q.perQuestionSettings?.answerTimeSeconds,
-              reRecordAllowed: q.perQuestionSettings?.reRecordAllowed,
-            },
-          };
-
-          // ✅ REQUIRED: audio for all question types
-          mapped.requiresAudio = true;
-
-          // ✅ REQUIRED: MCQ does not need rubric
-          if (mapped.type === "mcq") {
-            mapped.aiStatus = { rubric: "skipped" };
-          }
-
-          // Add options for MCQ questions
-          if (
-            (q.type === "mcq" || q.type === "MCQ") &&
-            Array.isArray(q.options)
-          ) {
-            mapped.options = q.options;
-            console.log("Adding options for MCQ:", mapped.options);
-          }
-
-          console.log("Mapped question:", mapped);
-          return mapped;
-        });
-
-        const inserted = await Question.insertMany(questionsToInsert);
-        console.log("Questions saved:", inserted.length);
-        inserted.forEach((q) => {
-          console.log("Saved question:", q.text, "with marks:", q.marks);
-        });
-
-        // ✅ QUEUE AI JOBS FOR EACH QUESTION (FIXED SCOPE)
-        for (let index = 0; index < inserted.length; index++) {
-          const q = inserted[index];
-
-          await aiQueue.add(
-            "process-question",
-            { questionId: q._id },
-            {
-              delay: index * 30000, // ⏱ 30 seconds gap between questions
-              attempts: 3,
-              backoff: {
-                type: "exponential",
-                delay: 20000,
+            const mapped = {
+              examId: draftId,
+              teacherId: teacherId,
+              text: q.text || q.title || q.question || "",
+              type: q.type || "long_answer",
+              marks: q.marks || q.points || 1,
+              expectedAnswer: q.expectedAnswer || "",
+              instruction: q.instruction || "",
+              media: {
+                imageUrl: getMediaUrl(q.media?.imageUrl || q.media?.image),
+                fileUrl: getMediaUrl(q.media?.fileUrl || q.media?.video),
               },
-              removeOnComplete: true,
-              removeOnFail: false,
-            },
-          );
+              order: q.order !== undefined ? q.order : index + 1,
+              perQuestionSettings: {
+                thinkTimeSeconds: q.perQuestionSettings?.thinkTimeSeconds,
+                answerTimeSeconds: q.perQuestionSettings?.answerTimeSeconds,
+                reRecordAllowed: q.perQuestionSettings?.reRecordAllowed,
+              },
+            };
 
-          console.log(
-            `✅ AI job queued for question ${q._id.toString()} (delay ${index * 30}s)`,
-          );
+            // ✅ REQUIRED: audio for all question types
+            mapped.requiresAudio = true;
+
+            // ✅ REQUIRED: MCQ does not need rubric
+            if (mapped.type === "mcq") {
+              mapped.aiStatus = { rubric: "skipped" };
+            }
+
+            // Add options for MCQ questions
+            if (
+              (q.type === "mcq" || q.type === "MCQ") &&
+              Array.isArray(q.options)
+            ) {
+              mapped.options = q.options;
+              console.log("Adding options for MCQ:", mapped.options);
+            }
+
+            console.log("Mapped question:", mapped);
+            return mapped;
+          });
+
+          const inserted = await Question.insertMany(questionsToInsert);
+          console.log("Questions saved:", inserted.length);
+          inserted.forEach((q) => {
+            console.log("Saved question:", q.text, "with marks:", q.marks);
+          });
+
+          // ✅ QUEUE AI JOBS FOR EACH QUESTION (FIXED SCOPE)
+          for (let index = 0; index < inserted.length; index++) {
+            const q = inserted[index];
+
+            await aiQueue.add(
+              "process-question",
+              { questionId: q._id },
+              {
+                delay: index * 30000, // ⏱ 30 seconds gap between questions
+                attempts: 3,
+                backoff: {
+                  type: "exponential",
+                  delay: 20000,
+                },
+                removeOnComplete: true,
+                removeOnFail: false,
+              },
+            );
+
+            console.log(
+              `✅ AI job queued for question ${q._id.toString()} (delay ${index * 30}s)`,
+            );
+          }
+        } else {
+          console.log("No valid questions to save after filtering");
         }
       } else {
         console.log("No questions to save");

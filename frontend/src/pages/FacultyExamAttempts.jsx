@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
 export default function FacultyExamAttempts() {
   const { examId } = useParams();
@@ -14,16 +14,8 @@ export default function FacultyExamAttempts() {
     try {
       setLoading(true);
 
-      // ✅ FIXED: use correct key
-      const token = localStorage.getItem("auth_token");
-
-      const res = await axios.get(
-        `/api/exams/${examId}/attempts`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await api.get(
+        `/exams/${examId}/attempts`
       );
 
       setAttempts(res.data.attempts || []);
@@ -46,17 +38,8 @@ export default function FacultyExamAttempts() {
     try {
       setProcessingId(studentId);
 
-      // ✅ FIXED: use correct key
-      const token = localStorage.getItem("auth_token");
-
-      await axios.patch(
-        `/api/exams/${examId}/reallow/${studentId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await api.patch(
+        `/exams/${examId}/reallow/${studentId}`
       );
 
       alert("Student reallowed successfully");

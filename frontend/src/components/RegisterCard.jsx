@@ -150,6 +150,13 @@ export default function RegisterCard() {
       return
     }
 
+    // Validate student username and enrollment number are identical
+    if (form.role === 'student' && form.username !== form.enrollmentNumber) {
+      setMessage({ type: 'error', text: 'Username and Enrollment Number must be identical for students.' })
+      return
+    }
+
+
     setIsLoading(true)
 
     try {
@@ -201,9 +208,23 @@ export default function RegisterCard() {
       }, 1500)
     } catch (error) {
       console.error('Registration error:', error)
+      let errorMsg = 'An error occurred during registration. Please try again.'
+      if (error.response) {
+        if (error.response.status === 409) {
+          errorMsg = 'This username or email is already registered. Please use a different one.'
+        } else if (error.response.status === 400) {
+          errorMsg = error.response.data?.message || 'Invalid details. Please verify all inputs.'
+        } else {
+          errorMsg = error.response.data?.message || `Server error (${error.response.status}). Please try again.`
+        }
+      } else if (error.request) {
+        errorMsg = 'Cannot connect to the server. Please check your network connection.'
+      } else {
+        errorMsg = error.message || errorMsg
+      }
       setMessage({
         type: 'error',
-        text: 'An error occurred. Please try again.'
+        text: errorMsg
       })
       setIsLoading(false)
     }

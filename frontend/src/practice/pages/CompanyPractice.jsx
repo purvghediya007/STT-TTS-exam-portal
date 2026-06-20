@@ -19,7 +19,9 @@ export default function CompanyPractice() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [questionCount, setQuestionCount] = useState(5);
+  const [aptitudeCount, setAptitudeCount] = useState(5);
+  const [technicalMcqCount, setTechnicalMcqCount] = useState(5);
+  const [spokenCount, setSpokenCount] = useState(5);
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
@@ -31,14 +33,27 @@ export default function CompanyPractice() {
 
   const selectedData = companies.find((c) => c.company === selectedCompany);
 
+  useEffect(() => {
+    if (selectedData) {
+      setAptitudeCount(Math.min(10, selectedData.aptitudeCount || 0));
+      setTechnicalMcqCount(Math.min(10, selectedData.technicalMcqCount || 0));
+      setSpokenCount(Math.min(5, selectedData.spokenCount || 0));
+    }
+  }, [selectedCompany, companies, selectedData]);
+
   const handleStart = async (type) => {
     if (!selectedCompany || starting) return;
     setStarting(true);
+    let count = 5;
+    if (type === 'aptitude') count = aptitudeCount;
+    else if (type === 'technical_mcq') count = technicalMcqCount;
+    else if (type === 'technical_spoken') count = spokenCount;
+
     try {
       const res = await startPractice({
         type,
         company: selectedCompany,
-        count: questionCount,
+        count: count,
       });
       navigate('/student/practice/exam', {
         state: { session: res.data, type, company: selectedCompany },
@@ -62,18 +77,24 @@ export default function CompanyPractice() {
     return Math.ceil(secs / 60);
   };
 
-  // Max across all categories for the selected company
-  const globalMax = selectedData
-    ? Math.max(selectedData.aptitudeCount || 0, selectedData.technicalMcqCount || 0, selectedData.spokenCount || 0)
-    : 50;
-
-  const handleIncrement = () => setQuestionCount((prev) => Math.min(prev + 1, globalMax));
-  const handleDecrement = () => setQuestionCount((prev) => Math.max(prev - 1, 1));
-  const handleInputChange = (e) => {
-    const val = parseInt(e.target.value, 10);
-    if (!isNaN(val)) setQuestionCount(Math.max(1, Math.min(val, globalMax)));
-    else if (e.target.value === '') setQuestionCount(1);
+  const stylesMap = {
+    blue: {
+      text: 'text-blue-600',
+      ring: 'focus:ring-blue-500 focus:border-blue-500',
+      btn: 'bg-blue-600 hover:bg-blue-700',
+    },
+    indigo: {
+      text: 'text-indigo-600',
+      ring: 'focus:ring-indigo-500 focus:border-indigo-500',
+      btn: 'bg-indigo-600 hover:bg-indigo-700',
+    },
+    green: {
+      text: 'text-green-600',
+      ring: 'focus:ring-green-500 focus:border-green-500',
+      btn: 'bg-green-600 hover:bg-green-700',
+    }
   };
+
 
   if (loading) {
     return (
@@ -156,78 +177,80 @@ export default function CompanyPractice() {
             </p>
           </div>
 
-          {/* Stepper */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">Number of Questions</label>
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  onClick={handleDecrement}
-                  disabled={questionCount <= 1}
-                  className="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Decrease"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={globalMax}
-                  value={questionCount}
-                  onChange={handleInputChange}
-                  className="w-14 text-center text-base font-bold text-gray-900 py-2 border-x border-gray-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <button
-                  onClick={handleIncrement}
-                  disabled={questionCount >= globalMax}
-                  className="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Increase"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <span className="text-xs text-gray-400">Max {globalMax}</span>
-            </div>
-          </div>
-
-          {/* Practice Mode Buttons */}
+          {/* Practice Mode Selection Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { type: 'aptitude', label: 'Aptitude', icon: Brain, max: getMaxForType('aptitude') },
-              { type: 'technical_mcq', label: 'Technical MCQ', icon: Monitor, max: getMaxForType('technical_mcq') },
-              { type: 'technical_spoken', label: 'Spoken Interview', icon: Mic, max: getMaxForType('technical_spoken') },
-            ].map(({ type, label, icon: Icon, max }) => {
-              const count = Math.min(questionCount, max);
-              const time = getTimeEstimate(count, type);
+              { type: 'aptitude', label: 'Aptitude', icon: Brain, max: getMaxForType('aptitude'), count: aptitudeCount, setCount: setAptitudeCount, color: 'blue' },
+              { type: 'technical_mcq', label: 'Technical MCQ', icon: Monitor, max: getMaxForType('technical_mcq'), count: technicalMcqCount, setCount: setTechnicalMcqCount, color: 'indigo' },
+              { type: 'technical_spoken', label: 'Spoken Interview', icon: Mic, max: getMaxForType('technical_spoken'), count: spokenCount, setCount: setSpokenCount, color: 'green' },
+            ].map(({ type, label, icon: Icon, max, count, setCount, color }) => {
+              const time = getTimeEstimate(count || 1, type);
+              const styles = stylesMap[color];
               return (
-                <button
+                <div
                   key={type}
-                  onClick={() => handleStart(type)}
-                  disabled={starting || max === 0}
-                  className="text-left p-4 bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex flex-col justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="flex items-center gap-2 font-semibold text-gray-900 text-sm">
-                      <Icon className="w-4 h-4 text-indigo-600" /> {label}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="flex items-center gap-2 font-semibold text-gray-900 text-sm">
+                        <Icon className={`w-4 h-4 ${styles.text}`} /> {label}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 space-y-1 mb-3">
+                      {max > 0 ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Available Questions:</span>
+                            <span className="font-semibold text-gray-700">{max}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span>Est. Time:</span>
+                            <span className="font-semibold text-gray-700">~{time} min</span>
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-gray-400">No questions available</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 space-y-0.5">
-                    {max > 0 ? (
-                      <>
-                        <div className="flex items-center gap-1">
-                          <span>{count} questions</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>~{time} min</span>
-                        </div>
-                      </>
-                    ) : (
-                      <span className="text-gray-400">No questions available</span>
-                    )}
-                  </div>
-                </button>
+
+                  {max > 0 && (
+                    <div className="space-y-3 mt-auto pt-2 border-t border-gray-200">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Number of Questions</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={max}
+                          value={count}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              setCount(Math.max(1, Math.min(val, max)));
+                            } else if (e.target.value === '') {
+                              setCount('');
+                            }
+                          }}
+                          onBlur={() => {
+                            if (count === '' || count < 1) {
+                              setCount(Math.min(type === 'technical_spoken' ? 5 : 10, max));
+                            }
+                          }}
+                          className={`w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 ${styles.ring}`}
+                          placeholder={`Max ${max}`}
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleStart(type)}
+                        disabled={starting || count === '' || count < 1}
+                        className={`w-full ${styles.btn} disabled:bg-gray-300 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm shadow-sm`}
+                      >
+                        Start Practice <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

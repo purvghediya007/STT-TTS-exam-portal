@@ -17,24 +17,18 @@ async function seed() {
     await mongoose.connect(MONGO_URI);
     console.log("Connected to MongoDB");
 
-    // Upsert each problem (update if exists, insert if not)
-    let inserted = 0;
-    let updated = 0;
+    // Clear all existing coding problems first to ensure only the 5 premium ones exist
+    await CodingProblem.deleteMany({});
+    console.log("Cleared existing coding problems from database");
 
+    let inserted = 0;
     for (const problem of problems) {
-      const existing = await CodingProblem.findOne({ slug: problem.slug });
-      if (existing) {
-        await CodingProblem.updateOne({ slug: problem.slug }, { $set: problem });
-        updated++;
-        console.log(`  Updated: ${problem.title}`);
-      } else {
-        await CodingProblem.create(problem);
-        inserted++;
-        console.log(`  Inserted: ${problem.title}`);
-      }
+      await CodingProblem.create(problem);
+      inserted++;
+      console.log(`  Inserted: ${problem.title}`);
     }
 
-    console.log(`\nDone! Inserted: ${inserted}, Updated: ${updated}, Total: ${problems.length}`);
+    console.log(`\nDone! Successfully seeded only the 5 premium LeetCode-style questions.`);
     process.exit(0);
   } catch (error) {
     console.error("Seed error:", error);

@@ -888,10 +888,11 @@ router.post(
       console.log(`📥 Raw Request Body:`, req.body);
       console.log(`🔐 Teacher ID: ${req.user.sub}`);
 
-      const { topics, num_questions, difficulty } = req.body;
+            const { topics, num_questions, difficulty, type } = req.body;
       console.log(`✔️ Destructured - Topics:`, topics);
       console.log(`✔️ Destructured - Num Questions:`, num_questions);
       console.log(`✔️ Destructured - Difficulty:`, difficulty);
+      console.log(`✔️ Destructured - Type:`, type);
 
       // Validate request data
       if (!topics || !Array.isArray(topics) || topics.length === 0) {
@@ -921,6 +922,13 @@ router.post(
         });
       }
 
+      if (type && typeof type !== "string") {
+        console.warn("⚠️ Validation failed: type must be a string");
+        return res.status(400).json({
+          message: "Invalid request: 'type' must be a string",
+        });
+      }
+
       console.log("\n✅ All validations passed");
       console.log(
         `🎓 Question Generation Request from Teacher: ${req.user.sub}`,
@@ -928,12 +936,14 @@ router.post(
       console.log(`📝 Topics: ${topics.join(", ")}`);
       console.log(`📊 Number of Questions: ${num_questions}`);
       console.log(`🎯 Difficulty: ${difficulty}`);
+      console.log(`🏷️ Type: ${type || 'viva'}`);
 
       // Prepare request payload
       const requestPayload = {
         topics,
         num_questions,
         difficulty,
+        type: type || 'viva',
       };
       console.log(
         "\n📤 Calling AI Model API with payload:",
