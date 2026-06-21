@@ -3,8 +3,9 @@
 const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const AI_MODEL_API_URL =
-  "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/questions/generate";
+// Commented out old hardcoded URL to make it dynamic and route MCQs to the correct endpoint
+// const AI_MODEL_API_URL =
+//   "https://jaunita-untempering-nita.ngrok-free.dev/api/v1/questions/generate";
 
 /**
  * Call external AI model API or direct Gemini API to generate exam questions
@@ -96,7 +97,16 @@ Ensure the output is valid JSON. Do not include any markdown formatting, backtic
     console.log("🤖 GEMINI_API_KEY not set. Calling external AI Model API for question generation...");
     console.log("📤 Request data:", requestData);
 
-    const response = await axios.post(AI_MODEL_API_URL, requestData, {
+    // Dynamically resolve target URL based on question type (mcq vs viva/theory)
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "https://jaunita-untempering-nita.ngrok-free.dev";
+    const isMcq = requestData.type === "mcq";
+    const targetApiUrl = isMcq
+      ? `${aiServiceUrl}/api/v1/mcqs/generate`
+      : `${aiServiceUrl}/api/v1/questions/generate`;
+
+    console.log(`🔗 Target AI Endpoint: ${targetApiUrl}`);
+
+    const response = await axios.post(targetApiUrl, requestData, {
       timeout: 60000, // 60 second timeout for AI processing
       headers: {
         "Content-Type": "application/json",
