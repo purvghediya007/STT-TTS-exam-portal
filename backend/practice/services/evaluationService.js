@@ -182,7 +182,8 @@ async function evaluateSpokenAnswer(question, transcript, expectedPoints, sample
       question_id: qId,
       question_text: question.question,
       student_answer: transcript,
-      rubric: rubric,
+      // rubric: rubric, // Commented out old key to fix 422 error
+      "rubrics": rubric, // Modified key to match FastAPI format
       max_marks: question.marks || 5,
     }, { timeout: 15000 }); // Fast timeout of 15s
 

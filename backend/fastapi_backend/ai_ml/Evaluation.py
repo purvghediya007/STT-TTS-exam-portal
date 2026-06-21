@@ -46,8 +46,8 @@ Return ONLY valid JSON. If JSON is malformed, fix it and return valid JSON.
 If the student says that they do not know the answer then you must give them a 0
 DO NOT GIVE marks greater than 0 if the student doesn't know the answer
 
-Rubric:
-{rubric}
+Rubrics:
+{rubrics}
 
 Question:
 {question_text}
@@ -62,7 +62,7 @@ Maximum Marks: {max_marks}
 
             prompt = PromptTemplate(
                 template=template,
-                input_variables=["rubric", "question_text", "student_answer", "max_marks"],
+                input_variables=["rubrics", "question_text", "student_answer", "max_marks"],
                 partial_variables={"format_instructions": parser.get_format_instructions()},
             )
 

@@ -14,7 +14,7 @@ class EvaluateAnswer(BaseModel):
     ]
     # rubric: Annotated[List[str], 
     #                   StringConstraints(min_length=1)]
-    rubric: Annotated[List[str], Field(min_length=1)]
+    rubrics: Annotated[List[str], Field(min_length=1)]
     max_marks: Annotated[float, Field(ge=1, le=100)] = 10
     
     # # Optional fields remain the same
