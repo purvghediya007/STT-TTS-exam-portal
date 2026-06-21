@@ -157,8 +157,10 @@ const FacultyAnalyticsDashboard = () => {
           },
         })
 
+
         if (!res.ok) throw new Error('Failed to fetch overview')
         const data = await res.json()
+        console.log('Overview data:', data)
         const overview = data.data || {}
         setSemesters(overview.semesterData || [])
         const exams = overview.examMetrics || []
@@ -216,11 +218,12 @@ const FacultyAnalyticsDashboard = () => {
     fetchStudents()
   }, [selectedSemester])
 
-  // Calculate average across all semesters
+  // Calculate average across semesters that have exams conducted
   const overallAverage = useMemo(() => {
-    if (semesters.length === 0) return 0
-    const sum = semesters.reduce((acc, s) => acc + (s.avg || 0), 0)
-    return Math.round(sum / semesters.length)
+    const validSemesters = semesters.filter((s) => (s.examCount || 0) > 0)
+    if (validSemesters.length === 0) return 0
+    const sum = validSemesters.reduce((acc, s) => acc + (s.avg || 0), 0)
+    return Math.round(sum / validSemesters.length)
   }, [semesters])
 
 

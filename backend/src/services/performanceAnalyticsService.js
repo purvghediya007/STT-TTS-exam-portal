@@ -326,6 +326,32 @@ const getSemesterOverview = async (teacherId) => {
       });
       const semesterStudentIds = semesterStudents.map((s) => s._id);
 
+      let examCount = 0;
+      if (semesterStudentIds.length > 0) {
+        const examCountResult = await StudentExamAttempt.aggregate([
+          {
+            $match: {
+              studentId: { $in: semesterStudentIds },
+              status: { $in: ["submitted", "transcribed", "evaluated"] },
+              totalScore: { $ne: null },
+              maxScore: { $gt: 0 },
+            },
+          },
+          {
+            $group: {
+              _id: "$examId",
+            },
+          },
+          {
+            $count: "examCount",
+          },
+        ]);
+
+        examCount = examCountResult[0]?.examCount || 0;
+      }
+
+      console.log("DEBUG semesterCount", { sem, examCount, studentCount: semesterStudentIds.length });
+
       if (semesterStudentIds.length === 0) {
         semesterData.push({
           sem,
@@ -333,6 +359,7 @@ const getSemesterOverview = async (teacherId) => {
           avg: 0,
           high: 0,
           low: 0,
+          examCount,
         });
         continue;
       }
@@ -351,6 +378,7 @@ const getSemesterOverview = async (teacherId) => {
           avg: 0,
           high: 0,
           low: 0,
+          examCount,
         });
         continue;
       }
@@ -376,6 +404,7 @@ const getSemesterOverview = async (teacherId) => {
         avg: avgPercentage,
         high: Math.round(maxPercentage),
         low: minPercentage === 100 ? 0 : Math.round(minPercentage),
+        examCount,
       });
     }
 
