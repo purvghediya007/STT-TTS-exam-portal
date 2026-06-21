@@ -1,7 +1,7 @@
 services:
   examecho-ai:
     build: .
-    image: examecho-ai:groq
+    image: v1-examecho-ai-backend:groq
     container_name: examecho-ai
     ports:
       - "8000:8000"
