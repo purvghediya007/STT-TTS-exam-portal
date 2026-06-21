@@ -239,6 +239,41 @@ router.put(
 );
 
 /**
+ * DELETE /api/faculty/exams/:id
+ * Delete an exam and its associated questions, attempts, and answers
+ */
+router.delete(
+  "/exams/:id",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const teacherId = req.user.sub;
+
+      const exam = await Exam.findById(id);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({ message: "Forbidden: not your exam" });
+      }
+
+      // Remove related data so the exam is fully deleted from the backend
+      await Question.deleteMany({ examId: id });
+      await StudentAnswer.deleteMany({ examId: id });
+      await StudentExamAttempt.deleteMany({ examId: id });
+      await Exam.findByIdAndDelete(id);
+
+      return res.status(200).json({ message: "Exam deleted successfully" });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/**
  * GET /api/faculty/exams/drafts
  * Get draft exams for the logged-in teacher
  */

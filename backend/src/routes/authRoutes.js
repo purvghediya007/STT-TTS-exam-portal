@@ -86,10 +86,10 @@ router.get("/captcha", (req, res) => {
 // Body: { role: "Teacher"|"Student", email, username, password, enrollmentNumber (optional for students) }
 router.post("/register", async (req, res, next) => {
   try {
-    let { role, email, username, password, enrollmentNumber ,branch,semester,} = req.body;
+    let { role, email, username, password, enrollmentNumber, branch, semester, department } = req.body;
     
     console.log(
-      `Registration attempt: role=${role}, email=${email}, username=${username}`
+      `Registration attempt: role=${role}, email=${email}, username=${username}, department=${department || ''}`
     );
 
     if (!role || !email || !username || !password) {
@@ -143,9 +143,13 @@ router.post("/register", async (req, res, next) => {
     // Add enrollmentNumber for students if provided
     if (normalizedRole === "student" && enrollmentNumber) {
       userDocData.enrollmentNumber = enrollmentNumber;
-        // 🔥 NEW ADDITION
       userDocData.branch = branch || "";
       userDocData.semester = semester || null;
+    }
+
+    // Add optional department for teachers
+    if (normalizedRole === "teacher" && department) {
+      userDocData.department = department;
     }
 
     const userDoc = await Model.create(userDocData);
@@ -161,6 +165,7 @@ router.post("/register", async (req, res, next) => {
         username: userDoc.username,
         role: userDoc.role,
         enrollmentNumber: userDoc.enrollmentNumber || undefined,
+        department: userDoc.department || undefined,
       },
     });
   } catch (error) {

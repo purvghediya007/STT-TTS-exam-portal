@@ -69,7 +69,8 @@ export default function StudentsList() {
   })
 
   const handleViewStudent = (studentId) => {
-    navigate(`/faculty/students/${studentId}`)
+    // navigate(`/faculty/students/${studentId}`)
+    alert('This feature is coming soon!') // Placeholder until student details page is implemented;
   }
 
   if (loading && students.length === 0) {
