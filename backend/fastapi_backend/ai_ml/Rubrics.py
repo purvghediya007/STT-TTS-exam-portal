@@ -1,143 +1,129 @@
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
+"""
+Rubric generation engine.
 
-from ai_ml.ModelCreator import HFModelCreation
-
-from pydantic import BaseModel, Field
-from typing import List, Dict, Annotated, Optional
-
-import re
-import json
-
-
-class RubricsResponse(BaseModel):
-
-    question_id: Annotated[str, Field(topic="Question ID", min_length=1)]
-
-    question_text: Annotated[str, Field(topic="Question", min_length=1)]
-
-    rubrics: Annotated[List[str], Field(
-        topic="Generated Rubrics", min_length=1)]
-
-
-class RubricsEngine():
-    def __init__(self, model_name: str, global_model=None):
-        self.model_name = model_name
-        self.model = global_model
-
-    def get_model(self):
-        if self.model is None:
-            self.model = HFModelCreation.hf_model_creator(self.model_name)
-        return self.model
-
-    def sanitize_json(self, text: str) -> str:
-        text = text.replace("```json", "").replace("```", "").strip()
-        m = re.search(r"\{[\s\S]*\}", text)
-        if m:
-            text = m.group(0)
-        text = re.sub(r",\s*}", "}", text)
-        text = re.sub(r",\s*]", "]", text)
-        return text
-
-    def create_rubrics_chain(self):
-
-        try:
-            parser = JsonOutputParser(pydantic_object=RubricsResponse)
-
-            template = """
-You are an exam evaluator.
-Generate marking rubrics for the given question.
-
-Return ONLY valid JSON in the following format:
-
-{{
-  "question_id": "{question_id}",
-  "question_text": "{question_text}",
-  "rubrics": []
-}}
-
-Question: {question_text}
-Total Marks: {max_marks}
-
-{format_instructions}
+Given a question and its maximum marks, uses Groq (llama-3.3-70b-versatile)
+to produce a list of marking criteria (rubrics) that an evaluator should
+check when scoring a student's answer.
 """
 
-            prompt = PromptTemplate(
-                template=template,
-                input_variables=["question_text", "max_marks"],
-                partial_variables={
-                    "format_instructions": parser.get_format_instructions()
-                }
-            )
+from __future__ import annotations
 
-            chain = prompt | self.get_model()
-            return chain, parser
+import logging
+from typing import List
 
-        except Exception as e:
-            print("Rubric chain creation error:", e)
-            return ""
+from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field, field_validator
 
-    def create_rubrics(self, input_features: dict):
+from ai_ml.exceptions import RubricsGenerationError
+from ai_ml.model_creator import GroqModelLoader
+from app.utils.json_utils import extract_json
+
+logger = logging.getLogger(__name__)
+
+
+# Output schema
+
+class RubricsResult(BaseModel):
+    """Validated rubric list for a single question."""
+
+    question_text: str = Field(min_length=1)
+    rubrics: List[str] = Field(min_length=1)
+
+    @field_validator("rubrics", mode="before")
+    @classmethod
+    def _ensure_list(cls, v) -> List[str]:
+        if isinstance(v, str):
+            return [v]
+        cleaned = [str(item).strip() for item in v if str(item).strip()]
+        if not cleaned:
+            raise ValueError("Rubrics must contain at least one non-empty item.")
+        return cleaned
+
+
+# Prompt
+
+_RUBRICS_TEMPLATE = """\
+You are an academic exam evaluator. You MUST respond with ONLY a valid JSON object. No explanation, no markdown, no text before or after the JSON.
+
+Task:
+Generate marking rubrics for the question below.
+
+Rules:
+- Each rubric item must be a clear, distinct evaluative criterion (a single sentence).
+- Generate approximately one rubric per 2–3 marks (e.g. 10 marks → 4–5 rubrics).
+- Rubrics must be specific enough to guide a human marker.
+- Do NOT include generic rubrics like "Good effort" or "Clear writing".
+
+Return ONLY this JSON (no markdown, no extra text):
+{{
+  "question_text": "{question_text}",
+  "rubrics": ["criterion 1", "criterion 2", "criterion 3"]
+}}
+
+Question:
+{question_text}
+
+Total Marks: {max_marks}"""
+
+
+class RubricsEngine:
+    """
+    Generates marking rubrics for a given question using Groq.
+
+    Args:
+        model: Pre-loaded ChatGroq instance (optional; lazy-loaded if omitted).
+    """
+
+    def __init__(self, model=None) -> None:
+        self._model = model
+
+    def _get_model(self):
+        if self._model is None:
+            self._model = GroqModelLoader.get_model()
+        return self._model
+
+    def _build_chain(self):
+        prompt = PromptTemplate(
+            template=_RUBRICS_TEMPLATE,
+            input_variables=["question_text", "max_marks"],
+        )
+        return prompt | self._get_model()
+
+    def generate(self, *, question_text: str, max_marks: int) -> RubricsResult:
+        """
+        Generate rubrics for a question.
+
+        Args:
+            question_text: The exam question.
+            max_marks:     The maximum marks allocated to this question.
+
+        Returns:
+            :class:`RubricsResult` with validated rubric list.
+
+        Raises:
+            RubricsGenerationError: If the Groq call or response parsing fails.
+        """
+        try:
+            chain = self._build_chain()
+            raw = chain.invoke({"question_text": question_text, "max_marks": max_marks})
+        except Exception as exc:
+            logger.error("Groq call failed during rubric generation: %s", exc)
+            raise RubricsGenerationError(f"LLM call failed: {exc}") from exc
+
+        content = raw.content if hasattr(raw, "content") else str(raw)
+        logger.debug("Rubrics raw output (%d chars)", len(content))
 
         try:
-            if "max_marks" not in input_features:
-                raise KeyError(
-                    "Input features must contain the maximum marks of question")
-
-            elif "question_text" not in input_features:
-                raise KeyError("Input features must contain the question")
-
-            chain, parser = self.create_rubrics_chain()
-
-            raw = chain.invoke(input_features)
-
-            # Extract actual text reliably from various return shapes
-            output = None
-
-            # common return shapes
-            if isinstance(raw, dict):
-                # hf pipeline or similar
-                if "text" in raw:
-                    output = raw["text"]
-                elif "generated_text" in raw:
-                    output = raw["generated_text"]
-                else:
-                    # sometimes pipelines return {"output_text": ...}
-                    if "output_text" in raw:
-                        output = raw["output_text"]
-                    else:
-                        output = json.dumps(raw)  # fallback
-
-            elif hasattr(raw, "generations"):
-                # LangChain-like object
-                try:
-                    output = raw.generations[0][0].text
-                except Exception:
-                    output = str(raw)
-
-            elif isinstance(raw, list) and len(raw) > 0:
-                first = raw[0]
-                if isinstance(first, dict) and "generated_text" in first:
-                    output = first["generated_text"]
-                else:
-                    output = str(raw)
-
-            else:
-                output = str(raw)
-
-            cleaned = self.sanitize_json(output)
-
-            # parser.parse returns a pydantic model instance - return its dict
-            parsed = parser.parse(cleaned)
-            # convert to dict for downstream code to inspect easily
-            try:
-                result_dict = parsed.model_dump() if hasattr(
-                    parsed, "model_dump") else dict(parsed)
-            except Exception:
-                result_dict = parsed if isinstance(
-                    parsed, dict) else json.loads(cleaned)
-
-            return result_dict
-
-        except Exception as e:
-            print("Rubrics creation error. Details: ", e)
+            data = extract_json(content)
+            # Ensure question_text is echoed correctly (model may paraphrase it)
+            if "question_text" not in data or not data["question_text"]:
+                data["question_text"] = question_text
+            return RubricsResult(**data)
+        except Exception as exc:
+            logger.error(
+                "Failed to parse rubrics response. Raw output (first 500 chars): %s",
+                content[:500],
+            )
+            raise RubricsGenerationError(
+                f"Could not parse rubrics response: {exc}"
+            ) from exc

@@ -1,0 +1,23 @@
+services:
+  examecho-ai:
+    build: .
+    image: examecho-ai:groq
+    container_name: examecho-ai
+    ports:
+      - "8000:8000"
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_API_BASE_URL: ${GROQ_API_BASE_URL:-https://api.groq.com}
+      GROQ_MODEL_NAME: ${GROQ_MODEL_NAME:-llama-3.3-70b-versatile}
+      GROQ_TEMPERATURE: ${GROQ_TEMPERATURE:-0.0}
+      GROQ_MAX_TOKENS: ${GROQ_MAX_TOKENS:-2048}
+      GROQ_STT_MODEL_NAME: ${GROQ_STT_MODEL_NAME:-whisper-large-v3}
+      GROQ_TTS_MODEL_NAME: ${GROQ_TTS_MODEL_NAME:-canopylabs/orpheus-v1-english}
+      GROQ_TTS_VOICE: ${GROQ_TTS_VOICE:-autumn}
+      GROQ_TTS_RESPONSE_FORMAT: ${GROQ_TTS_RESPONSE_FORMAT:-wav}
+      STT_DEFAULT_MODEL: ${STT_DEFAULT_MODEL:-groq}
+      TTS_AUDIO_DIR: /app/generated_audio
+      CORS_ORIGINS: '["*"]'
+    volumes:
+      - ./generated_audio:/app/generated_audio
+    restart: unless-stopped

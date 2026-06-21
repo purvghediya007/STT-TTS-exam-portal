@@ -1,44 +1,58 @@
-from ai_ml.Evaluation import EvaluationEngine
-from app.schemas.evaluation import EvaluateAnswer
-from app.core import models   
-from app.config import settings
+"""
+Evaluation service: bridges FastAPI route → EvaluationEngine.
+"""
 
-model_name = settings.HF_EVAL_MODEL_NAME
+from __future__ import annotations
 
-class EvaluationService:
+import logging
 
-    def evaluate(self, payload: EvaluateAnswer):
-        data = payload.model_dump()
+from ai_ml.evaluation import EvaluationEngine
+from app.core.state import app_state
+from app.schemas.evaluation import EvaluateAnswer, EvaluateAnswerResponse
 
-        try:
-            # use models.ai_model loaded during lifespan
-      
-            result = EvaluationEngine(model_name=model_name, global_model=models.ai_model).model_evaluator(data)
+logger = logging.getLogger(__name__)
 
-            required_keys = ["score", "strengths", "weakness",
-                             "justification", "suggested_improvement"]
-
-            if (
-                not result
-                or not isinstance(result, dict)
-                or any(k not in result for k in required_keys)
-            ):
-                raise ValueError("Model returned invalid output.")
-
-        except Exception as e:
-            print("Evaluation error:", e)
-
-            return {
-                "question_id": payload.question_id,
-                "score": 0,
-                "strengths": ["No strengths could be evaluated due to model error."],
-                "weakness": ["The evaluator model failed to process the answer."],
-                "justification": f"Internal model error: {str(e)}",
-                "suggested_improvement": "Retry after the evaluator model loads successfully."
-            }
-
-        result["question_id"] = payload.question_id
-        return result
+# Module-level engine instance (uses the preloaded Groq model from startup)
+_engine: EvaluationEngine | None = None
 
 
-evaluator_service = EvaluationService()
+def _get_engine() -> EvaluationEngine:
+    global _engine
+    if _engine is None:
+        _engine = EvaluationEngine(model=app_state.groq_model)
+    return _engine
+
+
+def evaluate_answer(payload: EvaluateAnswer) -> EvaluateAnswerResponse:
+    """
+    Evaluate a single student answer.
+
+    Args:
+        payload: Validated request containing question, answer, rubric,
+                 and maximum marks.
+
+    Returns:
+        :class:`EvaluateAnswerResponse` with score and feedback.
+
+    Raises:
+        EvaluationError: Propagated from :class:`EvaluationEngine`.
+    """
+    engine = _get_engine()
+
+    logger.info(
+        "Evaluating answer for question_id=%s (max_marks=%s)",
+        payload.question_id,
+        payload.max_marks,
+    )
+
+    result = engine.evaluate(
+        question_text=payload.question_text,
+        student_answer=payload.student_answer,
+        rubrics=payload.rubrics,
+        max_marks=payload.max_marks,
+    )
+
+    return EvaluateAnswerResponse(
+        question_id=payload.question_id,
+        **result.model_dump(),
+    )

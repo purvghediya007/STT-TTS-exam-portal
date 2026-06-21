@@ -1,39 +1,49 @@
-from ai_ml.MCQEvaluation import MCQEvaluationEngine
-from app.schemas.mcq_evaluation import MCQEvaluation
-from app.core import models   
-from app.config import settings
+"""
+MCQ evaluation service: bridges FastAPI route → MCQEvaluationEngine.
+"""
 
-model_name = settings.MCQ_EVAL_MODEL_NAME
+from __future__ import annotations
 
-class MCQEvaluationService:
+import logging
 
-    def evaluate(self, payload: MCQEvaluation):
-        data = payload.model_dump()
+from ai_ml.mcq_evaluation import MCQEvaluationEngine
+from app.core.state import app_state
+from app.schemas.mcq_evaluation import MCQEvaluation, MCQEvaluationResponse
 
-        try:
-            # use models.st_model loaded during lifespan
-      
-            result = models.st_model.evaluate(data)
+logger = logging.getLogger(__name__)
 
-            required_keys = ["similarity_score","inference"]
-
-            if (
-                not result
-                or not isinstance(result, dict)
-                or any(k not in result for k in required_keys)
-            ):
-                raise ValueError("Model returned invalid output.")
-
-        except Exception as e:
-            print("MCQ Evaluation error:", e)
-
-            return {
-                "question_id": payload.question_id,
-                "similarity_score": 0.00,
-                "inference": "Could not decide due to error"
-            }
-        
-        return result
+_engine: MCQEvaluationEngine | None = None
 
 
-mcq_evaluator_service = MCQEvaluationService()
+def _get_engine() -> MCQEvaluationEngine:
+    global _engine
+    if _engine is None:
+        # Use the preloaded sentence-transformer model if available
+        _engine = MCQEvaluationEngine(model=app_state.st_model)
+    return _engine
+
+
+def evaluate_mcq(payload: MCQEvaluation) -> MCQEvaluationResponse:
+    """
+    Evaluate a student's MCQ selection.
+
+    Args:
+        payload: Validated request with question ID and answer options.
+
+    Returns:
+        :class:`MCQEvaluationResponse` with similarity score and inference.
+
+    Raises:
+        ValueError: Propagated from :class:`MCQEvaluationEngine` for invalid inputs.
+    """
+    engine = _get_engine()
+
+    logger.info("Evaluating MCQ for question_id=%s", payload.question_id)
+
+    result = engine.evaluate(
+        question_id=payload.question_id,
+        correct_option=payload.correct_option,
+        selected_option=payload.selected_option,
+    )
+
+    return MCQEvaluationResponse(**result.model_dump())
