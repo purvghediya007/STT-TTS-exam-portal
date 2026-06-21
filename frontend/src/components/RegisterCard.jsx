@@ -13,6 +13,7 @@ const initialState = {
   confirmPassword: '',
   branch: '',
   semester: null,
+  department: '',
 }
 
 const availableBranches = [
@@ -163,7 +164,7 @@ export default function RegisterCard() {
       // Map frontend role to backend role
       const apiRole = form.role === 'student' ? 'Student' : 'Teacher'
 
-      const requestBody = {
+          const requestBody = {
         role: apiRole,
         username: form.username,
         email: form.email,
@@ -181,6 +182,11 @@ export default function RegisterCard() {
         if (form.semester) {
           requestBody.semester = form.semester
         }
+      }
+
+      // Add optional department for faculty
+      if (form.role === 'faculty' && form.department) {
+        requestBody.department = form.department
       }
 
       const response = await api.post('/auth/register', requestBody)
@@ -296,7 +302,7 @@ export default function RegisterCard() {
           />
         </label>
 
-        {isStudent && (
+        {isStudent ? (
           <>
             <label className="input-field">
               <span>Enrollment Number</span>
@@ -329,6 +335,15 @@ export default function RegisterCard() {
               disabled={isLoading}
             />
           </>
+        ) : (
+          <CustomSelect
+            label="Select Department (optional)"
+            value={form.department}
+            onChange={(value) => update('department', value)}
+            options={availableBranches}
+            placeholder="-- Select Department --"
+            disabled={isLoading}
+          />
         )}
 
         <label className="input-field">
