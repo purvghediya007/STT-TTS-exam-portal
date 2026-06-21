@@ -1,274 +1,147 @@
-# 🚀 FastAPI Backend - Examecho AI Service
+# ExamEcho AI Service
 
-A FastAPI-based backend service for the Examecho exam portal with Speech-to-Text (STT), Text-to-Speech (TTS), and answer evaluation capabilities.
+AI microservice for the ExamEcho platform.
 
----
+The service now uses Groq for:
+- Speech-to-Text
+- Text-to-Speech
+- LLM-based question generation
+- Rubric generation
+- Answer evaluation
 
-## 📁 Project Structure
+It also keeps local SentenceTransformer support for MCQ evaluation.
 
-```
-fastapi_backend/
-├── app/                          # Main application
-│   ├── main.py                     # FastAPI app entry point
-│   ├── config.py                   # Configuration
-│   ├── routers/                    # API routes
-│   │   ├── stt.py                      # Speech-to-Text routes
-│   │   ├── tts.py                      # Text-to-Speech routes
-│   │   └── evaluation.py               # Answer evaluation routes
-│   ├── schemas/                    # Pydantic models
-│   ├── services/                   # Business logic
-│   │   ├── stt_service.py
-│   │   ├── tts_service.py
-│   │   └── evaluation_service.py
-│   └── core/models.py              # Shared model instances
-├── ai_ml/                        # AI/ML models
-│   ├── Speech2Text.py              # Whisper STT
-│   ├── Text2Speech.py              # gTTS TTS
-│   ├── Evaluation.py               # LLM evaluation
-│   ├── AudioPreprocessor.py        # Audio utilities
-│   └── AIExceptions.py             # Custom exceptions
-├── generated_audio/              # Output audio files
-├── Dockerfile                    # Docker setup
-├── requirements.txt              # Dependencies
-└── README.md
-```
+## What’s included
 
----
+- `POST /api/v1/stt/transcribe`
+- `POST /api/v1/tts/synthesize`
+- `POST /api/v1/questions/generate`
+- `POST /api/v1/rubrics/create`
+- `POST /api/v1/evaluate/answer`
+- `POST /api/v1/mcq/evaluate`
+- `GET /health`
+- `GET /health/groq`
 
-## 🚀 Quick Start
+## Requirements
 
-### 📦 Installation
+- Python 3.11+
+- Groq API key
+- `ffmpeg` installed on the host or in the container
+- Optional: Docker and Docker Compose
 
-```bash
-# Clone repository
-git clone https://github.com/aryanshah2109/STT-TTS-exam-portal.git
-cd backend/fastapi_backend
+## Environment variables
 
-# Setup virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### ▶️ Running
-
-#### Local Development
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-#### Docker
-
-```bash
-docker build -t examecho-backend .
-docker run -p 8000:8000 examecho-backend
-```
-
-**Access API docs:** `http://localhost:8000/docs`
-
----
-
-## 🔌 API Endpoints
-
-### 💚 Health Check
-
-```
-GET /health
-```
-
-- **Response:** `{"status": "ok"}`
-
-### 🎤 Speech-to-Text (STT)
-
-```
-POST /stt/transcribe
-```
-
-- **File:** Audio file (WAV, MP3, MP4, WebM)
-- **Query Parameters:**
-  - `lang` - Language code (default: `en`)
-  - `model` - Model name (default: `whisper`)
-- **Response:**
-  ```json
-  {
-    "text": "Transcribed text",
-    "language": "en",
-    "model": "whisper"
-  }
-  ```
-
-### 🔊 Text-to-Speech (TTS)
-
-```
-POST /tts/synthesize
-```
-
-- **Request Body:**
-  ```json
-  {
-    "text": "Hello world",
-    "language": "en",
-    "slow": false
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "text": "Hello world",
-    "audio_path": "/generated_audio/audio_123.mp3",
-    "language": "en"
-  }
-  ```
-
-### ✅ Answer Evaluation
-
-```
-POST /evaluate/answer
-```
-
-- **Request Body:**
-  ```json
-  {
-    "question_id": "q134",
-    "question_text": "What is the capital of France?",
-    "student_answer": "Paris",
-    "marks": "20"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "question_id": "q134",
-    "score": 15,
-    "strengths": [
-      "The student answered the question very well",
-      "The answer was according to the rubrics of the questions"
-    ],
-    "weakness": ["Answer can be more detailed"],
-    "justification": "Correct answer!",
-    "suggested_improvement": "Try to add more depth to the answer"
-  }
-  ```
-
----
-
-## ⚙️ Configuration
-
-Create `.env` file in the root directory:
+Create a `.env` file with at least:
 
 ```env
-HF_EVAL_MODEL_NAME=microsoft/Phi-3.5-mini-instruct
-STT_DEFAULT_MODEL=whisper
-HF_TOKEN=your_token  # Optional
+GROQ_API_KEY=...
+GROQ_API_BASE_URL=https://api.groq.com
+GROQ_MODEL_NAME=llama-3.3-70b-versatile
+GROQ_TEMPERATURE=0.0
+GROQ_MAX_TOKENS=2048
+GROQ_STT_MODEL_NAME=whisper-large-v3
+GROQ_TTS_MODEL_NAME=canopylabs/orpheus-v1-english
+GROQ_TTS_VOICE=autumn
+GROQ_TTS_RESPONSE_FORMAT=wav
+STT_DEFAULT_MODEL=groq
+TTS_AUDIO_DIR=generated_audio
+MCQ_EVAL_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+MCQ_SIMILARITY_THRESHOLD=0.75
+CORS_ORIGINS=["*"]
+API_V1_PREFIX=/api/v1
+APP_TITLE=ExamEcho AI Service
+APP_VERSION=3.0.0
 ```
 
----
-
-## 🏗️ Architecture Overview
-
-**Layered Design:**
-
-- **🌐 Routers:** Handle HTTP requests and input validation
-- **📋 Schemas:** Pydantic models for request/response validation
-- **⚙️ Services:** Business logic layer
-- **🤖 AI/ML:** Model inference and audio processing
-- **💾 Core Models:** Global model instances (Whisper, Phi-3.5)
-
-**Model Lifecycle:** Models are preloaded on startup to reduce latency on first requests.
-
----
-
-## ✨ Key Features
-
-- ✅ Multi-language speech recognition (Whisper)
-- ✅ Text-to-speech synthesis (gTTS)
-- ✅ Intelligent answer evaluation (Phi-3.5 LLM)
-- ✅ Audio preprocessing (noise reduction, VAD)
-- ✅ Async request handling
-- ✅ Docker containerization
-- ✅ Swagger API documentation
-
----
-
-## 📚 Dependencies
-
-### Core Stack
-
-- **Web Framework:** FastAPI, Uvicorn, Pydantic
-- **AI/ML:** Whisper, Transformers, LangChain
-- **Audio Processing:** Librosa, SoundFile, pydub, noisereduce
-- **TTS:** gTTS
-- **Utilities:** python-dotenv, numpy, scipy
-
-See `requirements.txt` for complete list with versions.
-
----
-
-## 🛠️ Development
-
-### Code Structure
-
-- ✓ Follow PEP 8 style guide
-- ✓ Use type hints for functions
-- ✓ Add docstrings for modules
-- ✓ Use async/await for I/O operations
-
-### Adding New Endpoints
-
-**Steps:**
-
-1. Create schema in `app/schemas/`
-2. Create service in `app/services/`
-3. Create router in `app/routers/`
-4. Include router in `app/main.py`
-
-**Example:**
-
-```python
-# app/routers/new_feature.py
-from fastapi import APIRouter
-from app.services.new_service import process_request
-
-router = APIRouter(prefix="/new", tags=["new"])
-
-@router.post("/endpoint")
-async def new_endpoint(payload: RequestModel):
-    result = process_request(payload)
-    return ResponseModel(**result)
-```
-
----
-
-## 🔧 Troubleshooting
-
-| --------------- Issue -------------- | -----------------Solution-------------------- |
-| ------------------------------------ | --------------------------------------------- |
-| 📥 Model download errors             | Set `HF_TOKEN` for authenticated access       |
-| 🎵 Audio format not supported        | Convert to WAV/MP3; check MIME types          |
-| 💾 Out of memory                     | Use smaller models or increase RAM            |
-| ⚠️ Port 8000 in use                  | Use different port: `docker run -p 9000:8000` |
-
----
-
-## 🌟 Production Deployment
-
-Run with multiple workers for better performance:
+## Local setup
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+git clone <repo>
+cd examecho_ai_ollama
+
+python -m venv .venv
+.venv\Scripts\activate
+
+pip install -r requirements.txt
+copy .env.example .env
+
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
----
+## Docker
 
-## 📖 Resources
+Build and run:
 
-- **📦 Repository:** https://github.com/aryanshah2109/STT-TTS-exam-portal
-- **📄 API Docs:** http://localhost:8000/docs
-- **🔗 FastAPI Docs:** https://fastapi.tiangolo.com/
+```bash
+docker compose up --build
+```
 
----
+The container exposes the API on port `8000` and stores generated audio in
+`./generated_audio`.
 
-**Last Updated:** March 2, 2026
+## STT notes
+
+- Accepted MIME types:
+  - `audio/wav`
+  - `audio/x-wav`
+  - `audio/mpeg`
+  - `audio/mp4`
+  - `audio/webm`
+  - `video/webm`
+  - `audio/ogg`
+- Browser-recorded WebM uploads are supported.
+
+## TTS notes
+
+- The current Groq TTS model expects:
+  - `response_format=wav`
+  - voices: `autumn`, `diana`, `hannah`, `austin`, `daniel`, `troy`
+- The API returns a WAV file, not MP3.
+
+## Quick API examples
+
+### STT
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/stt/transcribe?lang=en&model=groq" \
+  -F "audio=@answer.webm;type=video/webm"
+```
+
+### TTS
+
+```bash
+curl -X POST http://localhost:8000/api/v1/tts/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question_id": "q_001",
+    "text": "Explain supervised and unsupervised learning.",
+    "language": "en",
+    "slow": false
+  }' --output q_001.wav
+```
+
+## Health checks
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/health/groq
+```
+
+## Troubleshooting
+
+- `401` or `403`: check `GROQ_API_KEY`
+- `429`: retry later, you hit a rate limit
+- `400 voice must be one of...`: use one of the supported voices listed above
+- `400 response_format must be one of [wav]`: keep `GROQ_TTS_RESPONSE_FORMAT=wav`
+- `415 unsupported audio type`: send one of the accepted audio MIME types
+
+## Project layout
+
+```text
+ai_ml/        core STT, TTS, evaluation logic
+app/          FastAPI config, routers, schemas, services
+main.py       application entrypoint
+requirements.txt
+Dockerfile
+docker-compose.yml
+```
