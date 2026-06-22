@@ -3,13 +3,18 @@ const router = express.Router();
 const sendFeedbackEmail = require("../utils/resendEmail");
 const authMiddleware = require("../middleware/authMiddleware");
 
+// Added models to fetch human-readable enrollment number/username instead of MongoDB ID
+const Student = require("../models/Student");
+const Teacher = require("../models/Teacher");
+const Admin = require("../models/Admin");
+
 /**
  * POST /api/feedback
  * Receives feedback from student/faculty and sends it to examecho22@gmail.com
  */
 router.post("/", authMiddleware, async (req, res, next) => {
   try {
-    const { name, role, email, rating1, rating2, rating1Label, rating2Label, message, feedbackType } = req.body;
+    const { name, role, email, username: reqUsername, rating1, rating2, rating1Label, rating2Label, message, feedbackType } = req.body;
 
     if (!message || !rating1 || !rating2 || !feedbackType) {
       return res.status(400).json({
@@ -17,8 +22,35 @@ router.post("/", authMiddleware, async (req, res, next) => {
       });
     }
 
-    // Auto-filled username/enrollment from token auth middleware
+    // Commented out old MongoDB ID assignment to retrieve human-readable username/enrollment number
+    /*
     const username = req.user?.sub || "Unknown User";
+    */
+    let username = reqUsername || "Unknown User";
+
+    // Query database for actual username/enrollmentNumber using authenticated userId (req.user.sub)
+    try {
+      if (req.user && req.user.sub) {
+        if (req.user.role === "student") {
+          const studentDoc = await Student.findById(req.user.sub);
+          if (studentDoc) {
+            username = studentDoc.enrollmentNumber || studentDoc.username || username;
+          }
+        } else if (req.user.role === "teacher" || req.user.role === "faculty") {
+          const teacherDoc = await Teacher.findById(req.user.sub);
+          if (teacherDoc) {
+            username = teacherDoc.username || username;
+          }
+        } else if (req.user.role === "admin") {
+          const adminDoc = await Admin.findById(req.user.sub);
+          if (adminDoc) {
+            username = adminDoc.username || username;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("⚠ Failed to query user details for feedback email:", err.message);
+    }
 
     const ratingStars = (count) => "★".repeat(count) + "☆".repeat(5 - count);
 

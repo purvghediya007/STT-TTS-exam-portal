@@ -87,8 +87,23 @@ export default function FeedbackView() {
     setIsSubmitting(true);
 
     try {
+      // Commented out original payload to include correct username/enrollment in submission
+      /*
       await submitFeedback({
         name: profile.name,
+        role: isStudent ? 'Student' : 'Faculty',
+        email: profile.email,
+        feedbackType,
+        rating1,
+        rating2,
+        rating1Label,
+        rating2Label,
+        message: message.trim()
+      });
+      */
+      await submitFeedback({
+        name: profile.name,
+        username: profile.username || profile.name, // Pass the correct username/enrollment
         role: isStudent ? 'Student' : 'Faculty',
         email: profile.email,
         feedbackType,
