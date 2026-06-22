@@ -21,8 +21,9 @@ export default function ForgotPasswordCard() {
       const res = await api.post("auth/forgot-password", {identifier}, {
         headers: { "Content-Type": "application/json" }
       });
-      
-      setMessage({ type: "success", text: "Mail sent. Please check your mailbox." });
+      // Commented out original success message to include spam folder check instruction
+      // setMessage({ type: "success", text: "Mail sent. Please check your mailbox." });
+      setMessage({ type: "success", text: "Mail sent. Please check your mailbox (check your spam folder if you do not see it)." });
       setLoading(false); 
     } catch(e){
       setLoading(false);

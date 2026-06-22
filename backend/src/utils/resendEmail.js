@@ -16,9 +16,28 @@ async function sendFeedbackEmail(to, subject, html) {
   try {
     const response = await axios.post(
       "https://api.resend.com/emails",
+      // {
+      //   from: "ExamEcho Feedback <onboarding@resend.dev>",
+      //   to: [to],
+      //   subject: subject,
+      //   html: html,
+      // },
+      // Commented out verified domain sender to use Resend Sandbox mode (onboarding@resend.dev)
+      /*
+      {
+        // 1. Sent FROM your verified domain email
+        from: "ExamEcho Feedback <feedback@examecho.com>", 
+        
+        // 2. Sent TO your Gmail address where you want to read it
+        to: ["examecho22@gmail.com"], 
+        
+        subject: subject,
+        html: html,
+      },
+      */
       {
         from: "ExamEcho Feedback <onboarding@resend.dev>",
-        to: [to],
+        to: ["examecho22@gmail.com"],
         subject: subject,
         html: html,
       },
