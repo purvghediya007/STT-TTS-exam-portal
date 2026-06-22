@@ -559,6 +559,8 @@ export default function FacultyExamsList() {
             </div>
           )}
 
+          {/* Commented out old modal rendering inside published tab block so drafts continue button works */}
+          {/*
           {showForm && (
             <ExamForm
               exam={editingExam}
@@ -578,7 +580,29 @@ export default function FacultyExamsList() {
               exam={editingExam}
             />
           )}
+          */}
         </div>
+      )}
+
+      {/* New modal rendering placed outside tab conditional block so modals open on drafts tab */}
+      {showForm && (
+        <ExamForm
+          exam={editingExam}
+          onClose={() => { setShowForm(false); setEditingExam(null); }}
+          onSuccess={handleFormSuccess}
+        />
+      )}
+      {showWizard && (
+        <ExamCreationWizard
+          onClose={() => {
+            setShowWizard(false)
+            setEditingExam(null)
+            setEditingDraft(null)
+          }}
+          onSuccess={handleWizardSuccess}
+          draft={editingDraft}
+          exam={editingExam}
+        />
       )}
 
     </div>

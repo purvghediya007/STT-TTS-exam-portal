@@ -1,45 +1,55 @@
-from app.schemas.rubrics import RubricsRequest
-from app.core import models
-from ai_ml.Rubrics import RubricsEngine
-from app.config import settings
-from fastapi import HTTPException
+"""
+Rubrics service: bridges FastAPI route → RubricsEngine.
+"""
 
-model_name = settings.HF_EVAL_MODEL_NAME
+from __future__ import annotations
 
-class RubricsService:
-    def generate(self, payload: RubricsRequest):
+import logging
 
-        data = payload.model_dump()
+from ai_ml.rubrics import RubricsEngine
+from app.core.state import app_state
+from app.schemas.rubrics import RubricsRequest, RubricsResponse
 
-        try: 
-            
-            # Use models.ai_model loaded during lifespan
+logger = logging.getLogger(__name__)
 
-            result = RubricsEngine(model_name=model_name, global_model=models.ai_model).create_rubrics(data)
+_engine: RubricsEngine | None = None
 
-            # Accept dict or pydantic model-like object
-            if not result:
-                raise ValueError("Model returned empty result.")
 
-            required_keys = ["question_text", "rubrics"]
+def _get_engine() -> RubricsEngine:
+    global _engine
+    if _engine is None:
+        _engine = RubricsEngine(model=app_state.groq_model)
+    return _engine
 
-            # If it's a pydantic model instance, convert to dict
-            if not isinstance(result, dict) and hasattr(result, "model_dump"):
-                result = result.model_dump()
 
-            if not isinstance(result, dict) or any(k not in result for k in required_keys):
-                raise ValueError("Model returned invalid output: missing required keys.")
-                
-        except Exception as e:
-            
-            print("Rubrics generation error: ", e)
+def generate_rubrics(payload: RubricsRequest) -> RubricsResponse:
+    """
+    Generate marking rubrics for a question.
 
-            raise HTTPException(
-                status_code=500,
-                detail="Rubrics generation failed due to model error"
-            )
-        
-        result["question_id"] = payload.question_id
-        return result
+    Args:
+        payload: Validated request with question text and max marks.
 
-generate_rubrics_service = RubricsService()
+    Returns:
+        :class:`RubricsResponse` with the generated rubric list.
+
+    Raises:
+        RubricsGenerationError: Propagated from :class:`RubricsEngine`.
+    """
+    engine = _get_engine()
+
+    logger.info(
+        "Generating rubrics for question_id=%s (max_marks=%s)",
+        payload.question_id,
+        payload.max_marks,
+    )
+
+    result = engine.generate(
+        question_text=payload.question_text,
+        max_marks=payload.max_marks,
+    )
+
+    return RubricsResponse(
+        question_id=payload.question_id,
+        question_text=result.question_text,
+        rubrics=result.rubrics,
+    )

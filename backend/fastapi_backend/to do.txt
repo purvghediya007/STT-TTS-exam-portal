@@ -1,2 +1,0 @@
-1) Seperate rubrics and evaluation codes
-2) Improve LLM response speed

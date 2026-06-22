@@ -213,7 +213,10 @@ export default function QuestionBuilder({ questions, onChange }) {
         setGenerating(true)
 
         const payload = {
-          topics: [newQuestion.topicName],
+          // Commented out single topic array wrapping to support multiple comma-separated topics
+          // topics: [newQuestion.topicName],
+          // Split input by comma to support generating questions for multiple topics in one go
+          topics: newQuestion.topicName.split(',').map(t => t.trim()).filter(Boolean),
           num_questions: newQuestion.numQuestions || 1,
           difficulty: (newQuestion.difficulty || 'Easy').toLowerCase(),
           type: newQuestion.questionTypesToGenerate[0] || 'viva'
@@ -229,6 +232,8 @@ export default function QuestionBuilder({ questions, onChange }) {
             if (Array.isArray(qs)) {
               // Array format (e.g. for MCQs or if we return objects)
               qs.forEach((qItem, i) => {
+                // Commented out old string-only option mapping to fix MCQ validation error
+                /*
                 generated.push({
                   id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
                   type: newQuestion.questionTypesToGenerate[0] || 'viva',
@@ -238,12 +243,32 @@ export default function QuestionBuilder({ questions, onChange }) {
                   options: Array.isArray(qItem.options) ? qItem.options : [],
                   media: { ...newQuestion.media }
                 })
+                */
+                // New mapping that supports { text, isCorrect } objects for MCQ options
+                generated.push({
+                  id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                  type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                  text: typeof qItem === 'string' ? qItem : (qItem.text || qItem.question || ''),
+                  marks: newQuestion.marks || 1,
+                  expectedAnswer: qItem.expectedAnswer || qItem.correct_option || '',
+                  options: Array.isArray(qItem.options)
+                    ? qItem.options.map(optStr => ({
+                        text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
+                        isCorrect: typeof optStr === 'string'
+                          ? optStr.trim() === (qItem.correct_option || '').trim()
+                          : !!optStr.isCorrect
+                      }))
+                    : [],
+                  media: { ...newQuestion.media }
+                })
               })
             } else if (typeof qs === 'object' && qs !== null) {
               // Object format (question label -> text or question label -> object)
               Object.keys(qs).forEach((k, i) => {
                 const qVal = qs[k]
                 if (typeof qVal === 'object' && qVal !== null) {
+                  // Commented out old string-only option mapping for object formatting
+                  /*
                   generated.push({
                     id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
                     type: newQuestion.questionTypesToGenerate[0] || 'viva',
@@ -251,6 +276,24 @@ export default function QuestionBuilder({ questions, onChange }) {
                     marks: newQuestion.marks || 1,
                     expectedAnswer: qVal.expectedAnswer || '',
                     options: Array.isArray(qVal.options) ? qVal.options : [],
+                    media: { ...newQuestion.media }
+                  })
+                  */
+                  // New mapping supporting { text, isCorrect } objects for MCQ options in object format
+                  generated.push({
+                    id: `GQ${Date.now()}_${topicKey.replace(/\s+/g, '')}_${i}`,
+                    type: newQuestion.questionTypesToGenerate[0] || 'viva',
+                    text: qVal.text || qVal.question || '',
+                    marks: newQuestion.marks || 1,
+                    expectedAnswer: qVal.expectedAnswer || qVal.correct_option || '',
+                    options: Array.isArray(qVal.options)
+                      ? qVal.options.map(optStr => ({
+                          text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
+                          isCorrect: typeof optStr === 'string'
+                            ? optStr.trim() === (qVal.correct_option || '').trim()
+                            : !!optStr.isCorrect
+                        }))
+                      : [],
                     media: { ...newQuestion.media }
                   })
                 } else {
@@ -737,6 +780,7 @@ export default function QuestionBuilder({ questions, onChange }) {
                 onChange={(e) => setNewQuestion({ ...newQuestion, topicName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              <p className="text-[11px] text-gray-400 mt-1">For multiple topics, separate them with a comma (e.g., Array, Linked List)</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

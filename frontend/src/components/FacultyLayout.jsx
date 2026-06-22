@@ -11,7 +11,8 @@ import {
   RefreshCw,
   LogOut,
   Menu, // Added for mobile
-  X     // Added for mobile
+  X,     // Added for mobile
+  MessageSquare
 } from 'lucide-react'
 
 export default function FacultyLayout({ children }) {
@@ -64,6 +65,7 @@ export default function FacultyLayout({ children }) {
     if (path.includes('/students')) return 'students'
     if (path.includes('/analytics')) return 'analytics'
     if (path.includes('/settings')) return 'settings'
+    if (path.includes('/feedback')) return 'feedback'
     return 'dashboard'
   }
 
@@ -108,6 +110,10 @@ export default function FacultyLayout({ children }) {
       <button onClick={() => handleNavigation('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'settings' ? 'bg-blue-700 text-white' : 'text-blue-100 hover:bg-blue-800'}`}>
         <Settings className="w-5 h-5" />
         <span className="font-medium">Settings</span>
+      </button>
+      <button onClick={() => handleNavigation('feedback')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-all duration-200 ${activeRoute === 'feedback' ? 'bg-blue-700 text-white' : 'text-blue-100 hover:bg-blue-800'}`}>
+        <MessageSquare className="w-5 h-5" />
+        <span className="font-medium">Feedback</span>
       </button>
     </>
   )

@@ -53,6 +53,7 @@ import ExamAnalysisView from './ExamAnalysisView'
 import ExamScoreboardView from './ExamScoreboardView'
 import ExamDetailsView from './ExamDetailsView'
 import ProfileView from './ProfileView'
+import FeedbackView from './FeedbackView'
 
 // PRACTICE HUB — Lazy loaded (no impact on existing bundle size)
 const PracticeHub = lazy(() => import('../practice/pages/PracticeHub'))
@@ -87,6 +88,7 @@ export default function StudentExams() {
         <Route path="history" element={<HistoryView />} />
         <Route path="guidelines" element={<GuidelinesView />} />
         <Route path="profile" element={<ProfileView />} />
+        <Route path="feedback" element={<FeedbackView />} />
         <Route path="exams/:examId/details" element={<ExamDetailsView />} />
         <Route path="exams/:examId/take" element={<TakeExamView />} />
         <Route path="exams/:examId/results" element={<ExamResultsView />} />

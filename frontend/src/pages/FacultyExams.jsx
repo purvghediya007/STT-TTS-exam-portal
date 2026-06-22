@@ -9,6 +9,7 @@ import ExamSubmissionsView from './ExamSubmissionsView'
 import FacultyAnalyticsDashboard from './FacultyAnalyticsDashboard'
 import FacultyExamAnalytics from './FacultyExamAnalytics'
 import ProfileView from './ProfileView'
+import FeedbackView from './FeedbackView'
 
 /**
  * FacultyExams - Main container with routing for all faculty views
@@ -25,6 +26,7 @@ export default function FacultyExams() {
         <Route path="analytics" element={<FacultyAnalyticsDashboard />} />
         <Route path="analytics/:examId" element={<FacultyExamAnalytics />} />
         <Route path="profile" element={<ProfileView />} />
+        <Route path="feedback" element={<FeedbackView />} />
         <Route path="settings" element={<div className="p-8"><h1 className="text-2xl font-bold">Settings</h1><p className="text-gray-600 mt-2">Settings page coming soon...</p></div>} />
         <Route path="" element={<Navigate to="dashboard" replace />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

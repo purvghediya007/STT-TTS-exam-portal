@@ -28,7 +28,8 @@ import {
   LogOut,
   Menu,
   X,
-  BookOpen
+  BookOpen,
+  MessageSquare
 } from 'lucide-react'
 import { useExams } from '../hooks/useExams'
 
@@ -105,6 +106,7 @@ export default function StudentLayout({ children }) {
     if (path.includes('/available')) return 'available'
     if (path.includes('/history')) return 'history'
     if (path.includes('/guidelines')) return 'guidelines'
+    if (path.includes('/feedback')) return 'feedback'
     return 'dashboard'
   }
 
@@ -227,6 +229,7 @@ export default function StudentLayout({ children }) {
             <NavLink route="history" icon={Clock} label="History" />
             <NavLink route="guidelines" icon={HelpCircle} label="Guidelines" />
             <NavLink route="practice" icon={BookOpen} label="Practice Hub" />
+            <NavLink route="feedback" icon={MessageSquare} label="Feedback" />
           </nav>
         </aside>
 

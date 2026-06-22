@@ -1,30 +1,47 @@
+"""TTS service: bridges FastAPI route -> Groq-backed TTS module."""
+
+from __future__ import annotations
+
+import logging
 import os
-import uuid
-from gtts import gTTS
+from pathlib import Path
 
- 
-# Create local folder automatically if not exists
- 
-BASE_DIR = "generated_audio"
+from ai_ml.tts import GTTSEngine, DirectTextSource, TTSConfig, TTSPipeline
+from app.config import settings
 
-os.makedirs(BASE_DIR, exist_ok=True)
+logger = logging.getLogger(__name__)
 
 
-def generate_tts_audio(text: str, language: str = "en", slow: bool = False) -> str:
-    """
-    Generate speech audio from text using gTTS.
-    Saves file locally inside generated_audio/ folder.
-    Returns the local file path.
-    """
+def generate_speech(*, text: str, question_id: str, language: str = "en", slow: bool = False) -> Path:
+    """Synthesise speech from text and write to a named WAV file."""
+    audio_dir = Path(settings.TTS_AUDIO_DIR)
+    audio_dir.mkdir(parents=True, exist_ok=True)
 
-    # Generate audio
-    tts = gTTS(text=text, lang=language, slow=slow)
+    output_path = audio_dir / f"{question_id}.wav"
 
-    # Create unique filename
-    filename = f"{uuid.uuid4()}.mp3"
-    file_path = os.path.join(BASE_DIR, filename)
+    config = TTSConfig(
+        language=language,
+        slow=slow,
+        output_file=output_path,
+        return_bytes=False,
+        response_format=settings.GROQ_TTS_RESPONSE_FORMAT,
+    )
 
-    # Save to disk
-    tts.save(file_path)
+    pipeline = TTSPipeline(
+        source=DirectTextSource(text),
+        engine=GTTSEngine(),
+        config=config,
+    )
 
-    return file_path
+    result_path = pipeline.run()
+    logger.info("TTS audio written to %s", result_path)
+    return Path(result_path)
+
+
+def delete_audio_file(path: str | Path) -> None:
+    """Remove a generated audio file from disk."""
+    try:
+        os.unlink(path)
+        logger.debug("Deleted TTS audio file: %s", path)
+    except OSError as exc:
+        logger.warning("Could not delete TTS audio file %s: %s", path, exc)

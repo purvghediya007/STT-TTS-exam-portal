@@ -199,7 +199,8 @@ const evaluateAnswerWithAI = async ({
       question_id: qId,
       question_text: questionText,
       student_answer: studentAnswer,
-      rubric: rubric,
+      // rubric: rubric, // Commented out old key to fix 422 error
+      "rubrics": rubric, // Modified key to match FastAPI format
       max_marks: maxMarks,
     }, { timeout: 35000 });
 
