@@ -1255,3 +1255,14 @@ export async function updateAnswerScore(answerId: string, score: number): Promis
   })
   return response.json()
 }
+
+/**
+ * Submit feedback form data to resend endpoint
+ */
+export async function submitFeedback(feedbackData: any): Promise<any> {
+  const response = await fetchAPI('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(feedbackData),
+  })
+  return response.json()
+}

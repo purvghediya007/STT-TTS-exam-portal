@@ -15,6 +15,7 @@ const studentExamRoutes = require("./routes/studentExamRoutes");
 const practiceRoutes = require("../practice/routes/practiceRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const studentAnalyticsRoutes = require("./routes/studentAnalyticsRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
 const path = require("path");
 
 connectDB();
@@ -69,6 +70,9 @@ app.use("/api/analytics", studentAnalyticsRoutes);
 
 //practice hub endpoints
 app.use("/api/practice", practiceRoutes);
+
+// Feedback endpoint
+app.use("/api/feedback", feedbackRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
