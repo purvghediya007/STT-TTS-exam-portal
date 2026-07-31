@@ -51,7 +51,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 
 // Health check route (ROOT LEVEL)
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
