@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, Image, Video, FileText, X, Check, Upload } from 'lucide-react'
 import { uploadMedia, deleteMedia, generateQuestions, API_BASE_URL } from '../services/api'
+import logger from '../utils/logger'
 
 /**
  * QuestionBuilder - Component for building MCQ, Viva, and Interview questions
@@ -18,7 +19,7 @@ export default function QuestionBuilder({ questions, onChange }) {
 
     setParsingFile(true)
     try {
-      console.log(`Uploading question bank: ${file.name}`)
+      logger.log(`Uploading question bank: ${file.name}`)
       const formData = new FormData()
       formData.append('file', file)
 
@@ -37,7 +38,7 @@ export default function QuestionBuilder({ questions, onChange }) {
 
       const resData = await response.json()
       if (resData.success && Array.isArray(resData.questions)) {
-        console.log(`Parsed ${resData.questions.length} questions successfully`)
+        logger.log(`Parsed ${resData.questions.length} questions successfully`)
         if (resData.questions.length === 0) {
           alert('No questions could be extracted from the file. Please ensure it follows a standard format.')
         } else {
@@ -49,7 +50,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         throw new Error('Invalid response structure')
       }
     } catch (error) {
-      console.error('Error parsing question bank:', error)
+      logger.error('Error parsing question bank:', error)
       alert(`Error parsing file: ${error.message}`)
     } finally {
       setParsingFile(false)
@@ -90,9 +91,9 @@ export default function QuestionBuilder({ questions, onChange }) {
 
     setUploadingMedia(type)
     try {
-      console.log(`Starting upload for ${type}:`, file.name)
+      logger.log(`Starting upload for ${type}:`, file.name)
       const uploadResult = await uploadMedia(file)
-      console.log(`Upload result for ${type}:`, uploadResult)
+      logger.log(`Upload result for ${type}:`, uploadResult)
 
       if (!uploadResult.url) {
         throw new Error(`Upload failed: No URL returned. Response: ${JSON.stringify(uploadResult)}`)
@@ -111,9 +112,9 @@ export default function QuestionBuilder({ questions, onChange }) {
           }
         }
       }))
-      console.log(`Media uploaded successfully for ${type}`)
+      logger.log(`Media uploaded successfully for ${type}`)
     } catch (error) {
-      console.error(`Error uploading ${type}:`, error)
+      logger.error(`Error uploading ${type}:`, error)
       alert(`Failed to upload ${type}: ${error.message}`)
     } finally {
       setUploadingMedia(null)
@@ -319,7 +320,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         setNewQuestion(resetNewQuestionState())
         setEditingIndex(null)
       } catch (error) {
-        console.error('Error generating questions:', error)
+        logger.error('Error generating questions:', error)
         alert('Failed to generate questions. Please try again.')
       } finally {
         setGenerating(false)
@@ -469,7 +470,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     // Delete from Cloudinary if it has a public_id
     if (mediaItem?.public_id) {
       deleteMedia(mediaItem.public_id).catch(error => {
-        console.error(`Error deleting ${type} from Cloudinary:`, error)
+        logger.error(`Error deleting ${type} from Cloudinary:`, error)
       })
     }
 

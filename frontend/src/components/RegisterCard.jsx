@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Loader, ChevronDown } from 'lucide-react'
 import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
+import logger from '../utils/logger'
 
 const initialState = {
   role: 'student',
@@ -213,7 +214,7 @@ export default function RegisterCard() {
         navigate('/')
       }, 1500)
     } catch (error) {
-      console.error('Registration error:', error)
+      logger.error('Registration error:', error)
       let errorMsg = 'An error occurred during registration. Please try again.'
       if (error.response) {
         if (error.response.status === 409) {
@@ -236,27 +237,31 @@ export default function RegisterCard() {
     }
   }
 
+  const allowFacultyRegistration = import.meta.env.VITE_ALLOW_FACULTY_REGISTRATION === 'true'
+  const roleOptions = allowFacultyRegistration ? ['student', 'faculty'] : ['student']
   const isStudent = form.role === 'student'
 
   return (
     <div className="login-card">
       <img src={logoImg} className="college-logo" alt="Vishwakarma Government Engineering College logo" />
 
-      <div className="role-toggle" role="tablist">
-        {['student', 'faculty'].map((option) => (
-          <button
-            key={option}
-            type="button"
-            className={form.role === option ? 'active' : ''}
-            onClick={() => update('role', option)}
-            role="tab"
-            aria-selected={form.role === option}
-            disabled={isLoading}
-          >
-            {option === 'student' ? 'Student' : 'Faculty'}
-          </button>
-        ))}
-      </div>
+      {allowFacultyRegistration && (
+        <div className="role-toggle" role="tablist">
+          {roleOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={form.role === option ? 'active' : ''}
+              onClick={() => update('role', option)}
+              role="tab"
+              aria-selected={form.role === option}
+              disabled={isLoading}
+            >
+              {option === 'student' ? 'Student' : 'Faculty'}
+            </button>
+          ))}
+        </div>
+      )}
 
       <header className="card-copy">
         <p className="eyebrow">Create an account</p>

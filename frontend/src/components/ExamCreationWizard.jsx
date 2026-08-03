@@ -3,6 +3,7 @@ import { X, ArrowRight, ArrowLeft, Save, Check } from 'lucide-react'
 import { createDraftExam, updateDraftExam, publishDraftExam } from '../services/api'
 import QuestionBuilder from './QuestionBuilder'
 import ExamTimeSettings from './ExamTimeSettings'
+import logger from '../utils/logger'
 
 /**
  * Multi-step exam creation wizard
@@ -125,7 +126,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         setCurrentStep(2)
       }
     } catch (error) {
-      console.error('Error saving draft:', error)
+      logger.error('Error saving draft:', error)
       setErrors({ submit: error.message || 'Failed to save draft. Please try again.' })
     } finally {
       setLoading(false)
@@ -147,7 +148,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         } catch (error) {
           // If draft update fails but we have questions, continue anyway
           // The questions are already in state and will be saved on publish
-          console.warn('Draft update failed, but continuing:', error)
+          logger.warn('Draft update failed, but continuing:', error)
           if (error && error.message && !error.message.includes('not found')) {
             // Only show error if it's not a "not found" error (which we can recover from)
             setErrors({ submit: 'Warning: Could not save draft, but you can continue. Questions will be saved when you publish.' })
@@ -156,7 +157,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       }
       setCurrentStep(3)
     } catch (error) {
-      console.error('Error saving questions:', error)
+      logger.error('Error saving questions:', error)
       setErrors({ submit: (error && error.message) || 'Failed to save questions.' })
     } finally {
       setLoading(false)
@@ -247,7 +248,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       onSuccess?.()
       onClose()
     } catch (error) {
-      console.error('Error publishing/updating exam:', error)
+      logger.error('Error publishing/updating exam:', error)
       setErrors({ submit: error.message || 'Failed to publish/update exam. Please try again.' })
     } finally {
       setLoading(false)

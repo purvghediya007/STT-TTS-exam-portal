@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, Trophy } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchExamScoreboard } from '../services/api'
+import logger from '../utils/logger'
 
 export default function ExamScoreboardView() {
   const { examId } = useParams()
@@ -23,7 +24,7 @@ export default function ExamScoreboardView() {
         const data = await fetchExamScoreboard(examId)
         setScoreboard(data)
       } catch (err) {
-        console.error(err)
+        logger.error(err)
         setError(err?.message || 'Failed to load scoreboard')
       } finally {
         setIsLoading(false)

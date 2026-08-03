@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, AlertCircle, Download, Search, User, Mail, Clock, CheckCircle, ChevronDown, Monitor, GraduationCap, Calendar, Edit2, Save, X, Loader } from 'lucide-react'
 import { fetchExamResults, updateAnswerScore } from '../services/api'
+import logger from '../utils/logger'
 
 /**
  * ExamSubmissionsView - Enhanced Responsive Page for faculty to review student results
@@ -26,7 +27,7 @@ export default function ExamSubmissionsView() {
                 const data = await fetchExamResults(examId)
                 setSubmissions(data)
             } catch (err) {
-                console.error('Error loading submissions:', err)
+                logger.error('Error loading submissions:', err)
                 setError(err?.message || 'Failed to load submissions')
             } finally {
                 setLoading(false)
@@ -118,7 +119,7 @@ export default function ExamSubmissionsView() {
 
             setEditingScore(null)
         } catch (err) {
-            console.error('Error updating score:', err)
+            logger.error('Error updating score:', err)
             alert('Failed to update score: ' + (err?.message || 'Unknown error'))
         } finally {
             setSavingScore(false)

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Code2, Search, CheckCircle2, Loader2, Filter } from 'lucide-react';
 import { getCodingProblems, getCodingTopics } from '../services/codingApi';
+import logger from '../../utils/logger';
 
 const DIFF_COLORS = {
   easy: 'text-green-600 bg-green-50',
@@ -33,7 +34,7 @@ export default function CodingProblemList() {
         setProblems(problemsRes.data || []);
         setTopics(topicsRes.data || []);
       })
-      .catch(console.error)
+      .catch((err) => logger.error(err))
       .finally(() => setLoading(false));
   }, [filters]);
 

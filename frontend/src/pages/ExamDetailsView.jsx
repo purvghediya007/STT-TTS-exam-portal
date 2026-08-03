@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, Award, Users, AlertCircle, Zap, Shield, Info, ChevronRight, FileText, CheckCircle } from 'lucide-react'
 import { getExamSummary } from '../services/api'
 import { formatExamTimeRange, formatDuration, formatTimePerQuestion } from '../utils/format'
+import logger from '../utils/logger'
 
 export default function ExamDetailsView() {
     const { examId } = useParams()
@@ -19,7 +20,7 @@ export default function ExamDetailsView() {
                 const examData = await getExamSummary(examId)
                 setExam(examData)
             } catch (err) {
-                console.error('Error loading exam:', err)
+                logger.error('Error loading exam:', err)
                 setError(err.message || 'Failed to load exam details')
             } finally {
                 setLoading(false)

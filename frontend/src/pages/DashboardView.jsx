@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { Calendar, CheckSquare, Award, TrendingUp, Clock } from 'lucide-react'
 import { useExams } from '../hooks/useExams'
+import logger from '../utils/logger'
 
 /**
  * DashboardView - Flexible structure for all devices
@@ -11,9 +12,9 @@ export default function DashboardView() {
   // Logic preserved exactly as requested
   React.useEffect(() => {
     if (!loading) {
-      console.log('DashboardView - Exams loaded:', exams.length, 'exams')
+      logger.log('DashboardView - Exams loaded:', exams.length, 'exams')
       if (error) {
-        console.error('DashboardView - Error:', error)
+        logger.error('DashboardView - Error:', error)
       }
     }
   }, [exams, loading, error])

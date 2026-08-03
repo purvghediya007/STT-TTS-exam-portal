@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import logger from '../utils/logger';
 import {
   User,
   Mail,
@@ -137,7 +138,7 @@ export default function ProfileView() {
       setProfile(data);
       setEditedProfile(data);
     } catch (err) {
-      console.error('Failed to load profile:', err);
+      logger.error('Failed to load profile:', err);
       try {
         const raw = localStorage.getItem('user_data');
         if (raw) {
@@ -177,7 +178,7 @@ export default function ProfileView() {
       localStorage.setItem('user_data', JSON.stringify({ ...existing, ...updated }));
       showSuccess('Profile updated successfully!');
     } catch (err) {
-      console.error('Failed to update profile:', err);
+      logger.error('Failed to update profile:', err);
       setError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
@@ -199,7 +200,7 @@ export default function ProfileView() {
       localStorage.setItem('user_data', JSON.stringify({ ...existing, profileImage: uploadResult.url }));
       showSuccess('Profile image updated!');
     } catch (err) {
-      console.error('Failed to upload image:', err);
+      logger.error('Failed to upload image:', err);
       setError('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);

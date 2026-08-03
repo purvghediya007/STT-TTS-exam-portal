@@ -13,6 +13,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { submitFeedback } from '../services/api';
+import logger from '../utils/logger';
 
 export default function FeedbackView() {
   const [role, setRole] = useState('student');
@@ -42,7 +43,7 @@ export default function FeedbackView() {
           department: userData.department || userData.branch || ''
         });
       } catch (e) {
-        console.error('Failed to parse user data:', e);
+        logger.error('Failed to parse user data:', e);
       }
     }
   }, []);
@@ -121,7 +122,7 @@ export default function FeedbackView() {
       setRating2(0);
       setMessage('');
     } catch (err) {
-      console.error('Error submitting feedback:', err);
+      logger.error('Error submitting feedback:', err);
       setErrorMessage(err.message || 'Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);

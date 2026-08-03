@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import logger from '../utils/logger'
 import {
   LayoutDashboard,
   BookOpen,
@@ -34,7 +35,7 @@ export default function FacultyLayout({ children }) {
         if (userData.email) setFacultyEmail(userData.email)
         if (userData.profileImage) setProfileImage(userData.profileImage)
       } catch (e) {
-        console.error('Failed to parse user data:', e)
+        logger.error('Failed to parse user data:', e)
       }
     }
   }, [])

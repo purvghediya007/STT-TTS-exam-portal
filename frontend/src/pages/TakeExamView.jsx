@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { fetchExamQuestions, getExamSummary, submitExam, startExam as apiStartExam, saveExamProgress, getSavedAnswers } from '../services/api';
 import { uploadAudioToS3Complete } from '../services/s3AudioUpload';
+import logger from '../utils/logger';
 
 // --- No Mock Data - Fetch from Backend ---
 
@@ -159,8 +160,8 @@ const TakeExamView = () => {
       lastAlertRef.current = { msg, ts: now };
       alert(msg);
     } catch (e) {
-      // fallback to console
-      console.warn('Alert fallback:', msg);
+      // fallback to logger
+      logger.warn('Alert fallback:', msg);
     }
   };
 
@@ -193,7 +194,7 @@ const TakeExamView = () => {
         // It will be set based on student's personal deadline when exam starts
         setLoading(false);
       } catch (err) {
-        console.error('Error loading exam:', err);
+        logger.error('Error loading exam:', err);
         setError(err.message || 'Failed to load exam');
         setLoading(false);
       }
@@ -244,7 +245,7 @@ const TakeExamView = () => {
         setMediaPermissionStatus('denied');
         showAlertOnce('Microphone permission denied. Please enable it in your browser settings to record audio answers.');
       } else {
-        console.error('Microphone permission error:', err);
+        logger.error('Microphone permission error:', err);
         setMediaPermissionStatus('error');
       }
       throw err;
@@ -270,7 +271,7 @@ const TakeExamView = () => {
     const fetchDeadline = async () => {
       try {
         const res = await apiStartExam(examId);
-        console.log('🕐 API Response from startExam:', res);
+        logger.log('🕐 API Response from startExam:', res);
         const newAttempt = res?.attemptId || res?.attempt_id;
         if (newAttempt && !attemptId) {
           setAttemptId(newAttempt);
@@ -281,20 +282,20 @@ const TakeExamView = () => {
 
         if (expiresAtStr) {
           const deadline = new Date(expiresAtStr);
-          console.log('📅 Setting deadline to:', deadline.toISOString());
-          console.log('⏰ Current time:', new Date().toISOString());
+          logger.log('📅 Setting deadline to:', deadline.toISOString());
+          logger.log('⏰ Current time:', new Date().toISOString());
           setDeadlineAt(deadline);
           setStartedAt(new Date());
 
           // Calculate remaining seconds from deadline
           const secondsRemaining = Math.floor((deadline - new Date()) / 1000);
-          console.log('⏱️ Initial remaining seconds:', secondsRemaining, `(${Math.floor(secondsRemaining / 60)} minutes)`);
+          logger.log('⏱️ Initial remaining seconds:', secondsRemaining, `(${Math.floor(secondsRemaining / 60)} minutes)`);
           setRemainingTime(Math.max(0, secondsRemaining));
         } else {
-          console.warn('⚠️ No expiresAt field in API response:', res);
+          logger.warn('⚠️ No expiresAt field in API response:', res);
         }
       } catch (err) {
-        console.warn('Could not fetch exam deadline:', err);
+        logger.warn('Could not fetch exam deadline:', err);
       }
     };
 
@@ -358,14 +359,14 @@ const TakeExamView = () => {
       }
 
       if (answers.length > 0) {
-        console.log(`💾 Saving progress for ${answers.length} answers...`);
+        logger.log(`💾 Saving progress for ${answers.length} answers...`);
         await saveExamProgress(examId, {
           attemptId: usedAttemptId,
           answers
         });
       }
     } catch (err) {
-      console.warn('⚠️ Progress save failed:', err);
+      logger.warn('⚠️ Progress save failed:', err);
     }
   };
 
@@ -374,7 +375,7 @@ const TakeExamView = () => {
     const loadSavedProgress = async () => {
       if (!attemptId || questions.length === 0 || examStatus.length === 0) return;
       try {
-        console.log('📂 Fetching saved progress for attempt:', attemptId);
+        logger.log('📂 Fetching saved progress for attempt:', attemptId);
         const progressRes = await getSavedAnswers(attemptId);
         if (progressRes && Array.isArray(progressRes.answers)) {
           const savedAnswersMap = new Map();
@@ -382,7 +383,7 @@ const TakeExamView = () => {
             savedAnswersMap.set(ans.questionId, ans);
           });
 
-          console.log(`✅ Loaded ${progressRes.answers.length} saved answers from DB.`);
+          logger.log(`✅ Loaded ${progressRes.answers.length} saved answers from DB.`);
 
           setExamStatus(prevStatus => {
             return prevStatus.map((qState, index) => {
@@ -429,7 +430,7 @@ const TakeExamView = () => {
           });
         }
       } catch (err) {
-        console.warn('⚠️ Could not load saved progress:', err);
+        logger.warn('⚠️ Could not load saved progress:', err);
       }
     };
 
@@ -441,7 +442,7 @@ const TakeExamView = () => {
     if (!isExamStarted || questions.length === 0) return;
 
     const autoSaveInterval = setInterval(() => {
-      console.log('⏰ 15s Auto-save interval triggered');
+      logger.log('⏰ 15s Auto-save interval triggered');
       saveAnswerProgress(examStatusRef.current);
     }, 15000);
 
@@ -453,7 +454,7 @@ const TakeExamView = () => {
   useEffect(() => {
     // If no deadline is set yet, don't start the timer
     if (!deadlineAt) {
-      console.log('⏰ Timer waiting for deadline...');
+      logger.log('⏰ Timer waiting for deadline...');
       return;
     }
 
@@ -463,7 +464,7 @@ const TakeExamView = () => {
       return;
     }
 
-    console.log('⏰ Timer started with deadline:', deadlineAt.toISOString());
+    logger.log('⏰ Timer started with deadline:', deadlineAt.toISOString());
     const timer = setInterval(() => {
       if (!deadlineAt) return;
       const now = new Date();
@@ -476,7 +477,7 @@ const TakeExamView = () => {
         // Auto-submit the exam when time runs out
         if (!hasAutoSubmittedRef.current) {
           hasAutoSubmittedRef.current = true;
-          console.log('⏰ Time is up! Auto-submitting exam...');
+          logger.log('⏰ Time is up! Auto-submitting exam...');
           triggerAutoSubmitFlow();
         }
         return;
@@ -698,7 +699,7 @@ const TakeExamView = () => {
       await finalSubmitExam({ redirect: false });
       setAutoSubmitDone(true);
     } catch (e) {
-      console.error('Auto-submit failed', e);
+      logger.error('Auto-submit failed', e);
     } finally {
       setAutoSubmitInProgress(false);
     }
@@ -741,7 +742,7 @@ const TakeExamView = () => {
           setIsPlaying(true);
         }
       } catch (err) {
-        console.log('TTS play failed', err);
+        logger.log('TTS play failed', err);
       }
     }, 2000);
 
@@ -801,7 +802,7 @@ const TakeExamView = () => {
     }
 
     setIsUploadingAudio(true);
-    console.log(`\n📤 Uploading audio for question ${questionIndex + 1}...`);
+    logger.log(`\n📤 Uploading audio for question ${questionIndex + 1}...`);
     let uploadSuccessful = true;
     const uploadedUrls = [];
 
@@ -817,12 +818,12 @@ const TakeExamView = () => {
         }
 
         try {
-          console.log(`   Recording ${i + 1}/${qState.answer.recordings.length}...`);
+          logger.log(`   Recording ${i + 1}/${qState.answer.recordings.length}...`);
 
           // Convert blob URL to file
           const response = await fetch(recordingUrl);
           const blob = await response.blob();
-          console.log(`   ✅ Blob fetched. Size: ${blob.size} bytes`);
+          logger.log(`   ✅ Blob fetched. Size: ${blob.size} bytes`);
 
           // Upload directly to S3 using the complete workflow
           const uploadResult = await uploadAudioToS3Complete(
@@ -832,10 +833,10 @@ const TakeExamView = () => {
             blob
           );
 
-          console.log(`   ✅ Recording ${i + 1} uploaded successfully`);
+          logger.log(`   ✅ Recording ${i + 1} uploaded successfully`);
           uploadedUrls.push(uploadResult.url);
         } catch (error) {
-          console.error(`   ❌ Error uploading recording ${i + 1}:`, error.message);
+          logger.error(`   ❌ Error uploading recording ${i + 1}:`, error.message);
           uploadSuccessful = false;
           // Keep the blob URL if upload fails, will retry on next navigation or at submission
           uploadedUrls.push(recordingUrl);
@@ -857,12 +858,12 @@ const TakeExamView = () => {
           return q;
         });
         setExamStatus(nextStatus);
-        console.log(`✅ Audio upload complete for question ${questionIndex + 1}`);
+        logger.log(`✅ Audio upload complete for question ${questionIndex + 1}`);
         // Save progress with the newly uploaded S3 URLs
         await saveAnswerProgress(nextStatus);
       }
     } catch (error) {
-      console.error(`❌ Unexpected error during audio upload:`, error);
+      logger.error(`❌ Unexpected error during audio upload:`, error);
       uploadSuccessful = false;
     } finally {
       setIsUploadingAudio(false);
@@ -870,7 +871,7 @@ const TakeExamView = () => {
 
     // Return true to allow navigation even if upload fails (with warning)
     if (!uploadSuccessful) {
-      console.warn(`⚠️ Some audio files failed to upload. They will be retried at submission.`);
+      logger.warn(`⚠️ Some audio files failed to upload. They will be retried at submission.`);
     }
     return true; // Always allow navigation
   };
@@ -878,7 +879,7 @@ const TakeExamView = () => {
   const handleNavigation = async (index) => {
     // Prevent navigation while uploading
     if (isUploadingAudio) {
-      console.log('⏳ Upload in progress, please wait...');
+      logger.log('⏳ Upload in progress, please wait...');
       return;
     }
 
@@ -982,7 +983,7 @@ const TakeExamView = () => {
       } else {
         showAlertOnce(`Error accessing audio media: ${err.name}. Check if your microphone is in use or if you are on a secure (HTTPS) connection.`);
       }
-      console.error('Error accessing media devices:', err);
+      logger.error('Error accessing media devices:', err);
     }
   };
 
@@ -1103,10 +1104,10 @@ const TakeExamView = () => {
         }
       }
 
-      console.log(`📝 Submitting exam with ${answers.length} text/MCQ answers and ${audioAnswers.length} audio answers`);
+      logger.log(`📝 Submitting exam with ${answers.length} text/MCQ answers and ${audioAnswers.length} audio answers`);
       if (audioAnswers.length === 0) {
-        console.warn(`⚠️ No audio answers collected. Check question types and recordings.`);
-        console.log(`Debug info:`, currentStatus);
+        logger.warn(`⚠️ No audio answers collected. Check question types and recordings.`);
+        logger.log(`Debug info:`, currentStatus);
       }
 
       // Submit exam (text/MCQ answers only)
@@ -1116,20 +1117,20 @@ const TakeExamView = () => {
         timeSpent: Math.round((3600 - remainingTimeRef.current) / 60), // in minutes
       });
 
-      console.log(`✅ Exam submitted successfully. Attempt ID: ${result.submissionId}`);
+      logger.log(`✅ Exam submitted successfully. Attempt ID: ${result.submissionId}`);
 
       // Now upload audio files if any - DIRECT TO S3
       if (audioAnswers.length > 0) {
-        console.log(`📤 Uploading ${audioAnswers.length} audio files directly to S3...`);
+        logger.log(`📤 Uploading ${audioAnswers.length} audio files directly to S3...`);
         let audioUploadCount = 0;
 
         for (const audioAnswer of audioAnswers) {
-          console.log(`📤 Processing audio answer for question: ${audioAnswer.questionId}`);
-          console.log(`   Recordings count: ${audioAnswer.recordings.length}`);
+          logger.log(`📤 Processing audio answer for question: ${audioAnswer.questionId}`);
+          logger.log(`   Recordings count: ${audioAnswer.recordings.length}`);
 
           for (let i = 0; i < audioAnswer.recordings.length; i++) {
             const recordingUrl = audioAnswer.recordings[i];
-            console.log(`   🎙️ Recording ${i + 1}: ${recordingUrl.substring(0, 50)}...`);
+            logger.log(`   🎙️ Recording ${i + 1}: ${recordingUrl.substring(0, 50)}...`);
 
             // Skip if already an S3 URL (already uploaded during navigation)
             if (isS3Url(recordingUrl)) {
@@ -1141,7 +1142,7 @@ const TakeExamView = () => {
               // Convert blob URL to file
               const response = await fetch(recordingUrl);
               const blob = await response.blob();
-              console.log(`   ✅ Blob fetched. Size: ${blob.size} bytes, Type: ${blob.type}`);
+              logger.log(`   ✅ Blob fetched. Size: ${blob.size} bytes, Type: ${blob.type}`);
 
               // Upload directly to S3 using the complete workflow
               const uploadResult = await uploadAudioToS3Complete(
@@ -1152,12 +1153,12 @@ const TakeExamView = () => {
               );
 
               audioUploadCount++;
-              console.log(
+              logger.log(
                 `   ✅ Uploaded audio for question ${audioAnswer.questionId}:`,
                 uploadResult
               );
             } catch (error) {
-              console.error(
+              logger.error(
                 `❌ Error uploading audio for question ${audioAnswer.questionId}:`,
                 error
               );
@@ -1165,7 +1166,7 @@ const TakeExamView = () => {
           }
         }
 
-        console.log(
+        logger.log(
           `✅ Audio upload complete: ${audioUploadCount}/${audioAnswers.length} uploaded`
         );
       }
@@ -1181,7 +1182,7 @@ const TakeExamView = () => {
         }, 1000);
       }
     } catch (error) {
-      console.error('Error submitting exam:', error);
+      logger.error('Error submitting exam:', error);
       // Normalize error message (fetchAPI may throw plain objects)
       const errMsg = (error && (error.message || error.error || error.detail)) || JSON.stringify(error) || 'Please try again';
       showAlertOnce('Error submitting exam: ' + errMsg);
@@ -1340,8 +1341,8 @@ const TakeExamView = () => {
                                   className="flex-1 h-8"
                                   controlsList="nodownload"
                                   crossOrigin="anonymous"
-                                  onError={() => console.error('Audio load error for:', url)}
-                                  onLoadedMetadata={() => console.log('Audio loaded:', url)}
+                                  onError={() => logger.error('Audio load error for:', url)}
+                                  onLoadedMetadata={() => logger.log('Audio loaded:', url)}
                                 />
                               </div>
                               <span className="ml-2 text-xs text-green-600 font-semibold whitespace-nowrap">Uploaded</span>
@@ -1370,8 +1371,8 @@ const TakeExamView = () => {
                                   className="flex-1 h-8"
                                   controlsList="nodownload"
                                   crossOrigin="anonymous"
-                                  onError={() => console.error('Audio load error for:', url)}
-                                  onLoadedMetadata={() => console.log('Audio loaded:', url)}
+                                  onError={() => logger.error('Audio load error for:', url)}
+                                  onLoadedMetadata={() => logger.log('Audio loaded:', url)}
                                 />
                               </div>
                               <span className="ml-2 text-xs text-yellow-600 font-semibold whitespace-nowrap animate-pulse">Pending...</span>
@@ -1773,7 +1774,7 @@ const TakeExamView = () => {
                                 setIsPlaying(true);
                               }
                             } catch (err) {
-                              console.warn('TTS play failed', err);
+                              logger.warn('TTS play failed', err);
                             }
                           }}
                           disabled={!(currentQuestion?.ttsAudioUrl || (typeof window !== 'undefined' && window.speechSynthesis))}

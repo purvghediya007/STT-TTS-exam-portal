@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Activity, Users, ClipboardList } from 'lucide-react'
+import logger from '../utils/logger'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
 
 const getDifficultyBadge = (value) => {
   if (value >= 70) return 'bg-red-100 text-red-700'
@@ -50,7 +51,7 @@ const FacultyExamAnalytics = () => {
         setQuestionDifficulty(data.data.questionDifficulty || [])
         setStudentAttempts(data.data.studentAttempts || [])
       } catch (err) {
-        console.error('Exam analysis fetch error:', err)
+        logger.error('Exam analysis fetch error:', err)
         setError(err.message || 'Unable to fetch exam analysis')
       } finally {
         setLoading(false)

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchFacultyExams, fetchFacultyStats, deleteExam } from '../services/api'
+import logger from '../utils/logger'
 
 /**
  * Custom hook for managing faculty exams
@@ -17,7 +18,7 @@ export function useFacultyExams() {
       const response = await fetchFacultyExams({ status: 'all', limit: 100 })
       setExams(response.exams || [])
     } catch (err) {
-      console.error('Error fetching faculty exams:', err)
+      logger.error('Error fetching faculty exams:', err)
       setError('Failed to load exams')
       // Try to load from localStorage as fallback
       try {
@@ -41,7 +42,7 @@ export function useFacultyExams() {
       const data = await fetchFacultyStats()
       setStats(data)
     } catch (err) {
-      console.error('Error fetching faculty stats:', err)
+      logger.error('Error fetching faculty stats:', err)
     }
   }, [])
 
@@ -51,7 +52,7 @@ export function useFacultyExams() {
       setExams(prev => prev.filter(ex => ex.id !== examId))
       await refreshStats()
     } catch (err) {
-      console.error('Error deleting exam:', err)
+      logger.error('Error deleting exam:', err)
       throw err
     }
   }, [refreshStats])

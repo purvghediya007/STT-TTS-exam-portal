@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ExamChart from "../components/ExamChart";
 import TypeChart from "../components/TypeChart";
 import api from "../api/axiosInstance";
+import logger from "../utils/logger";
 
 export default function StudentAnalytics({ studentId }) {
   const [data, setData] = useState(null);
@@ -19,7 +20,7 @@ export default function StudentAnalytics({ studentId }) {
       .get(`/analytics/student/${studentId}`)
       .then((res) => setData(res.data))
       .catch((err) => {
-        console.error("Failed to load analytics:", err);
+        logger.error("Failed to load analytics:", err);
         setError(err.response?.data || err.message || "Unknown error");
       })
       .finally(() => setLoading(false));
