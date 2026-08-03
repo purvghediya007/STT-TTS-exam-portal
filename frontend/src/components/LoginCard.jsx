@@ -9,9 +9,9 @@ import logger from '../utils/logger'
 const formConfig = {
   title: 'VGEC Exam Portal Login',
   description:
-    'Login with your username, enrollment number, or email and password to access your dashboard.',
-  primaryFieldLabel: 'Username / Enrollment Number / Email',
-  primaryPlaceholder: 'e.g. student123, 20XX123456, or prof.patel@vgec.ac.in',
+    'Login with your username or enrollment number and password to access your dashboard.',
+  primaryFieldLabel: 'Username or Enrollment Number',
+  primaryPlaceholder: 'e.g. student123 or 2XX123456',
 }
 
 function LoginCard() {

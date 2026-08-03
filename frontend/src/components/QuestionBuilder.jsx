@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Plus, Trash2, Image, Video, FileText, X, Check, Upload } from 'lucide-react'
 import { uploadMedia, deleteMedia, generateQuestions, API_BASE_URL } from '../services/api'
 import logger from '../utils/logger'
@@ -13,6 +13,24 @@ export default function QuestionBuilder({ questions, onChange }) {
   const [generating, setGenerating] = useState(false)
   // Modified: Added parsingFile state and handleQuestionBankUploadAndParse helper function to upload and parse question bank files
   const [parsingFile, setParsingFile] = useState(false)
+  const [selectedIndices, setSelectedIndices] = useState([])
+
+  const formRef = useRef(null)
+  const questionInputRef = useRef(null)
+  const topicInputRef = useRef(null)
+  const lastQuestionRef = useRef(null)
+
+  const scrollToLastQuestionAndForm = () => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (lastQuestionRef.current) {
+          lastQuestionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        }
+      }, 50)
+    })
+  }
 
   const handleQuestionBankUploadAndParse = async (file) => {
     if (!file) return
@@ -44,6 +62,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         } else {
           // Append to existing questions list
           onChange([...questions, ...resData.questions])
+          scrollToLastQuestionAndForm()
           alert(`Successfully parsed and added ${resData.questions.length} questions from ${file.name}!`)
         }
       } else {
@@ -82,7 +101,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     questionTypesToGenerate: ['viva'],
     topicWeights: { mcq: 0, viva: 0, interview: 0 }
   })
-  
+
 
 
   // Handler for media uploads to Cloudinary
@@ -229,7 +248,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         if (data && data.topics) {
           Object.keys(data.topics).forEach(topicKey => {
             const qs = data.topics[topicKey]
-            
+
             if (Array.isArray(qs)) {
               // Array format (e.g. for MCQs or if we return objects)
               qs.forEach((qItem, i) => {
@@ -254,11 +273,11 @@ export default function QuestionBuilder({ questions, onChange }) {
                   expectedAnswer: qItem.expectedAnswer || qItem.correct_option || '',
                   options: Array.isArray(qItem.options)
                     ? qItem.options.map(optStr => ({
-                        text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
-                        isCorrect: typeof optStr === 'string'
-                          ? optStr.trim() === (qItem.correct_option || '').trim()
-                          : !!optStr.isCorrect
-                      }))
+                      text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
+                      isCorrect: typeof optStr === 'string'
+                        ? optStr.trim() === (qItem.correct_option || '').trim()
+                        : !!optStr.isCorrect
+                    }))
                     : [],
                   media: { ...newQuestion.media }
                 })
@@ -289,11 +308,11 @@ export default function QuestionBuilder({ questions, onChange }) {
                     expectedAnswer: qVal.expectedAnswer || qVal.correct_option || '',
                     options: Array.isArray(qVal.options)
                       ? qVal.options.map(optStr => ({
-                          text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
-                          isCorrect: typeof optStr === 'string'
-                            ? optStr.trim() === (qVal.correct_option || '').trim()
-                            : !!optStr.isCorrect
-                        }))
+                        text: typeof optStr === 'string' ? optStr.trim() : (optStr.text || ''),
+                        isCorrect: typeof optStr === 'string'
+                          ? optStr.trim() === (qVal.correct_option || '').trim()
+                          : !!optStr.isCorrect
+                      }))
                       : [],
                     media: { ...newQuestion.media }
                   })
@@ -319,6 +338,7 @@ export default function QuestionBuilder({ questions, onChange }) {
         // Reset form
         setNewQuestion(resetNewQuestionState())
         setEditingIndex(null)
+        scrollToLastQuestionAndForm()
       } catch (error) {
         logger.error('Error generating questions:', error)
         alert('Failed to generate questions. Please try again.')
@@ -366,6 +386,7 @@ export default function QuestionBuilder({ questions, onChange }) {
     // Reset form
     setNewQuestion(resetNewQuestionState())
     setEditingIndex(null)
+    scrollToLastQuestionAndForm()
   }
 
   const handleUpdateQuestion = (index) => {
@@ -426,10 +447,39 @@ export default function QuestionBuilder({ questions, onChange }) {
     setNewQuestion(resetNewQuestionState())
   }
 
+  const handleToggleSelect = (index) => {
+    setSelectedIndices(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (questions.length === 0) return
+    if (selectedIndices.length === questions.length) {
+      setSelectedIndices([])
+    } else {
+      setSelectedIndices(questions.map((_, i) => i))
+    }
+  }
+
+  const handleBulkDelete = () => {
+    if (selectedIndices.length === 0) return
+    if (confirm(`Are you sure you want to delete the ${selectedIndices.length} selected question(s)?`)) {
+      const updatedQuestions = questions.filter((_, i) => !selectedIndices.includes(i))
+      onChange(updatedQuestions)
+      setSelectedIndices([])
+      if (editingIndex !== null && selectedIndices.includes(editingIndex)) {
+        setEditingIndex(null)
+        setNewQuestion(resetNewQuestionState())
+      }
+    }
+  }
+
   const handleDeleteQuestion = (index) => {
     if (confirm('Are you sure you want to delete this question?')) {
       const updatedQuestions = questions.filter((_, i) => i !== index)
       onChange(updatedQuestions)
+      setSelectedIndices(prev => prev.filter(i => i !== index).map(i => i > index ? i - 1 : i))
     }
   }
   const handleEditQuestion = (index) => {
@@ -462,6 +512,19 @@ export default function QuestionBuilder({ questions, onChange }) {
       questionTypesToGenerate: question.questionTypesToGenerate || (question.questionTypeToGenerate ? [question.questionTypeToGenerate] : ['viva']),
       topicWeights: question.topicWeights || { mcq: 0, viva: 0, interview: 0 }
     })
+
+    // Smoothly scroll form into view and focus input without hard jumps
+    requestAnimationFrame(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+      const qType = question.type || 'viva'
+      if (qType === 'topic_based' && topicInputRef.current) {
+        topicInputRef.current.focus({ preventScroll: true })
+      } else if (questionInputRef.current) {
+        questionInputRef.current.focus({ preventScroll: true })
+      }
+    })
   }
 
   const handleRemoveMedia = (type) => {
@@ -485,77 +548,163 @@ export default function QuestionBuilder({ questions, onChange }) {
 
   return (
     <div className="space-y-6">
-      {/* Existing Questions */}
-      {questions.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="font-semibold text-gray-700">Questions ({questions.length})</h4>
-          {questions.map((q, index) => (
-            <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${q.type === 'mcq' ? 'bg-green-100 text-green-700' :
-                      q.type === 'interview' ? 'bg-indigo-100 text-indigo-700' : 'bg-pink-100 text-pink-700'
-                      }`}>
-                      {q.type.toUpperCase()}
-                    </span>
-                    <span className="text-sm text-gray-600">{q.marks} point{q.marks !== 1 ? 's' : ''}</span>
+      {/* Questions Section Header & List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <label className={`flex items-center gap-2 text-sm font-medium select-none ${questions.length === 0 ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer text-gray-700'}`}>
+              <input
+                type="checkbox"
+                checked={questions.length > 0 && selectedIndices.length === questions.length}
+                disabled={questions.length === 0}
+                onChange={handleSelectAll}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
+              />
+              <span>Select All</span>
+            </label>
+            <h4 className="font-semibold text-gray-700">Questions ({questions.length})</h4>
+          </div>
+
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIndices.length === 0}
+            className={`px-3 py-1.5 text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${selectedIndices.length > 0
+              ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer shadow-sm'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Selected {selectedIndices.length > 0 ? `(${selectedIndices.length})` : ''}
+          </button>
+        </div>
+
+        {questions.length > 0 && (
+          questions.map((q, index) => {
+            const isSelected = selectedIndices.includes(index)
+            const isBulkSelectionActive = selectedIndices.length > 0
+            const isLastQuestion = index === questions.length - 1
+
+            return (
+              <div
+                key={q.id || index}
+                ref={isLastQuestion ? lastQuestionRef : null}
+                style={isLastQuestion ? { scrollMarginTop: '150px' } : undefined}
+                className={`border rounded-lg p-4 transition-colors ${isSelected ? 'border-blue-400 bg-blue-50/40' : 'border-gray-200 bg-gray-50'
+                  }`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleToggleSelect(index)}
+                    className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded ${q.type === 'mcq' ? 'bg-green-100 text-green-700' :
+                        q.type === 'interview' ? 'bg-indigo-100 text-indigo-700' : 'bg-pink-100 text-pink-700'
+                        }`}>
+                        {q.type.toUpperCase()}
+                      </span>
+                      <span className="text-sm text-gray-600">{q.marks} point{q.marks !== 1 ? 's' : ''}</span>
+                    </div>
+                    <p className="text-gray-900 font-medium">{q.text}</p>
+
+                    {/* MCQ Options Display */}
+                    {q.type === 'mcq' && q.options && (
+                      <div className="mt-2 space-y-1">
+                        {q.options.map((opt, optIndex) => (
+                          <div key={optIndex} className="flex items-center gap-2 text-sm">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${opt.isCorrect
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-200 text-gray-600'
+                              }`}>
+                              {opt.isCorrect ? <Check className="w-3 h-3" /> : String.fromCharCode(65 + optIndex)}
+                            </span>
+                            <span className={opt.isCorrect ? 'font-semibold text-green-700' : 'text-gray-700'}>
+                              {opt.text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {(q.media?.image || q.media?.video || q.media?.graph) && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                        {q.media.image && <Image className="w-4 h-4" />}
+                        {q.media.video && <Video className="w-4 h-4" />}
+                        {q.media.graph && <FileText className="w-4 h-4" />}
+                        <span>Media attached</span>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-gray-900 font-medium">{q.text}</p>
-
-                  {/* MCQ Options Display */}
-                  {q.type === 'mcq' && q.options && (
-                    <div className="mt-2 space-y-1">
-                      {q.options.map((opt, optIndex) => (
-                        <div key={optIndex} className="flex items-center gap-2 text-sm">
-                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${opt.isCorrect
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-200 text-gray-600'
-                            }`}>
-                            {opt.isCorrect ? <Check className="w-3 h-3" /> : String.fromCharCode(65 + optIndex)}
-                          </span>
-                          <span className={opt.isCorrect ? 'font-semibold text-green-700' : 'text-gray-700'}>
-                            {opt.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {(q.media?.image || q.media?.video || q.media?.graph) && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                      {q.media.image && <Image className="w-4 h-4" />}
-                      {q.media.video && <Video className="w-4 h-4" />}
-                      {q.media.graph && <FileText className="w-4 h-4" />}
-                      <span>Media attached</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleEditQuestion(index)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteQuestion(index)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditQuestion(index)}
+                      disabled={isBulkSelectionActive}
+                      className={`p-2 text-sm font-medium rounded-lg transition-colors ${isBulkSelectionActive
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'text-blue-600 hover:bg-blue-50'
+                        }`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteQuestion(index)}
+                      disabled={isBulkSelectionActive}
+                      className={`p-2 text-sm rounded-lg transition-colors ${isBulkSelectionActive
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'text-red-600 hover:bg-red-50'
+                        }`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )
+          })
+        )}
+      </div>
 
       {/* Add/Edit Question Form */}
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-white">
-        <h4 className="font-semibold text-gray-700 mb-4">
-          {editingIndex !== null ? 'Edit Question' : 'Add New Question'}
-        </h4>
+      <div ref={formRef} style={{ scrollMarginTop: '150px' }} className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-white">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2 border-b border-gray-100 pb-3">
+          <h4 className="font-semibold text-gray-700">
+            {editingIndex !== null ? 'Edit Question' : 'Add New Question'}
+          </h4>
+          <div className="flex items-center gap-3">
+            {editingIndex !== null && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingIndex(null)
+                  setNewQuestion(resetNewQuestionState())
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Cancel Update
+              </button>
+            )}
+            {newQuestion.type !== 'file_upload' ? (
+              <button
+                type="button"
+                onClick={editingIndex !== null
+                  ? () => handleUpdateQuestion(editingIndex)
+                  : handleAddQuestion}
+                disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating}
+                className={`px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+              >
+                <Plus className="w-4 h-4" />
+                {editingIndex !== null ? 'Update Question' : (generating ? 'Generating...' : 'Add Question')}
+              </button>
+            ) : (
+              <div className="text-xs text-green-700 font-medium bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+                Questions are parsed and imported automatically. No need to click Add Question.
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Question Type Selector */}
         <div className="mb-4">
@@ -573,7 +722,7 @@ export default function QuestionBuilder({ questions, onChange }) {
               />
               MCQ
             </label>
-            
+
             <label className={`px-3 py-1 rounded-lg border cursor-pointer ${newQuestion.type === 'viva' ? 'bg-pink-100 border-pink-300 text-pink-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
               <input
                 type="radio"
@@ -635,6 +784,7 @@ export default function QuestionBuilder({ questions, onChange }) {
               Question <span className="text-red-500">*</span>
             </label>
             <textarea
+              ref={questionInputRef}
               value={newQuestion.text}
               onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
               rows={3}
@@ -775,6 +925,7 @@ export default function QuestionBuilder({ questions, onChange }) {
             <div className="space-y-2">
               <label className="block text-xs text-gray-600">Topic Name</label>
               <input
+                ref={topicInputRef}
                 type="text"
                 placeholder="e.g. Data Structures – Stack & Queue"
                 value={newQuestion.topicName}
@@ -788,7 +939,7 @@ export default function QuestionBuilder({ questions, onChange }) {
               <div>
                 <label className="block text-xs text-gray-600 mb-2">Difficulty Level</label>
                 <div className="flex items-center gap-2">
-                  {['Easy','Medium','Hard'].map(level => (
+                  {['Easy', 'Medium', 'Hard'].map(level => (
                     <label key={level} className={`px-3 py-1 rounded-lg border cursor-pointer text-sm ${newQuestion.difficulty === level ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-gray-50 border-gray-300 text-gray-700'}`}>
                       <input
                         type="radio"
@@ -822,9 +973,9 @@ export default function QuestionBuilder({ questions, onChange }) {
                 <label className="block text-xs text-gray-600 mb-2">Question Type to Generate</label>
                 <div className="flex items-center gap-2">
                   {[
-                    {value: 'viva', label: 'Viva'},
-                    {value: 'interview', label: 'Interview'},
-                    {value: 'mcq', label: 'MCQ'}
+                    { value: 'viva', label: 'Viva' },
+                    { value: 'interview', label: 'Interview' },
+                    { value: 'mcq', label: 'MCQ' }
                   ].map(opt => {
                     const selected = Array.isArray(newQuestion.questionTypesToGenerate) && newQuestion.questionTypesToGenerate[0] === opt.value
                     return (
@@ -878,8 +1029,8 @@ export default function QuestionBuilder({ questions, onChange }) {
               Media Attachments <span className="text-gray-500 text-xs">(Optional)</span>
             </label>
             <div className="grid grid-cols-3 gap-3">
-            {/* Image */}
-            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+              {/* Image */}
+              <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Image className="w-6 h-6 text-blue-600" />
@@ -923,10 +1074,10 @@ export default function QuestionBuilder({ questions, onChange }) {
                     </div>
                   </div>
                 )}
-            </label>
+              </label>
 
-            {/* Video */}
-            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+              {/* Video */}
+              <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Video className="w-6 h-6 text-blue-600" />
@@ -970,145 +1121,112 @@ export default function QuestionBuilder({ questions, onChange }) {
                     </div>
                   </div>
                 )}
-            </label>
+              </label>
 
-            {/* Graph/Chart */}
-            <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
-              {newQuestion.type === 'interview' ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                    <span className="text-xs text-gray-600">Attach File</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {newQuestion.media.graph ? (
-                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
-                    ) : (
-                      <span className="text-xs text-gray-400">No file</span>
-                    )}
-                    <span className="w-4 h-4 inline-flex items-center justify-center" />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                    <span className="text-xs text-gray-600">{uploadingMedia === 'graph' ? 'Uploading...' : 'Graph/Chart'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {newQuestion.media.graph ? (
-                      <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
-                    ) : (
-                      <span className="text-xs text-gray-400">No file</span>
-                    )}
-                    <span className="w-4 h-4 inline-flex items-center justify-center">
-                      {uploadingMedia === 'graph' ? (
-                        <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+              {/* Graph/Chart */}
+              <label className="block border border-gray-300 rounded-lg p-4 min-h-[110px] cursor-pointer">
+                {newQuestion.type === 'interview' ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                      <span className="text-xs text-gray-600">Attach File</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {newQuestion.media.graph ? (
+                        <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
                       ) : (
-                        <span className="inline-block w-4 h-4" />
+                        <span className="text-xs text-gray-400">No file</span>
                       )}
-                    </span>
+                      <span className="w-4 h-4 inline-flex items-center justify-center" />
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* Input: interview uses local file, others use handleMediaUpload */}
-              {newQuestion.type === 'interview' ? (
-                <>
-                  <input
-                    type="file"
-                    accept=".pdf,.xlsx,.xls,.csv"
-                    onChange={(e) => {
-                      const f = e.target.files[0]
-                      setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: f ? { file: f.name, size: f.size, type: f.type } : null } }))
-                    }}
-                    className="hidden"
-                  />
-
-                  {newQuestion.media.graph && (
-                    <div className="mt-3 flex items-start gap-3">
-                      <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
-                        <FileText className="w-10 h-10 text-slate-400" />
-                      </div>
-                      <div className="flex-1 flex items-center justify-end">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: null } })) }}
-                          className="text-red-600 hover:text-red-700 flex items-center gap-2"
-                        >
-                          <X className="w-4 h-4" />
-                          <span className="text-xs">Remove</span>
-                        </button>
-                      </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                      <span className="text-xs text-gray-600">{uploadingMedia === 'graph' ? 'Uploading...' : 'Graph/Chart'}</span>
                     </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleMediaUpload('graph', e.target.files[0])}
-                    className="hidden"
-                    disabled={uploadingMedia !== null}
-                  />
-
-                  {newQuestion.media.graph && (
-                    <div className="mt-3 flex items-start gap-3">
-                      <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
-                        <FileText className="w-10 h-10 text-slate-400" />
-                      </div>
-                      <div className="flex-1 flex items-center justify-end">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleRemoveMedia('graph') }}
-                          className="text-red-600 hover:text-red-700 flex items-center gap-2"
-                        >
-                          <X className="w-4 h-4" />
-                          <span className="text-xs">Remove</span>
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      {newQuestion.media.graph ? (
+                        <span className="text-xs text-green-600 truncate max-w-[140px] text-right" title={newQuestion.media.graph.file}>{newQuestion.media.graph.file}</span>
+                      ) : (
+                        <span className="text-xs text-gray-400">No file</span>
+                      )}
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        {uploadingMedia === 'graph' ? (
+                          <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                        ) : (
+                          <span className="inline-block w-4 h-4" />
+                        )}
+                      </span>
                     </div>
-                  )}
-                </>
-              )}
-            </label>
-          </div>
-        </div>
-      )}   {/* ✅ FIX: CLOSE CONDITIONAL HERE */}
+                  </div>
+                )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
-          {editingIndex !== null && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditingIndex(null)
-                setNewQuestion(resetNewQuestionState())
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel Edit
-            </button>
-          )}
-          {newQuestion.type !== 'file_upload' ? (
-            <button
-              type="button"
-              onClick={editingIndex !== null
-                ? () => handleUpdateQuestion(editingIndex)
-                : handleAddQuestion}
-              disabled={!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating}
-              className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${(!newQuestion.type || (newQuestion.type === 'topic_based' && (!Array.isArray(newQuestion.questionTypesToGenerate) || newQuestion.questionTypesToGenerate.length !== 1)) || generating) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-            >
-              <Plus className="w-4 h-4" />
-              {editingIndex !== null ? 'Update Question' : (generating ? 'Generating...' : 'Add Question')}
-            </button>
-          ) : (
-            <div className="text-sm text-green-700 font-medium bg-green-50 border border-green-200 rounded-lg p-3 w-full text-center">
-              Questions are parsed and imported automatically. No need to click Add Question.
+                {/* Input: interview uses local file, others use handleMediaUpload */}
+                {newQuestion.type === 'interview' ? (
+                  <>
+                    <input
+                      type="file"
+                      accept=".pdf,.xlsx,.xls,.csv"
+                      onChange={(e) => {
+                        const f = e.target.files[0]
+                        setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: f ? { file: f.name, size: f.size, type: f.type } : null } }))
+                      }}
+                      className="hidden"
+                    />
+
+                    {newQuestion.media.graph && (
+                      <div className="mt-3 flex items-start gap-3">
+                        <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
+                          <FileText className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <div className="flex-1 flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setNewQuestion(prev => ({ ...prev, media: { ...prev.media, graph: null } })) }}
+                            className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                          >
+                            <X className="w-4 h-4" />
+                            <span className="text-xs">Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleMediaUpload('graph', e.target.files[0])}
+                      className="hidden"
+                      disabled={uploadingMedia !== null}
+                    />
+
+                    {newQuestion.media.graph && (
+                      <div className="mt-3 flex items-start gap-3">
+                        <div className="w-36 md:w-44 h-28 md:h-32 flex items-center justify-center bg-slate-50 rounded-md border border-slate-100">
+                          <FileText className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <div className="flex-1 flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleRemoveMedia('graph') }}
+                            className="text-red-600 hover:text-red-700 flex items-center gap-2"
+                          >
+                            <X className="w-4 h-4" />
+                            <span className="text-xs">Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </label>
             </div>
-          )}
-        </div>
+          </div>
+        )}   {/* ✅ FIX: CLOSE CONDITIONAL HERE */}
       </div>
     </div>
   )
