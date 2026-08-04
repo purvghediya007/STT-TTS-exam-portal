@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, ArrowRight, ArrowLeft, Save, Check } from 'lucide-react'
 import { createDraftExam, updateDraftExam, publishDraftExam } from '../services/api'
 import QuestionBuilder from './QuestionBuilder'
 import ExamTimeSettings from './ExamTimeSettings'
+import logger from '../utils/logger'
 
 /**
  * Multi-step exam creation wizard
@@ -12,6 +13,7 @@ import ExamTimeSettings from './ExamTimeSettings'
  */
 export default function ExamCreationWizard({ onClose, onSuccess, draft: initialDraft, exam: initialExam }) {
   const [currentStep, setCurrentStep] = useState(1)
+  const wizardContainerRef = useRef(null)
   const [draftId, setDraftId] = useState(initialDraft?.id || initialExam?.id || null)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -27,21 +29,21 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
 
   // Available options for branches and semesters
   const availableBranches = [
-  'IT',
-  'CE',
-  'COE',
-  'CSE (DS)',
-  'ECE',
-  'EIE',
-  'EE',
-  'ICT',
-  'AM',
-  'CHE',
-  'IC',
-  'ME',
-  'PE',
-  'SH'
-];
+    'IT',
+    'CE',
+    'COE',
+    'CSE (DS)',
+    'ECE',
+    'EIE',
+    'EE',
+    'ICT',
+    'AM',
+    'CHE',
+    'IC',
+    'ME',
+    'PE',
+    'SH'
+  ];
   const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
   // Step 2: Questions - Load from draft/exam if available
@@ -59,6 +61,13 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
     allowedReRecords: initialExam?.allowedReRecords || 0,
     strictMode: initialExam?.strictMode || false
   })
+
+  useEffect(() => {
+    if (wizardContainerRef.current) {
+      wizardContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep])
 
   // If editing a draft, start at step 2 if questions exist, otherwise step 1
   useEffect(() => {
@@ -125,7 +134,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         setCurrentStep(2)
       }
     } catch (error) {
-      console.error('Error saving draft:', error)
+      logger.error('Error saving draft:', error)
       setErrors({ submit: error.message || 'Failed to save draft. Please try again.' })
     } finally {
       setLoading(false)
@@ -147,7 +156,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
         } catch (error) {
           // If draft update fails but we have questions, continue anyway
           // The questions are already in state and will be saved on publish
-          console.warn('Draft update failed, but continuing:', error)
+          logger.warn('Draft update failed, but continuing:', error)
           if (error && error.message && !error.message.includes('not found')) {
             // Only show error if it's not a "not found" error (which we can recover from)
             setErrors({ submit: 'Warning: Could not save draft, but you can continue. Questions will be saved when you publish.' })
@@ -156,7 +165,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       }
       setCurrentStep(3)
     } catch (error) {
-      console.error('Error saving questions:', error)
+      logger.error('Error saving questions:', error)
       setErrors({ submit: (error && error.message) || 'Failed to save questions.' })
     } finally {
       setLoading(false)
@@ -247,7 +256,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
       onSuccess?.()
       onClose()
     } catch (error) {
-      console.error('Error publishing/updating exam:', error)
+      logger.error('Error publishing/updating exam:', error)
       setErrors({ submit: error.message || 'Failed to publish/update exam. Please try again.' })
     } finally {
       setLoading(false)
@@ -267,9 +276,9 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-y-auto">
+      <div ref={wizardContainerRef} className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Create New Exam</h2>
             <div className="flex items-center gap-2 mt-2">
@@ -390,12 +399,12 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                           key={branch}
                           className="flex items-center gap-2 p-3 transition-all duration-200 cursor-pointer"
                           style={{
-                            border: basicInfo.branches.includes(branch) 
-                              ? '2px solid var(--accent)' 
+                            border: basicInfo.branches.includes(branch)
+                              ? '2px solid var(--accent)'
                               : '1px solid var(--border)',
                             borderRadius: '18px',
-                            backgroundColor: basicInfo.branches.includes(branch) 
-                              ? 'var(--accent-light)' 
+                            backgroundColor: basicInfo.branches.includes(branch)
+                              ? 'var(--accent-light)'
                               : 'transparent',
                           }}
                         >
@@ -418,7 +427,7 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                             className="w-4 h-4 rounded cursor-pointer"
                             style={{ accentColor: 'var(--accent)' }}
                           />
-                          <span className="text-sm font-medium" style={{ 
+                          <span className="text-sm font-medium" style={{
                             color: basicInfo.branches.includes(branch) ? 'var(--accent)' : 'var(--text)'
                           }}>
                             {branch}
@@ -427,8 +436,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                       ))}
                     </div>
                     <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
-                      {basicInfo.branches.length === 0 
-                        ? '✓ All branches will have access' 
+                      {basicInfo.branches.length === 0
+                        ? '✓ All branches will have access'
                         : `✓ Selected: ${basicInfo.branches.join(', ')}`}
                     </p>
                   </div>
@@ -449,15 +458,15 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                           key={semester}
                           className="flex items-center gap-2 p-2 transition-all duration-200 cursor-pointer font-medium min-h-[2.5rem]"
                           style={{
-                            border: basicInfo.semesters.includes(semester) 
-                              ? '2px solid var(--accent-strong)' 
+                            border: basicInfo.semesters.includes(semester)
+                              ? '2px solid var(--accent-strong)'
                               : '1px solid var(--border)',
                             borderRadius: '18px',
-                            backgroundColor: basicInfo.semesters.includes(semester) 
-                              ? 'rgba(124, 58, 237, 0.12)' 
+                            backgroundColor: basicInfo.semesters.includes(semester)
+                              ? 'rgba(124, 58, 237, 0.12)'
                               : 'transparent',
-                            color: basicInfo.semesters.includes(semester) 
-                              ? 'var(--accent-strong)' 
+                            color: basicInfo.semesters.includes(semester)
+                              ? 'var(--accent-strong)'
                               : 'var(--text)',
                           }}
                         >
@@ -485,8 +494,8 @@ export default function ExamCreationWizard({ onClose, onSuccess, draft: initialD
                       ))}
                     </div>
                     <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
-                      {basicInfo.semesters.length === 0 
-                        ? '✓ All semesters will have access' 
+                      {basicInfo.semesters.length === 0
+                        ? '✓ All semesters will have access'
                         : `✓ Selected: Semester ${basicInfo.semesters.join(', ')}`}
                     </p>
                   </div>

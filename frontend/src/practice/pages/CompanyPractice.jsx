@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Brain, Monitor, Mic, ChevronLeft, Loader2, ArrowRight, Minus, Plus, CheckCircle2, Clock } from 'lucide-react';
 import { getCompanies, startPractice } from '../services/practiceApi';
+import logger from '../../utils/logger';
 
 const COMPANY_COLORS = {
   TCS: 'blue',
@@ -27,7 +28,7 @@ export default function CompanyPractice() {
   useEffect(() => {
     getCompanies()
       .then((res) => setCompanies(res.data || []))
-      .catch((e) => console.error('Failed to load companies:', e))
+      .catch((e) => logger.error('Failed to load companies:', e))
       .finally(() => setLoading(false));
   }, []);
 

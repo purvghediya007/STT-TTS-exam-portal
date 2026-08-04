@@ -1,7 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import api from '../api/axiosInstance'
+import logger from '../utils/logger'
 
 const AuthContext = createContext(null)
+
+
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
@@ -14,23 +17,23 @@ export function AuthProvider({ children }) {
         const savedToken = localStorage.getItem('auth_token')
         const savedUserStr = localStorage.getItem('user_data')
 
-        console.log('🔐 AuthContext initializing...')
-        console.log('   Token:', savedToken ? 'YES' : 'NO')
-        console.log('   User data:', savedUserStr ? 'YES' : 'NO')
+        logger.log('🔐 AuthContext initializing...')
+        logger.log('   Token:', savedToken ? 'YES' : 'NO')
+        logger.log('   User data:', savedUserStr ? 'YES' : 'NO')
 
         if (savedToken && savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr)
-                console.log('✅ AuthContext restored user:', savedUser)
+                logger.log('✅ AuthContext restored user:', savedUser)
                 setToken(savedToken)
                 setUser(savedUser)
             } catch (e) {
-                console.error('❌ Failed to restore auth:', e)
+                logger.error('❌ Failed to restore auth:', e)
                 localStorage.removeItem('auth_token')
                 localStorage.removeItem('user_data')
             }
         } else {
-            console.log('ℹ️ No saved auth data in localStorage')
+            logger.log('ℹ️ No saved auth data in localStorage')
         }
 
         setIsLoading(false)
@@ -54,7 +57,7 @@ export function AuthProvider({ children }) {
                 throw new Error(data.message || 'Login failed')
             }
 
-            console.log('🔐 Login response data:', data)
+            logger.log('🔐 Login response data:', data)
 
             const userData = {
                 id: data.user.id,
@@ -65,7 +68,7 @@ export function AuthProvider({ children }) {
                 loginTime: new Date().toISOString(),
             }
 
-            console.log('📦 userData prepared:', userData)
+            logger.log('📦 userData prepared:', userData)
 
             setToken(data.token)
             setUser(userData)

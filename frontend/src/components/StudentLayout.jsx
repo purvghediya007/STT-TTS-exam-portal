@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import logger from '../utils/logger'
 // import {
 //   LayoutDashboard,
 //   Calendar,
@@ -63,7 +64,7 @@ export default function StudentLayout({ children }) {
           setProfileImage(userData.profileImage)
         }
       } catch (e) {
-        console.error('Failed to parse user data:', e)
+        logger.error('Failed to parse user data:', e)
       }
     }
   }, [])

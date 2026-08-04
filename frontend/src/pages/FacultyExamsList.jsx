@@ -8,6 +8,7 @@ import { formatExamTimeRange, formatDuration } from '../utils/format'
 import StatusPill from '../components/StatusPill'
 // import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation } from '../services/api'
 import { fetchDraftExams, deleteDraftExam, getExamEvaluationStatus, publishExamResults, startExamEvaluation, retryExamEvaluation } from '../services/api'
+import logger from '../utils/logger'
 
 export default function FacultyExamsList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -45,7 +46,7 @@ export default function FacultyExamsList() {
       const draftList = await fetchDraftExams()
       setDrafts(draftList)
     } catch (error) {
-      console.error('Error loading drafts:', error)
+      logger.error('Error loading drafts:', error)
     } finally {
       setLoadingDrafts(false)
     }
@@ -115,7 +116,7 @@ export default function FacultyExamsList() {
       const status = await getExamEvaluationStatus(examId)
       setEvaluationStatus(prev => ({ ...prev, [examId]: status }))
     } catch (error) {
-      console.error('Error fetching evaluation status:', error)
+      logger.error('Error fetching evaluation status:', error)
       alert('Failed to fetch evaluation status. Please try again.')
     } finally {
       setLoadingStatus(prev => ({ ...prev, [examId]: false }))
@@ -138,7 +139,7 @@ export default function FacultyExamsList() {
         alert(response.message || 'Failed to start evaluation')
       }
     } catch (error) {
-      console.error('Error starting evaluation:', error)
+      logger.error('Error starting evaluation:', error)
       alert(error?.message || 'Failed to start evaluation. Please try again.')
     } finally {
       setStartingEvaluationId(null)
@@ -162,7 +163,7 @@ export default function FacultyExamsList() {
         alert(response.message || 'Failed to publish results')
       }
     } catch (error) {
-      console.error('Error publishing results:', error)
+      logger.error('Error publishing results:', error)
       alert(error?.message || 'Failed to publish results. Please try again.')
     } finally {
       setPublishingId(null)
@@ -184,7 +185,7 @@ export default function FacultyExamsList() {
         alert(response.message || 'Failed to retry evaluation')
       }
     } catch (error) {
-      console.error('Error retrying evaluation:', error)
+      logger.error('Error retrying evaluation:', error)
       alert(error?.message || 'Failed to retry evaluation. Please try again.')
     } finally {
       setRetryingId(null)

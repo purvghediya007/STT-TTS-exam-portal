@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoImg from "../assets/vgec-logo.png";
 import api from "../api/axiosInstance";
+import logger from "../utils/logger";
 
 export default function ForgotPasswordCard() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function ForgotPasswordCard() {
       setLoading(false); 
     } catch(e){
       setLoading(false);
-      console.error("Error during forgot password request:", e);
+      logger.error("Error during forgot password request:", e);
       setMessage({ type: "error", text: "Something went wrong. Please try again." });
       return;
     }

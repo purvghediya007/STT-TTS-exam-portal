@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logger from '../utils/logger'
 
 /**
  * FacultyAnalyticsDashboard
@@ -10,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
  * - Fetches real data from API
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '')
 
 const getStatusColor = (status) => {
   if (status === 'Excellent') return 'text-green-700'
@@ -160,13 +161,13 @@ const FacultyAnalyticsDashboard = () => {
 
         if (!res.ok) throw new Error('Failed to fetch overview')
         const data = await res.json()
-        console.log('Overview data:', data)
+        logger.log('Overview data:', data)
         const overview = data.data || {}
         setSemesters(overview.semesterData || [])
         const exams = overview.examMetrics || []
         setExamMetrics(exams)
       } catch (err) {
-        console.error('Overview fetch error:', err)
+        logger.error('Overview fetch error:', err)
         setError(err.message)
       } finally {
         setOverviewLoading(false)
@@ -208,7 +209,7 @@ const FacultyAnalyticsDashboard = () => {
         const data = await res.json()
         setSemesterStudents(data.data.students || [])
       } catch (err) {
-        console.error('Students fetch error:', err)
+        logger.error('Students fetch error:', err)
         setError(err.message)
       } finally {
         setLoading(false)
