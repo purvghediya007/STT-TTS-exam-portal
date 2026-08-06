@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../api/axiosInstance'
 import logoImg from '../assets/vgec-logo.png'
+import logger from '../utils/logger'
 
 const formConfig = {
   title: 'VGEC Exam Portal Login',
   description:
-    'Login with your username, enrollment number, or email and password to access your dashboard.',
-  primaryFieldLabel: 'Username / Enrollment Number / Email',
-  primaryPlaceholder: 'e.g. student123, 20XX123456, or prof.patel@vgec.ac.in',
+    'Login with your username or enrollment number and password to access your dashboard.',
+  primaryFieldLabel: 'Username or Enrollment Number',
+  primaryPlaceholder: 'e.g. student123 or 2XX123456',
 }
 
 function LoginCard() {
@@ -60,12 +61,18 @@ function LoginCard() {
       // Clear the captcha text input - user must enter it manually
       setCaptchaText('')
       // Log captcha text for development only (not autofill)
+
       if (data.captchaText) {
-        console.log('%c🔐 DEV MODE - Captcha text:', 'color: red; font-size: 14px; font-weight: bold;', data.captchaText)
-        console.log('%c💡 For testing: Copy the text above and paste it in the captcha field', 'color: blue; font-size: 12px;')
+        logger.log(
+          '%c🔐 DEV MODE - Captcha text:',
+          'color: red; font-weight: bold;',
+          data.captchaText
+        );
+        logger.log('💡 For testing: Copy the text above and paste it in the captcha field')
       }
+
     } catch (error) {
-      console.error('Failed to fetch captcha:', error)
+      logger.error('Failed to fetch captcha:', error)
       setError('Failed to load captcha. Please refresh.')
     }
   }
@@ -82,7 +89,7 @@ function LoginCard() {
         return
       }
 
-      console.log('Login attempt:', {
+      logger.log('Login attempt:', {
         username,
         captchaId: captchaId.substring(0, 8) + '...',
       })
@@ -102,7 +109,7 @@ function LoginCard() {
         return
       }
 
-      console.log('✅ Login successful, AuthContext updated with user:', result.user)
+      logger.log('✅ Login successful, AuthContext updated with user:', result.user)
 
       // Redirect based on role
       if (result.user.role === 'teacher') {
@@ -111,7 +118,7 @@ function LoginCard() {
         navigate('/student/dashboard')
       }
     } catch (error) {
-      console.error('Login error:', error)
+      logger.error('Login error:', error)
       let errorMsg = 'An unexpected login error occurred. Please try again.'
       if (error.response) {
         if (error.response.status === 401) {
@@ -229,7 +236,7 @@ function LoginCard() {
             </button>
           </div>
           <span className="text-sm text-gray-600">
-            Need help? <a href="mailto:aryan2109shah@gmail.com" className="text-blue-600 hover:underline">aryan2109shah@gmail.com</a> 
+            Need help? <a href="mailto:aryan2109shah@gmail.com" className="text-blue-600 hover:underline">aryan2109shah@gmail.com</a>
           </span>
         </div>
       </form>

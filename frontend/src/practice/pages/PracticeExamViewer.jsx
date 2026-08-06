@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { saveAnswer, saveAudio, submitPractice, updateTime } from '../services/practiceApi';
+import logger from '../../utils/logger';
 
 const QuestionStatusItem = ({ id, status, onClick, isCurrent }) => {
   let bg = 'bg-gray-400 hover:bg-gray-500';
@@ -129,7 +130,7 @@ export default function PracticeExamViewer() {
           setAnswers(newAnswers);
         };
         reader.readAsDataURL(blob);
-      } catch (e) { console.error('Audio save error:', e); }
+      } catch (e) { logger.error('Audio save error:', e); }
     }
     stopRecording();
     setLocalAudioURL(null);
@@ -232,7 +233,7 @@ export default function PracticeExamViewer() {
         navigate('/student/practice/results', { state: { results: result.data } });
       }
     } catch (e) {
-      console.error("AI Evaluation submission failed:", e);
+      logger.error("AI Evaluation submission failed:", e);
       const errMsg = e.response?.data?.message || e.message || 'AI Evaluation failed';
       setEvalError(errMsg);
     } finally {

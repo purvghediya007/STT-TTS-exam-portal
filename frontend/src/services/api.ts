@@ -3,6 +3,8 @@
  * Uses VITE_API_URL environment variable set in Vercel/development
  */
 
+import logger from '../utils/logger'
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 /**
@@ -48,7 +50,7 @@ export async function fetchAPI(
         }
       }
       const error = { status: response.status, ...errorData }
-      console.error('API error:', url, error)
+      logger.error('API error:', url, error)
       throw error
     }
 
@@ -56,7 +58,7 @@ export async function fetchAPI(
   } catch (error) {
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('Network error - server may not be running:', url)
+      logger.error('Network error - server may not be running:', url)
       throw new Error('Unable to connect to server. Please ensure the server is running.')
     }
     throw error
@@ -92,7 +94,7 @@ export async function uploadMedia(file: File): Promise<{
 
     return response.json()
   } catch (error) {
-    console.error('Error uploading media:', error)
+    logger.error('Error uploading media:', error)
     throw error
   }
 }
@@ -107,7 +109,7 @@ export async function deleteMedia(publicId: string): Promise<void> {
     })
     await response.json()
   } catch (error) {
-    console.error('Error deleting media:', error)
+    logger.error('Error deleting media:', error)
     throw error
   }
 }
@@ -198,7 +200,7 @@ export async function fetchExams(params: {
       total: data.total || 0
     }
   } catch (error) {
-    console.error('Error fetching exams:', error)
+    logger.error('Error fetching exams:', error)
     throw error
   }
 }
@@ -540,7 +542,7 @@ export async function fetchFacultyExams(params: {
       total: data.exams?.length || 0
     }
   } catch (err) {
-    console.warn('API fetch failed, using fallback:', err)
+    logger.warn('API fetch failed, using fallback:', err)
     // Fallback to empty array - no hardcoded mock data
     return {
       exams: [],
@@ -559,7 +561,7 @@ export async function fetchFacultyStats(): Promise<FacultyStats> {
     const response = await fetchAPI('/faculty/stats')
     return response.json()
   } catch (err) {
-    console.warn('API fetch failed, calculating stats from local data:', err)
+    logger.warn('API fetch failed, calculating stats from local data:', err)
     // Calculate stats from localStorage exams
     const storedExams = localStorage.getItem('faculty_exams')
     const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
@@ -623,7 +625,7 @@ export async function createExam(examData: {
     }
     return newExam
   } catch (err) {
-    console.warn('API create failed, saving to localStorage:', err)
+    logger.warn('API create failed, saving to localStorage:', err)
     // Fallback: Create exam locally
     const newExam: FacultyExam = {
       id: `FAC-EX-${Date.now()}`,
@@ -668,7 +670,7 @@ export async function updateExam(
     })
     return response.json()
   } catch (err) {
-    console.warn('API update failed, updating localStorage:', err)
+    logger.warn('API update failed, updating localStorage:', err)
     // Update exam locally for demo
     const storedExams = localStorage.getItem('faculty_exams')
     const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
@@ -701,7 +703,7 @@ export async function deleteExam(examId: string): Promise<void> {
       method: 'DELETE',
     })
   } catch (err) {
-    console.warn('API delete failed, deleting from localStorage:', err)
+    logger.warn('API delete failed, deleting from localStorage:', err)
     // Delete exam locally for demo
     const storedExams = localStorage.getItem('faculty_exams')
     const exams = storedExams ? JSON.parse(storedExams) : MOCK_FACULTY_EXAMS
@@ -729,7 +731,7 @@ export async function createDraftExam(draftData: {
     })
     return response.json()
   } catch (err) {
-    console.warn('API create draft failed, saving to localStorage:', err)
+    logger.warn('API create draft failed, saving to localStorage:', err)
     // Fallback: Create draft locally
     const newDraft: DraftExam = {
       id: `DRAFT-${Date.now()}`,
@@ -769,11 +771,11 @@ export async function updateDraftExam(
     })
     return response.json()
   } catch (err: any) {
-    console.warn('API update draft failed, trying localStorage fallback:', err)
+    logger.warn('API update draft failed, trying localStorage fallback:', err)
 
     // If it's a 413 error (payload too large), try to sync from server first
     if (err.status === 413) {
-      console.warn('Payload too large, attempting to sync from server first')
+      logger.warn('Payload too large, attempting to sync from server first')
       try {
         const draftsResponse = await fetchAPI('/faculty/exams/drafts')
         const serverDrafts = await draftsResponse.json()
@@ -797,7 +799,7 @@ export async function updateDraftExam(
           return updatedDraft
         }
       } catch (syncErr) {
-        console.warn('Failed to sync from server:', syncErr)
+        logger.warn('Failed to sync from server:', syncErr)
       }
     }
 
@@ -857,7 +859,7 @@ export async function publishDraftExam(
 
     return newExam
   } catch (err) {
-    console.warn('API publish draft failed, creating exam locally:', err)
+    logger.warn('API publish draft failed, creating exam locally:', err)
     // Fallback: Create exam from draft
     let teacherName = 'Current Faculty'
     try {
@@ -914,7 +916,7 @@ export async function fetchDraftExams(): Promise<DraftExam[]> {
     const response = await fetchAPI('/faculty/exams/drafts')
     return response.json()
   } catch (err) {
-    console.warn('API fetch drafts failed, using localStorage:', err)
+    logger.warn('API fetch drafts failed, using localStorage:', err)
     try {
       const storedDrafts = localStorage.getItem('faculty_drafts')
       return storedDrafts ? JSON.parse(storedDrafts) : []
@@ -933,7 +935,7 @@ export async function deleteDraftExam(draftId: string): Promise<void> {
       method: 'DELETE',
     })
   } catch (err) {
-    console.warn('API delete draft failed, deleting from localStorage:', err)
+    logger.warn('API delete draft failed, deleting from localStorage:', err)
     try {
       const storedDrafts = localStorage.getItem('faculty_drafts')
       const drafts = storedDrafts ? JSON.parse(storedDrafts) : []
@@ -960,7 +962,7 @@ export async function getExamEvaluationStatus(examId: string): Promise<{
     const response = await fetchAPI(`/faculty/exams/${examId}/evaluation-status`)
     return response.json()
   } catch (err) {
-    console.error('Error fetching evaluation status:', err)
+    logger.error('Error fetching evaluation status:', err)
     throw err
   }
 }
@@ -981,7 +983,7 @@ export async function publishExamResults(examId: string): Promise<{
     })
     return response.json()
   } catch (err) {
-    console.error('Error publishing results:', err)
+    logger.error('Error publishing results:', err)
     throw err
   }
 }
@@ -1001,7 +1003,7 @@ export async function startExamEvaluation(examId: string): Promise<{
     })
     return response.json()
   } catch (err) {
-    console.error('Error starting exam evaluation:', err)
+    logger.error('Error starting exam evaluation:', err)
     throw err
   }
 }
@@ -1022,7 +1024,7 @@ export async function retryExamEvaluation(examId: string): Promise<{
     })
     return response.json()
   } catch (err) {
-    console.error('Error retrying exam evaluation:', err)
+    logger.error('Error retrying exam evaluation:', err)
     throw err
   }
 }
@@ -1216,7 +1218,7 @@ export async function generateQuestions(payload: { topics: string[]; num_questio
     })
     return response.json()
   } catch (err) {
-    console.warn('Primary generate endpoint failed, trying alternative:', err)
+    logger.warn('Primary generate endpoint failed, trying alternative:', err)
     // Try pluralized path as a fallback
     const response = await fetchAPI('/exams/questions_generate/generate', {
       method: 'POST',

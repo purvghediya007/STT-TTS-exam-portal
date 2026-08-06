@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Play } from 'lucide-react'
 import { fetchAPI, API_BASE_URL } from '../services/api'
+import logger from '../utils/logger'
 import ExamChart from './ExamChart'
 import TypeChart from './TypeChart'
 import FeedbackCards from './FeedbackCards'
@@ -124,7 +125,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
               return
             }
           } catch (e) {
-            console.warn('audio probe GET failed', e)
+            logger.warn('audio probe GET failed', e)
           }
 
           // 3) Try an .mp3 alternative (useful if backend stores a converted mp3 alongside original)
@@ -189,7 +190,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
           rafRef.current = requestAnimationFrame(loop)
         }
       } catch (err) {
-        console.error('Playback error', err)
+        logger.error('Playback error', err)
         setError(err?.name === 'NotSupportedError' ? 'Unsupported audio format or file not found.' : 'Unable to play audio. Please check file or server.')
         setPlaying(false)
       }
@@ -232,7 +233,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
         a.remove()
         setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
       } catch (err) {
-        console.error('Download error', err)
+        logger.error('Download error', err)
         setError('Unable to download audio — check server or CORS settings')
       } finally {
         setLoadingAudio(false)
@@ -321,7 +322,7 @@ export default function ExamAnalysis({ examId, attemptId: propAttemptId, initial
           setError('No exam or attempt data provided')
         }
       } catch (err) {
-        console.error('ExamAnalysis load error', err)
+        logger.error('ExamAnalysis load error', err)
         setError(err.message || JSON.stringify(err))
       } finally {
         setLoading(false)

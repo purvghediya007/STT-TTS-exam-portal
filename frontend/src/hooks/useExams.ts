@@ -13,6 +13,7 @@ import {
 import { getSecondsRemaining } from '../utils/format'
 // @ts-ignore - JS file
 import { useDebouncedValue } from './useDebouncedValue.js'
+import logger from '../utils/logger'
 
 export type FilterStatus = 'all' | 'live' | 'upcoming' | 'finished'
 export type SortOption = 'startTime' | 'title' | 'deadline'
@@ -138,7 +139,7 @@ export function useExams(options: UseExamsOptions = {}): UseExamsReturn {
 
       // Ensure we have exams array
       if (!response || !response.exams) {
-        console.error('Invalid API response:', response)
+        logger.error('Invalid API response:', response)
         throw new Error('Invalid API response format')
       }
 
@@ -166,7 +167,7 @@ export function useExams(options: UseExamsOptions = {}): UseExamsReturn {
         // Ignore storage errors
       }
     } catch (err) {
-      console.error('API fetch failed:', err)
+      logger.error('API fetch failed:', err)
       // Only use mock data if we have no cached data
       try {
         const cached = sessionStorage.getItem(STORAGE_KEY)
@@ -255,7 +256,7 @@ export function useExams(options: UseExamsOptions = {}): UseExamsReturn {
       // Could cache this in a separate store if needed
     } catch (err) {
       // Silently fail - prefetch is optional
-      console.debug('Prefetch failed for exam:', examId, err)
+      logger.debug('Prefetch failed for exam:', examId, err)
     }
   }, [])
 

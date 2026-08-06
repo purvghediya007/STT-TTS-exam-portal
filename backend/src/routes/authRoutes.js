@@ -116,6 +116,17 @@ router.post("/register", async (req, res, next) => {
       });
     }
 
+    // Check if faculty registration is allowed via feature flag
+    if (
+      normalizedRole === "teacher" &&
+      process.env.ALLOW_FACULTY_REGISTRATION !== "true"
+    ) {
+      return res.status(403).json({
+        message:
+          "Faculty registration is currently disabled. Please contact an administrator.",
+      });
+    }
+
     // Check if user exists (across all collections)
     const existing = await findUserByUsernameOrEmail(username, email);
     if (existing) {

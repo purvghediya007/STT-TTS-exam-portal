@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axiosInstance";
+import logger from "../utils/logger";
 
 export default function FacultyExamAttempts() {
   const { examId } = useParams();
@@ -20,7 +21,7 @@ export default function FacultyExamAttempts() {
 
       setAttempts(res.data.attempts || []);
     } catch (err) {
-      console.error("Error fetching attempts:", err);
+      logger.error("Error fetching attempts:", err);
       alert("Failed to load attempts");
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export default function FacultyExamAttempts() {
 
       fetchAttempts(); // refresh
     } catch (err) {
-      console.error("Error reallowing:", err);
+      logger.error("Error reallowing:", err);
       alert("Failed to reallow student");
     } finally {
       setProcessingId(null);

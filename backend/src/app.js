@@ -36,7 +36,7 @@ app.use(express.json({ limit: '50mb' }));
 
 // Simple log to see requests
 app.use((req, res, next) => {
-  //console.log(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 

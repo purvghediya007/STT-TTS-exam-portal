@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import logger from '../utils/logger'
 
 /**
  * ProtectedRoute - Component to protect routes based on user role
@@ -24,7 +25,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
   try {
     userData = JSON.parse(userDataStr)
   } catch (error) {
-    console.error('Error parsing user data:', error)
+    logger.error('Error parsing user data:', error)
     // If there's an error parsing, redirect to login
     return <Navigate to="/" replace />
   }

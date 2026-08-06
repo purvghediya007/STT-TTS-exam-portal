@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Save, Calendar, Clock, Award, Settings, FileText, AlertCircle } from 'lucide-react'
 import { createExam, updateExam } from '../services/api'
+import logger from '../utils/logger'
 
 /**
  * ExamForm - Form component for creating and editing exams
@@ -146,7 +147,7 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
         onClose()
       }
     } catch (error) {
-      console.error('Error saving exam:', error)
+      logger.error('Error saving exam:', error)
       setErrors({ submit: error.message || 'Failed to save exam. Please try again.' })
     } finally {
       setLoading(false)

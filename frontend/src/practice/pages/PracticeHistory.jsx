@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, TrendingUp, TrendingDown, Minus, Flame, Clock, Award, BarChart3, Loader2 } from 'lucide-react';
 import { getHistory } from '../services/practiceApi';
+import logger from '../../utils/logger';
 
 const TYPE_LABELS = {
   aptitude: 'Aptitude',
@@ -134,7 +135,7 @@ export default function PracticeHistory() {
   useEffect(() => {
     getHistory()
       .then((res) => setData(res.data))
-      .catch((e) => console.error('Failed to load history:', e))
+      .catch((e) => logger.error('Failed to load history:', e))
       .finally(() => setLoading(false));
   }, []);
 

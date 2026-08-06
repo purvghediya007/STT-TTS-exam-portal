@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchStudents, fetchStudentDetails } from '../services/api'
+import logger from '../utils/logger'
 
 /**
  * Custom hook for managing students list
@@ -16,7 +17,7 @@ export function useStudents() {
       const response = await fetchStudents({ limit: 100, ...filters })
       setStudents(response.students || [])
     } catch (err) {
-      console.error('Error fetching students:', err)
+      logger.error('Error fetching students:', err)
       setError('Failed to load students')
       setStudents([])
     } finally {
@@ -52,7 +53,7 @@ export function useStudentDetails(studentId) {
         const data = await fetchStudentDetails(studentId)
         setStudent(data)
       } catch (err) {
-        console.error('Error fetching student details:', err)
+        logger.error('Error fetching student details:', err)
         setError('Failed to load student details')
       } finally {
         setLoading(false)
