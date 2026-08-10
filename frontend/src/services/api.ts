@@ -1205,6 +1205,8 @@ export async function fetchExamResults(examId: string): Promise<{
       order: number
       instruction: string
       answerText: string
+      transcribedText?: string
+      recordingUrls?: string[]
       selectedOptionIndex?: number | null
       options?: Array<{ text: string }>
       score: number | null

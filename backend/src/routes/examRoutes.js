@@ -806,6 +806,28 @@ router.get(
           answersByAttempt.set(key, []);
         }
         const q = ans.questionId;
+
+        // Process and deduplicate recording URLs
+        let recordings = [];
+        if (Array.isArray(ans.recordingUrls) && ans.recordingUrls.length > 0) {
+          recordings = ans.recordingUrls.filter(
+            (url) => typeof url === "string" && url.trim().length > 0,
+          );
+        }
+
+        // Fallback: If recordingUrls is empty, extract from answerText if it contains "[Audio recording: https://...]"
+        if (recordings.length === 0 && ans.answerText) {
+          const match = ans.answerText.match(
+            /\[Audio recording:\s*(https?:\/\/[^\]\s]+)\]/i,
+          );
+          if (match && match[1]) {
+            recordings.push(match[1].trim());
+          }
+        }
+
+        // Deduplicate URLs strictly so we NEVER show duplicate takes for the same recording
+        const uniqueRecordings = [...new Set(recordings)];
+
         answersByAttempt.get(key).push({
           _id: ans._id,
           questionId: q?._id,
@@ -817,6 +839,7 @@ router.get(
           options: q?.type === "mcq" ? q?.options : undefined,
           answerText: ans.answerText,
           transcribedText: ans.transcribedText,
+          recordingUrls: uniqueRecordings,
           selectedOptionIndex: ans.selectedOptionIndex,
           score: ans.score,
           maxMarks: ans.maxMarks,
@@ -834,10 +857,10 @@ router.get(
           attemptId: a._id,
           student: student
             ? {
-                id: student._id,
-                username: student.username,
-                email: student.email,
-              }
+              id: student._id,
+              username: student.username,
+              email: student.email,
+            }
             : null,
           status: a.status,
           startedAt: a.startedAt,
@@ -915,7 +938,7 @@ router.post(
       console.log(`📥 Raw Request Body:`, req.body);
       console.log(`🔐 Teacher ID: ${req.user.sub}`);
 
-            const { topics, num_questions, difficulty, type } = req.body;
+      const { topics, num_questions, difficulty, type } = req.body;
       console.log(`✔️ Destructured - Topics:`, topics);
       console.log(`✔️ Destructured - Num Questions:`, num_questions);
       console.log(`✔️ Destructured - Difficulty:`, difficulty);
@@ -1284,9 +1307,7 @@ router.post(
         });
       }
 
-      const feedbackNote = `Bonus Marks Awarded (${score}/${question.marks})${
-        reason && reason.trim() ? `: ${reason.trim()}` : ""
-      }`;
+      const feedbackNote = reason && reason.trim() ? reason.trim() : "";
 
       // 6. Bulk update/upsert StudentAnswer records
       const answerBulkOps = attempts.map((att) => ({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
     ArrowLeft,
@@ -24,10 +24,289 @@ import {
     HelpCircle,
     Check,
     AlertTriangle,
-    FileText
+    FileText,
+    Play,
+    Pause,
+    Volume2,
+    VolumeX,
+    Headphones,
+    ExternalLink
 } from 'lucide-react'
 import { fetchExamResults, updateAnswerScore, awardQuestionBonusMarks, publishExamResults } from '../services/api'
 import logger from '../utils/logger'
+
+/**
+ * AudioAnswerPlayer - Audio player for student voice answers
+ * - Strictly deduplicates audio takes so it never shows duplicate takes
+ * - Stops playback when another audio element begins playing
+ * - Provides playback rate controls (1x, 1.25x, 1.5x, 2x), seeking, mute, and direct download
+ */
+function AudioAnswerPlayer({ recordings, answerId, activeGlobalAudioId, onPlayAudio }) {
+    // 1. Strictly deduplicate recordings and filter out empty strings
+    const uniqueUrls = useMemo(() => {
+        if (!recordings) return [];
+        const raw = Array.isArray(recordings) ? recordings : [recordings];
+        return Array.from(new Set(raw.filter(u => typeof u === 'string' && u.trim().length > 0)));
+    }, [recordings]);
+
+    if (uniqueUrls.length === 0) return null;
+
+    const [selectedTakeIndex, setSelectedTakeIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [isMuted, setIsMuted] = useState(false);
+    const [loadError, setLoadError] = useState(null);
+    const audioRef = useRef(null);
+
+    const activeUrl = uniqueUrls[selectedTakeIndex] || uniqueUrls[0];
+    const resolvedUrl = useMemo(() => {
+        if (!activeUrl) return '';
+        if (activeUrl.startsWith('http://') || activeUrl.startsWith('https://') || activeUrl.startsWith('blob:')) {
+            return activeUrl;
+        }
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        return `${apiBase.replace(/\/api\/?$/, '')}${activeUrl.startsWith('/') ? '' : '/'}${activeUrl}`;
+    }, [activeUrl]);
+
+    const playerKey = `${answerId}-${selectedTakeIndex}`;
+
+    // Stop playing if another audio starts anywhere on the page
+    useEffect(() => {
+        if (activeGlobalAudioId && activeGlobalAudioId !== playerKey && isPlaying) {
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
+            setIsPlaying(false);
+        }
+    }, [activeGlobalAudioId, playerKey, isPlaying]);
+
+    // Handle Take switch
+    const handleSwitchTake = (index) => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setIsPlaying(false);
+        setCurrentTime(0);
+        setDuration(0);
+        setLoadError(null);
+        setSelectedTakeIndex(index);
+    };
+
+    const togglePlay = () => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            onPlayAudio(playerKey);
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch(err => {
+                logger.error('Audio playback error:', err);
+                setLoadError('Playback error. Click raw link below.');
+                setIsPlaying(false);
+            });
+        }
+    };
+
+    const handleSeek = (e) => {
+        const time = parseFloat(e.target.value);
+        setCurrentTime(time);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    };
+
+    const cyclePlaybackRate = () => {
+        const rates = [1, 1.25, 1.5, 2];
+        const nextIdx = (rates.indexOf(playbackRate) + 1) % rates.length;
+        const newRate = rates[nextIdx];
+        setPlaybackRate(newRate);
+        if (audioRef.current) {
+            audioRef.current.playbackRate = newRate;
+        }
+    };
+
+    const toggleMute = () => {
+        if (audioRef.current) {
+            audioRef.current.muted = !isMuted;
+            setIsMuted(!isMuted);
+        }
+    };
+
+    const formatAudioTime = (secs) => {
+        if (!secs || isNaN(secs) || secs < 0) return '0:00';
+        const minutes = Math.floor(secs / 60);
+        const seconds = Math.floor(secs % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    };
+
+    return (
+        <div className="p-4 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/50 rounded-2xl border border-blue-100 shadow-xs relative overflow-hidden">
+            <audio
+                ref={audioRef}
+                src={resolvedUrl}
+                preload="metadata"
+                data-audio-id={playerKey}
+                onPlay={() => {
+                    onPlayAudio(playerKey);
+                    setIsPlaying(true);
+                }}
+                onPause={() => setIsPlaying(false)}
+                onTimeUpdate={() => {
+                    if (audioRef.current) {
+                        setCurrentTime(audioRef.current.currentTime);
+                    }
+                }}
+                onLoadedMetadata={() => {
+                    if (audioRef.current) {
+                        setDuration(audioRef.current.duration || 0);
+                        audioRef.current.playbackRate = playbackRate;
+                    }
+                }}
+                onEnded={() => {
+                    setIsPlaying(false);
+                    setCurrentTime(0);
+                }}
+                onError={() => {
+                    setLoadError('Audio file could not be played directly in browser.');
+                    setIsPlaying(false);
+                }}
+            />
+
+            {/* Header: Title & Takes Selector */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg shadow-xs transition-colors ${isPlaying ? 'bg-indigo-600 text-white animate-pulse' : 'bg-blue-600 text-white'}`}>
+                        <Headphones className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                            Student Audio Recording
+                        </span>
+                        {uniqueUrls.length === 1 ? (
+                            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">
+                                1 Take
+                            </span>
+                        ) : null}
+                    </div>
+                </div>
+
+                {/* If multiple unique takes exist, render take switcher tabs */}
+                {uniqueUrls.length > 1 && (
+                    <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-blue-100">
+                        <span className="text-[10px] font-bold text-slate-400 px-1.5">Takes:</span>
+                        {uniqueUrls.map((_, idx) => (
+                            <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleSwitchTake(idx)}
+                                className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all ${selectedTakeIndex === idx
+                                        ? 'bg-blue-600 text-white shadow-xs'
+                                        : 'bg-transparent text-slate-600 hover:bg-slate-100'
+                                    }`}
+                            >
+                                Take {idx + 1}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Controls Bar */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+                {/* Play / Pause Circular Button */}
+                <button
+                    type="button"
+                    onClick={togglePlay}
+                    className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-md active:scale-95 flex-shrink-0 ${isPlaying
+                            ? 'bg-indigo-600 text-white ring-4 ring-indigo-200 shadow-indigo-200'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
+                        }`}
+                    title={isPlaying ? 'Pause Audio' : 'Play Student Audio'}
+                >
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                </button>
+
+                {/* Progress Bar & Timestamps */}
+                <div className="flex-1 w-full bg-white/90 px-3.5 py-2 rounded-xl border border-blue-100/80 shadow-xs">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="range"
+                            min="0"
+                            max={duration > 0 ? duration : 100}
+                            step="0.1"
+                            value={currentTime}
+                            onChange={handleSeek}
+                            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-1">
+                        <span className="text-blue-700 font-black">{formatAudioTime(currentTime)}</span>
+                        <span>{formatAudioTime(duration)}</span>
+                    </div>
+                </div>
+
+                {/* Utility Buttons: Speed, Mute, Open Raw */}
+                <div className="flex items-center gap-1.5 self-end sm:self-auto flex-shrink-0">
+                    {/* Speed Multiplier */}
+                    <button
+                        type="button"
+                        onClick={cyclePlaybackRate}
+                        className="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-blue-100 rounded-xl text-xs font-black transition-colors shadow-xs"
+                        title="Toggle playback speed"
+                    >
+                        {playbackRate}x
+                    </button>
+
+                    {/* Mute Toggle */}
+                    <button
+                        type="button"
+                        onClick={toggleMute}
+                        className={`p-2 rounded-xl border transition-colors ${isMuted
+                                ? 'bg-red-50 text-red-600 border-red-200'
+                                : 'bg-white hover:bg-slate-50 text-slate-600 border-blue-100'
+                            }`}
+                        title={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+
+                    {/* Open / Download Direct Link */}
+                    {resolvedUrl && (
+                        <a
+                            href={resolvedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={`student_answer_${answerId}.webm`}
+                            className="p-2 bg-white hover:bg-slate-50 text-slate-600 border border-blue-100 rounded-xl transition-colors shadow-xs"
+                            title="Download or open raw audio in new tab"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                        </a>
+                    )}
+                </div>
+            </div>
+
+            {loadError && (
+                <div className="mt-2 text-xs text-amber-800 flex items-center justify-between gap-2 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                    <span>{loadError}</span>
+                    <a
+                        href={resolvedUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-bold underline hover:text-amber-950"
+                    >
+                        Open Raw Audio
+                    </a>
+                </div>
+            )}
+        </div>
+    );
+}
 
 /**
  * ExamSubmissionsView - Enhanced Responsive Page for faculty to review student results & award bonus marks
@@ -41,8 +320,9 @@ export default function ExamSubmissionsView() {
     const [selectedSubmission, setSelectedSubmission] = useState(null)
     const [expandedAnswers, setExpandedAnswers] = useState({})
     const [searchTerm, setSearchTerm] = useState('')
-    const [editingScore, setEditingScore] = useState(null) // { answerId, value, submissionIndex, answerIndex }
+    const [editingScore, setEditingScore] = useState(null) // { answerId, value, feedback, submissionIndex, answerIndex }
     const [savingScore, setSavingScore] = useState(false)
+    const [activeGlobalAudioId, setActiveGlobalAudioId] = useState(null)
 
     // Bonus Marks Modal State
     const [bonusModalQuestion, setBonusModalQuestion] = useState(null) // { questionId, order, text, marks, type }
@@ -84,8 +364,25 @@ export default function ExamSubmissionsView() {
     }
 
     const toggleSubmission = (index) => {
+        // Pause any running audio when switching/collapsing student attempts
+        if (selectedSubmission !== index) {
+            setActiveGlobalAudioId(null);
+            document.querySelectorAll('audio').forEach((el) => {
+                if (!el.paused) el.pause();
+            });
+        }
         setSelectedSubmission(selectedSubmission === index ? null : index)
     }
+
+    const handlePlayAudio = (audioId) => {
+        // Pause all other audio elements on the document
+        document.querySelectorAll('audio').forEach((el) => {
+            if (el.dataset.audioId !== audioId && !el.paused) {
+                el.pause();
+            }
+        });
+        setActiveGlobalAudioId(audioId);
+    };
 
     const exportToCSV = () => {
         if (!submissions || !submissions.attempts) return;
@@ -643,6 +940,14 @@ export default function ExamSubmissionsView() {
                                                                         </button>
                                                                     </div>
 
+                                                                    {/* Student Audio Player */}
+                                                                    <AudioAnswerPlayer
+                                                                        recordings={answer.recordingUrls}
+                                                                        answerId={answer._id || `${index}-${answerIndex}`}
+                                                                        activeGlobalAudioId={activeGlobalAudioId}
+                                                                        onPlayAudio={handlePlayAudio}
+                                                                    />
+
                                                                     {answer.transcribedText && (
                                                                         <div className="p-5 bg-emerald-50/50 rounded-xl border border-emerald-100 relative">
                                                                             <div className="flex items-center gap-2 mb-3">
@@ -664,7 +969,7 @@ export default function ExamSubmissionsView() {
                                                                         </div>
                                                                     )}
 
-                                                                    {answer.answerText && (
+                                                                    {answer.answerText && !/^\[Audio recording:\s*https?:\/\/[^\]]+\]$/i.test(answer.answerText.trim()) && (
                                                                         <div className="p-5 bg-slate-50 rounded-xl border border-slate-200/80 relative">
                                                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Student Response</p>
                                                                             <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-wrap">
