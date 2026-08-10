@@ -2,7 +2,7 @@
 
 ExamEcho is an **intelligent examination platform** that enables **voice-based exams** with automatic transcription, AI-driven evaluation, and optional text-to-speech feedback. Students speak their answers, the system transcribes them, evaluates using advanced AI models, and provides instant feedback.
 
-## 🌟 Key Features
+# 🌟 Key Features
 
 - 🗣️ **Speech-to-Text (STT)** – Transcribe student answers using OpenAI Whisper
 - 🧠 **AI Evaluation Engine** – Evaluate answers using HuggingFace transformers & Google Gemini

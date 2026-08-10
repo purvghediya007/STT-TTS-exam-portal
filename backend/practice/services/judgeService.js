@@ -60,26 +60,50 @@ function ensureTempDir() {
 function sanitizeError(text, submissionDir) {
   if (!text) return "";
   let result = text;
-  
+
   if (submissionDir) {
     // Normalize and replace all occurrences of submissionDir path
     const normalizedDir = submissionDir.replace(/\\/g, "/");
-    result = result.replace(new RegExp(normalizedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi"), "solution");
-    
+    result = result.replace(
+      new RegExp(normalizedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+      "solution",
+    );
+
     const doubleEscapedDir = submissionDir.replace(/\\/g, "\\\\");
-    result = result.replace(new RegExp(doubleEscapedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi"), "solution");
-    
-    result = result.replace(new RegExp(submissionDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi"), "solution");
+    result = result.replace(
+      new RegExp(
+        doubleEscapedDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+        "gi",
+      ),
+      "solution",
+    );
+
+    result = result.replace(
+      new RegExp(submissionDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+      "solution",
+    );
   }
-  
+
   // Replace temp base path
   const tempBaseNormalized = TEMP_BASE.replace(/\\/g, "/");
-  result = result.replace(new RegExp(tempBaseNormalized.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi"), "tmp");
-  result = result.replace(new RegExp(TEMP_BASE.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "gi"), "tmp");
-  
+  result = result.replace(
+    new RegExp(
+      tempBaseNormalized.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+      "gi",
+    ),
+    "tmp",
+  );
+  result = result.replace(
+    new RegExp(TEMP_BASE.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"),
+    "tmp",
+  );
+
   // Replace any standard uuid patterns
-  result = result.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, "code");
-  
+  result = result.replace(
+    /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi,
+    "code",
+  );
+
   return result;
 }
 
@@ -89,18 +113,27 @@ function sanitizeError(text, submissionDir) {
  */
 function dockerRun(args, timeoutMs = 10000) {
   return new Promise((resolve) => {
-    const proc = execFile("docker", args, {
-      timeout: timeoutMs,
-      maxBuffer: 1024 * 1024, // 1MB output buffer
-    }, (error, stdout, stderr) => {
-      resolve({
-        stdout: stdout || "",
-        stderr: stderr || "",
-        exitCode: error ? (error.code !== null && error.code !== undefined ? error.code : -1) : 0,
-        timedOut: error?.killed || false,
-        signal: error?.signal || null,
-      });
-    });
+    const proc = execFile(
+      "docker",
+      args,
+      {
+        timeout: timeoutMs,
+        maxBuffer: 1024 * 1024, // 1MB output buffer
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          stdout: stdout || "",
+          stderr: stderr || "",
+          exitCode: error
+            ? error.code !== null && error.code !== undefined
+              ? error.code
+              : -1
+            : 0,
+          timedOut: error?.killed || false,
+          signal: error?.signal || null,
+        });
+      },
+    );
   });
 }
 
@@ -117,7 +150,9 @@ function checkDocker() {
     // Run 'docker ps' to verify the Docker daemon is actually running and active
     execFile("docker", ["ps"], (error) => {
       isDockerAvailable = !error;
-      console.log(`[Judge] Checking Docker daemon status: ${isDockerAvailable ? "RUNNING" : "NOT RUNNING (using host fallback)"}`);
+      console.log(
+        `[Judge] Checking Docker daemon status: ${isDockerAvailable ? "RUNNING" : "NOT RUNNING (using host fallback)"}`,
+      );
       resolve(isDockerAvailable);
     });
   });
@@ -126,19 +161,28 @@ function checkDocker() {
 function localRun(cmd, args, options, timeoutMs = 10000) {
   return new Promise((resolve) => {
     const { input, ...execOptions } = options;
-    const child = execFile(cmd, args, {
-      ...execOptions,
-      timeout: timeoutMs,
-      maxBuffer: 1024 * 1024, // 1MB buffer
-    }, (error, stdout, stderr) => {
-      resolve({
-        stdout: stdout || "",
-        stderr: stderr || "",
-        exitCode: error ? (error.code !== null && error.code !== undefined ? error.code : -1) : 0,
-        timedOut: error?.killed || false,
-        signal: error?.signal || null,
-      });
-    });
+    const child = execFile(
+      cmd,
+      args,
+      {
+        ...execOptions,
+        timeout: timeoutMs,
+        maxBuffer: 1024 * 1024, // 1MB buffer
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          stdout: stdout || "",
+          stderr: stderr || "",
+          exitCode: error
+            ? error.code !== null && error.code !== undefined
+              ? error.code
+              : -1
+            : 0,
+          timedOut: error?.killed || false,
+          signal: error?.signal || null,
+        });
+      },
+    );
 
     if (input !== undefined && input !== null && child.stdin) {
       child.stdin.write(input);
@@ -150,22 +194,41 @@ function localRun(cmd, args, options, timeoutMs = 10000) {
 /**
  * Fallback code execution directly on the host system (Render/Vercel environments)
  */
-async function runLocalCode(language, config, submissionDir, stdin, cpuTimeLimit, startTime) {
+async function runLocalCode(
+  language,
+  config,
+  submissionDir,
+  stdin,
+  cpuTimeLimit,
+  startTime,
+) {
   const isWindows = process.platform === "win32";
-  
+
   // 1. Compilation Step (for compiled languages like C, C++, Java)
   if (config.compileCmd) {
     const compileCmd = config.compileCmd[0];
     const compileArgs = config.compileCmd.slice(1);
-    
-    console.log(`[Judge] Compiling locally using: ${compileCmd} ${compileArgs.join(" ")}`);
+
+    console.log(
+      `[Judge] Compiling locally using: ${compileCmd} ${compileArgs.join(" ")}`,
+    );
     // Increased timeout to 30 seconds for slower CPUs (Render free tier)
-    const compileResult = await localRun(compileCmd, compileArgs, { cwd: submissionDir }, 30000);
-    
-    if (compileResult.exitCode !== 0 || compileResult.timedOut || compileResult.stderr.toLowerCase().includes("error")) {
-      const rawError = compileResult.timedOut 
-        ? "Compilation timed out after 30 seconds" 
-        : (compileResult.stderr.trim() || `Local compilation failed with exit code ${compileResult.exitCode}`);
+    const compileResult = await localRun(
+      compileCmd,
+      compileArgs,
+      { cwd: submissionDir },
+      30000,
+    );
+
+    if (
+      compileResult.exitCode !== 0 ||
+      compileResult.timedOut ||
+      compileResult.stderr.toLowerCase().includes("error")
+    ) {
+      const rawError = compileResult.timedOut
+        ? "Compilation timed out after 30 seconds"
+        : compileResult.stderr.trim() ||
+          `Local compilation failed with exit code ${compileResult.exitCode}`;
       const friendlyError = sanitizeError(rawError, submissionDir);
       return {
         stdout: "",
@@ -195,7 +258,8 @@ async function runLocalCode(language, config, submissionDir, stdin, cpuTimeLimit
     if (!fs.existsSync(runCmd)) {
       return {
         stdout: "",
-        stderr: "Executable binary not found. Compilation failed to generate output binary.",
+        stderr:
+          "Executable binary not found. Compilation failed to generate output binary.",
         compileOutput: "Executable binary not found.",
         statusId: 6, // Compilation Error
         status: "Compilation Error",
@@ -225,10 +289,15 @@ async function runLocalCode(language, config, submissionDir, stdin, cpuTimeLimit
   }
 
   console.log(`[Judge] Running code locally: ${runCmd} ${runArgs.join(" ")}`);
-  const runResult = await localRun(runCmd, runArgs, {
-    cwd: submissionDir,
-    input: stdin
-  }, (cpuTimeLimit + 3) * 1000);
+  const runResult = await localRun(
+    runCmd,
+    runArgs,
+    {
+      cwd: submissionDir,
+      input: stdin,
+    },
+    (cpuTimeLimit + 3) * 1000,
+  );
 
   const execTime = Date.now() - startTime;
 
@@ -276,7 +345,13 @@ async function runLocalCode(language, config, submissionDir, stdin, cpuTimeLimit
  * @param {number} cpuTimeLimit - Time limit in seconds (default 5)
  * @param {number} memoryLimitMB - Memory limit in MB (default 256)
  */
-async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, memoryLimitMB = 256) {
+async function executeCode(
+  language,
+  sourceCode,
+  stdin = "",
+  cpuTimeLimit = 5,
+  memoryLimitMB = 256,
+) {
   const config = LANG_CONFIG[language];
   if (!config) throw new Error(`Unsupported language: ${language}`);
 
@@ -301,7 +376,14 @@ async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, m
     // ANTIGRAVITY NEW: Check if Docker is available; otherwise, execute on the host locally
     const useDocker = await checkDocker();
     if (!useDocker) {
-      return await runLocalCode(language, config, submissionDir, stdin, cpuTimeLimit, startTime);
+      return await runLocalCode(
+        language,
+        config,
+        submissionDir,
+        stdin,
+        cpuTimeLimit,
+        startTime,
+      );
     }
 
     const containerName = `examecho-run-${submissionId.substring(0, 8)}`;
@@ -313,14 +395,19 @@ async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, m
     // --cpus: CPU limit
     // -v: mount the submission directory as /code (read-only for source)
     const dockerArgs = [
-      "run", "--rm",
-      "--name", containerName,
-      "--network", "none",
+      "run",
+      "--rm",
+      "--name",
+      containerName,
+      "--network",
+      "none",
       `--memory=${memoryLimitMB}m`,
       "--cpus=1",
       "--pids-limit=64",
-      "-v", `${submissionDir}:/code`,
-      "-w", "/code",
+      "-v",
+      `${submissionDir}:/code`,
+      "-w",
+      "/code",
       config.image,
     ];
 
@@ -328,9 +415,15 @@ async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, m
     if (config.compileCmd) {
       // First, compile
       const compileArgs = [...dockerArgs, ...config.compileCmd];
-      const compileResult = await dockerRun(compileArgs, (cpuTimeLimit + 5) * 1000);
+      const compileResult = await dockerRun(
+        compileArgs,
+        (cpuTimeLimit + 5) * 1000,
+      );
 
-      if (compileResult.exitCode !== 0 || compileResult.stderr.includes("error")) {
+      if (
+        compileResult.exitCode !== 0 ||
+        compileResult.stderr.includes("error")
+      ) {
         return {
           stdout: "",
           stderr: compileResult.stderr.trim(),
@@ -344,17 +437,24 @@ async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, m
 
       // Then, run the compiled binary
       const runArgs = [
-        "run", "--rm",
-        "--name", `${containerName}-run`,
-        "--network", "none",
+        "run",
+        "--rm",
+        "--name",
+        `${containerName}-run`,
+        "--network",
+        "none",
         `--memory=${memoryLimitMB}m`,
         "--cpus=1",
         "--pids-limit=64",
-        "-v", `${submissionDir}:/code`,
-        "-w", "/code",
+        "-v",
+        `${submissionDir}:/code`,
+        "-w",
+        "/code",
         "-i",
         config.image,
-        "sh", "-c", `cat /code/input.txt | ${config.runCmd.join(" ")}`,
+        "sh",
+        "-c",
+        `cat /code/input.txt | ${config.runCmd.join(" ")}`,
       ];
 
       const runResult = await dockerRun(runArgs, (cpuTimeLimit + 3) * 1000);
@@ -398,7 +498,9 @@ async function executeCode(language, sourceCode, stdin = "", cpuTimeLimit = 5, m
     // Interpreted languages (Python, JavaScript) — just run
     const runArgs = [
       ...dockerArgs,
-      "sh", "-c", `cat /code/input.txt | ${config.runCmd.join(" ")}`,
+      "sh",
+      "-c",
+      `cat /code/input.txt | ${config.runCmd.join(" ")}`,
     ];
 
     const runResult = await dockerRun(runArgs, (cpuTimeLimit + 3) * 1000);
@@ -465,7 +567,13 @@ const STATUS = {
 /**
  * Run student code against multiple test cases
  */
-async function runTestCases(language, studentCode, driverCode, testCases, includeHidden = false) {
+async function runTestCases(
+  language,
+  studentCode,
+  driverCode,
+  testCases,
+  includeHidden = false,
+) {
   const casesToRun = includeHidden
     ? testCases
     : testCases.filter((tc) => !tc.isHidden);
@@ -514,7 +622,9 @@ async function runTestCases(language, studentCode, driverCode, testCases, includ
 
     const actualOutput = execResult.stdout.trim();
     const expectedOutput = tc.expectedOutput.trim();
-    const passed = execResult.statusId === STATUS.ACCEPTED && actualOutput === expectedOutput;
+    const passed =
+      execResult.statusId === STATUS.ACCEPTED &&
+      actualOutput === expectedOutput;
 
     results.push({
       passed,
@@ -529,7 +639,11 @@ async function runTestCases(language, studentCode, driverCode, testCases, includ
 
   // Determine overall status
   let overallStatus;
-  const hasCompileError = results.some((r) => r.errorOutput?.includes("Compilation Error") || r.errorOutput?.includes("error:"));
+  const hasCompileError = results.some(
+    (r) =>
+      r.errorOutput?.includes("Compilation Error") ||
+      r.errorOutput?.includes("error:"),
+  );
   if (hasCompileError && results.every((r) => !r.passed)) {
     overallStatus = "compilation_error";
   } else if (results.every((r) => r.passed)) {
@@ -557,7 +671,10 @@ async function runTestCases(language, studentCode, driverCode, testCases, includ
  */
 async function checkHealth() {
   try {
-    const result = await dockerRun(["version", "--format", "{{.Server.Version}}"], 5000);
+    const result = await dockerRun(
+      ["version", "--format", "{{.Server.Version}}"],
+      5000,
+    );
     return { healthy: result.exitCode === 0, version: result.stdout.trim() };
   } catch {
     return { healthy: false, version: null };

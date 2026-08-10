@@ -9,7 +9,12 @@ const axios = require("axios");
 const Question = require("../models/Question");
 const connection = require("../config/redis");
 const connectDB = require("../config/db");
-const { s3Client, generateTTSAudioKey, getS3Url } = require("../config/s3");
+const {
+  s3Client,
+  generateTTSAudioKey,
+  getS3Url,
+  BUCKET_NAME,
+} = require("../config/s3");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 
 // ✅ Connect MongoDB for worker process
@@ -67,7 +72,8 @@ new Worker(
           //   },
           // );
 
-          const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+          const aiServiceUrl =
+            process.env.AI_SERVICE_URL || "http://localhost:8000";
           const ttsRes = await axios.post(
             `${aiServiceUrl}/api/v1/tts/synthesize`,
             {
@@ -82,32 +88,29 @@ new Worker(
             },
           );
 
-
           console.log("🎧 AFTER TTS CALL");
 
           const audioBuffer = Buffer.from(ttsRes.data);
 
-          // ===== UPLOAD TO S3 =====
+          // ===== UPLOAD TO R2 =====
           try {
             const s3Key = generateTTSAudioKey(
               question.examId.toString(),
               question._id.toString(),
             );
-            const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const region = process.env.AWS_S3_REGION || "us-east-1";
 
-            console.log(`📤 Uploading TTS audio to S3: ${s3Key}`);
-            console.log(`🪣 Bucket: ${bucketName}, Region: ${region}`);
+            console.log(`📤 Uploading TTS audio to R2: ${s3Key}`);
+            console.log(`🪣 Bucket: ${BUCKET_NAME}`);
 
             const putCommand = new PutObjectCommand({
-              Bucket: bucketName,
+              Bucket: BUCKET_NAME,
               Key: s3Key,
               Body: audioBuffer,
               ContentType: "audio/mpeg",
             });
 
             await s3Client.send(putCommand);
-            console.log("✅ TTS audio uploaded to S3");
+            console.log("✅ TTS audio uploaded to R2");
 
             // Generate S3 URL using helper function
             const s3Url = getS3Url(s3Key);
