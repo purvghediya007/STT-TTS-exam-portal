@@ -757,7 +757,10 @@ router.get(
         return res.status(403).json({ message: "Forbidden: not your exam" });
       }
 
-      // 1) Get all attempts for this exam
+      // 1) Fetch exam questions
+      const questions = await Question.find({ examId }).sort({ order: 1 });
+
+      // 2) Get all attempts for this exam
       const attempts = await StudentExamAttempt.find({ examId })
         .sort({ startedAt: 1 })
         .populate("studentId", "username email");
@@ -771,14 +774,26 @@ router.get(
             startTime: exam.startTime,
             endTime: exam.endTime,
             durationMinutes: exam.durationMinutes,
+            pointsTotal: exam.pointsTotal,
+            resultsPublished: exam.resultsPublished === true,
+            resultPublishedAt: exam.resultPublishedAt,
           },
+          questions: questions.map((q) => ({
+            _id: q._id,
+            text: q.text,
+            type: q.type,
+            marks: q.marks,
+            order: q.order,
+            instruction: q.instruction,
+            options: q.type === "mcq" ? q.options : undefined,
+          })),
           attempts: [],
         });
       }
 
       const attemptIds = attempts.map((a) => a._id);
 
-      // 2) Fetch all answers for these attempts, with question info
+      // 3) Fetch all answers for these attempts, with question info
       const answers = await StudentAnswer.find({
         attemptId: { $in: attemptIds },
       }).populate("questionId", "text marks instruction order type options");
@@ -791,6 +806,28 @@ router.get(
           answersByAttempt.set(key, []);
         }
         const q = ans.questionId;
+
+        // Process and deduplicate recording URLs
+        let recordings = [];
+        if (Array.isArray(ans.recordingUrls) && ans.recordingUrls.length > 0) {
+          recordings = ans.recordingUrls.filter(
+            (url) => typeof url === "string" && url.trim().length > 0,
+          );
+        }
+
+        // Fallback: If recordingUrls is empty, extract from answerText if it contains "[Audio recording: https://...]"
+        if (recordings.length === 0 && ans.answerText) {
+          const match = ans.answerText.match(
+            /\[Audio recording:\s*(https?:\/\/[^\]\s]+)\]/i,
+          );
+          if (match && match[1]) {
+            recordings.push(match[1].trim());
+          }
+        }
+
+        // Deduplicate URLs strictly so we NEVER show duplicate takes for the same recording
+        const uniqueRecordings = [...new Set(recordings)];
+
         answersByAttempt.get(key).push({
           _id: ans._id,
           questionId: q?._id,
@@ -802,6 +839,7 @@ router.get(
           options: q?.type === "mcq" ? q?.options : undefined,
           answerText: ans.answerText,
           transcribedText: ans.transcribedText,
+          recordingUrls: uniqueRecordings,
           selectedOptionIndex: ans.selectedOptionIndex,
           score: ans.score,
           maxMarks: ans.maxMarks,
@@ -819,10 +857,10 @@ router.get(
           attemptId: a._id,
           student: student
             ? {
-                id: student._id,
-                username: student.username,
-                email: student.email,
-              }
+              id: student._id,
+              username: student.username,
+              email: student.email,
+            }
             : null,
           status: a.status,
           startedAt: a.startedAt,
@@ -841,7 +879,19 @@ router.get(
           startTime: exam.startTime,
           endTime: exam.endTime,
           durationMinutes: exam.durationMinutes,
+          pointsTotal: exam.pointsTotal,
+          resultsPublished: exam.resultsPublished === true,
+          resultPublishedAt: exam.resultPublishedAt,
         },
+        questions: questions.map((q) => ({
+          _id: q._id,
+          text: q.text,
+          type: q.type,
+          marks: q.marks,
+          order: q.order,
+          instruction: q.instruction,
+          options: q.type === "mcq" ? q.options : undefined,
+        })),
         attempts: resultAttempts,
       });
     } catch (error) {
@@ -888,7 +938,7 @@ router.post(
       console.log(`📥 Raw Request Body:`, req.body);
       console.log(`🔐 Teacher ID: ${req.user.sub}`);
 
-            const { topics, num_questions, difficulty, type } = req.body;
+      const { topics, num_questions, difficulty, type } = req.body;
       console.log(`✔️ Destructured - Topics:`, topics);
       console.log(`✔️ Destructured - Num Questions:`, num_questions);
       console.log(`✔️ Destructured - Difficulty:`, difficulty);
@@ -1002,7 +1052,7 @@ router.post(
 
 /**
  * PUT /api/student-answers/:answerId/score
- * Update score for a student answer (teacher grading)
+ * Update score and feedback for a student answer (teacher grading)
  */
 router.put(
   "/student-answers/:answerId/score",
@@ -1011,11 +1061,11 @@ router.put(
   async (req, res, next) => {
     try {
       const { answerId } = req.params;
-      const { score } = req.body;
+      const { score, feedback } = req.body;
       const teacherId = req.user.sub;
 
-      // Validate score
-      if (score == null || typeof score !== "number" || score < 0) {
+      // Validate score if provided
+      if (score != null && (typeof score !== "number" || score < 0)) {
         return res.status(400).json({
           message: "score must be a non-negative number",
         });
@@ -1040,24 +1090,40 @@ router.put(
       }
 
       // Validate score doesn't exceed max marks
-      if (score > answer.maxMarks) {
+      if (score != null && score > answer.maxMarks) {
         return res.status(400).json({
           message: `score cannot exceed maxMarks (${answer.maxMarks})`,
         });
       }
 
-      // Update the score
+      // Unpublish results on manual edit so teacher can review before republishing
+      exam.resultsPublished = false;
+      exam.resultPublishedAt = null;
+      await exam.save();
+
+      // Build update payload
+      const updateData = {
+        evaluatedAt: new Date(),
+        evaluationStatus: "completed",
+      };
+
+      if (score != null) {
+        updateData.score = score;
+      }
+
+      if (feedback !== undefined) {
+        updateData.evaluationFeedback = typeof feedback === "string" ? feedback.trim() : "";
+      }
+
+      // Update the answer
       const updatedAnswer = await StudentAnswer.findByIdAndUpdate(
         answerId,
-        {
-          score: score,
-          evaluatedAt: new Date(),
-        },
+        updateData,
         { new: true },
       );
 
       console.log(
-        `✅ Score updated for answer ${answerId}: ${score}/${answer.maxMarks}`,
+        `✅ Score & feedback updated for answer ${answerId}: ${updatedAnswer.score}/${answer.maxMarks}`,
       );
 
       // Recalculate total score for the attempt
@@ -1072,23 +1138,24 @@ router.put(
       // Update the attempt with new total score
       const attempt = await StudentExamAttempt.findByIdAndUpdate(
         answer.attemptId,
-        { totalScore },
+        { totalScore, status: "evaluated" },
         { new: true },
       );
 
       console.log(`✅ Attempt total score recalculated: ${totalScore}`);
 
       return res.status(200).json({
-        message: "Score updated successfully",
+        message: "Score and feedback updated successfully",
         answer: updatedAnswer,
         attempt: {
           attemptId: attempt._id,
           totalScore: attempt.totalScore,
           maxScore: attempt.maxScore,
         },
+        resultsPublished: false,
       });
     } catch (error) {
-      console.error("Error updating answer score:", error);
+      console.error("Error updating answer score and feedback:", error);
       next(error);
     }
   },
@@ -1167,6 +1234,147 @@ router.patch(
         message: "Student reallowed successfully",
       });
     } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/exams/:examId/questions/:questionId/bonus-marks
+ * Award fixed marks / bonus override for a question across all student submissions
+ * Also sets exam.resultsPublished = false so faculty can review before republishing.
+ */
+router.post(
+  "/:examId/questions/:questionId/bonus-marks",
+  authMiddleware,
+  requireRole("teacher"),
+  async (req, res, next) => {
+    try {
+      const { examId, questionId } = req.params;
+      const { score, reason, applyToSkipped = true } = req.body;
+      const teacherId = req.user.sub;
+
+      // 1. Validate score
+      if (score == null || typeof score !== "number" || score < 0) {
+        return res.status(400).json({
+          message: "Score must be a non-negative number",
+        });
+      }
+
+      // 2. Validate exam & ownership
+      const exam = await Exam.findById(examId);
+      if (!exam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+      if (exam.teacherId.toString() !== teacherId) {
+        return res.status(403).json({
+          message: "Forbidden: You cannot modify scores for this exam",
+        });
+      }
+
+      // 3. Validate question
+      const question = await Question.findOne({ _id: questionId, examId });
+      if (!question) {
+        return res.status(404).json({
+          message: "Question not found in this exam",
+        });
+      }
+
+      if (score > question.marks) {
+        return res.status(400).json({
+          message: `Score (${score}) cannot exceed question max marks (${question.marks})`,
+        });
+      }
+
+      // 4. Set resultsPublished as false so faculty can review & republish
+      exam.resultsPublished = false;
+      exam.resultPublishedAt = null;
+      await exam.save();
+
+      console.log(`[Bonus Marks] Set exam ${examId} resultsPublished to false`);
+
+      // 5. Find all attempts for this exam
+      const attempts = await StudentExamAttempt.find({
+        examId,
+        status: { $in: ["submitted", "transcribed", "evaluated"] },
+      });
+
+      if (attempts.length === 0) {
+        return res.status(200).json({
+          message: "No student submissions to update",
+          updatedCount: 0,
+          resultsPublished: false,
+        });
+      }
+
+      const feedbackNote = reason && reason.trim() ? reason.trim() : "";
+
+      // 6. Bulk update/upsert StudentAnswer records
+      const answerBulkOps = attempts.map((att) => ({
+        updateOne: {
+          filter: {
+            attemptId: att._id,
+            questionId: question._id,
+          },
+          update: {
+            $set: {
+              examId: exam._id,
+              studentId: att.studentId,
+              score: score,
+              maxMarks: question.marks,
+              evaluationFeedback: feedbackNote,
+              evaluationStatus: "completed",
+              evaluatedAt: new Date(),
+            },
+          },
+          upsert: applyToSkipped === true,
+        },
+      }));
+
+      await StudentAnswer.bulkWrite(answerBulkOps);
+
+      // 7. Recalculate totalScore for each student attempt
+      const attemptIds = attempts.map((a) => a._id);
+      const allAnswers = await StudentAnswer.find({
+        attemptId: { $in: attemptIds },
+      });
+
+      const scoresByAttempt = {};
+      for (const ans of allAnswers) {
+        const attId = ans.attemptId.toString();
+        scoresByAttempt[attId] =
+          (scoresByAttempt[attId] || 0) + (ans.score || 0);
+      }
+
+      const attemptBulkOps = attemptIds.map((attId) => ({
+        updateOne: {
+          filter: { _id: attId },
+          update: {
+            $set: {
+              totalScore: scoresByAttempt[attId.toString()] || 0,
+              status: "evaluated",
+            },
+          },
+        },
+      }));
+
+      await StudentExamAttempt.bulkWrite(attemptBulkOps);
+
+      console.log(
+        `✅ Bonus marks (${score}/${question.marks}) applied to ${attempts.length} attempts for Question ${questionId}`
+      );
+
+      return res.status(200).json({
+        message: `Successfully awarded ${score}/${question.marks} marks to ${attempts.length} student submission(s).`,
+        updatedCount: attempts.length,
+        questionId: question._id,
+        awardedScore: score,
+        maxMarks: question.marks,
+        reason: reason || null,
+        resultsPublished: false,
+      });
+    } catch (error) {
+      console.error("Error awarding bonus marks:", error);
       next(error);
     }
   }

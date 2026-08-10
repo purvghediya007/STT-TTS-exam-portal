@@ -40,6 +40,18 @@ export async function fetchAPI(
     })
 
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login' &&
+          !window.location.pathname.startsWith('/auth')
+        ) {
+          window.location.href = '/login'
+        }
+      }
+
       let errorData
       try {
         errorData = await response.json()
@@ -1172,7 +1184,18 @@ export async function fetchExamResults(examId: string): Promise<{
     endTime: string
     durationMinutes: number
     pointsTotal?: number
+    resultsPublished?: boolean
+    resultPublishedAt?: string | null
   }
+  questions?: Array<{
+    _id: string
+    text: string
+    type?: string
+    marks: number
+    order: number
+    instruction?: string
+    options?: Array<{ text: string }>
+  }>
   attempts: Array<{
     attemptId: string
     student: {
@@ -1186,6 +1209,7 @@ export async function fetchExamResults(examId: string): Promise<{
     totalScore: number | null
     maxScore: number | null
     answers: Array<{
+      _id?: string
       questionId: string
       text: string
       type?: string
@@ -1193,6 +1217,8 @@ export async function fetchExamResults(examId: string): Promise<{
       order: number
       instruction: string
       answerText: string
+      transcribedText?: string
+      recordingUrls?: string[]
       selectedOptionIndex?: number | null
       options?: Array<{ text: string }>
       score: number | null
@@ -1247,13 +1273,33 @@ export async function updateProfile(profileData: any): Promise<any> {
   return response.json()
 }
 /**
- * Update student answer score
+ * Update student answer score and feedback
  * PUT /api/exams/student-answers/:answerId/score
  */
-export async function updateAnswerScore(answerId: string, score: number): Promise<any> {
+export async function updateAnswerScore(
+  answerId: string,
+  score: number,
+  feedback?: string
+): Promise<any> {
   const response = await fetchAPI(`/exams/student-answers/${answerId}/score`, {
     method: 'PUT',
-    body: JSON.stringify({ score }),
+    body: JSON.stringify({ score, feedback }),
+  })
+  return response.json()
+}
+
+/**
+ * Award bonus marks / fixed score override for a question to all students
+ * POST /api/exams/:examId/questions/:questionId/bonus-marks
+ */
+export async function awardQuestionBonusMarks(
+  examId: string,
+  questionId: string,
+  payload: { score: number; reason?: string; applyToSkipped?: boolean }
+): Promise<any> {
+  const response = await fetchAPI(`/exams/${examId}/questions/${questionId}/bonus-marks`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
   })
   return response.json()
 }
