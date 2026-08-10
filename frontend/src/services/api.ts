@@ -40,6 +40,18 @@ export async function fetchAPI(
     })
 
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login' &&
+          !window.location.pathname.startsWith('/auth')
+        ) {
+          window.location.href = '/login'
+        }
+      }
+
       let errorData
       try {
         errorData = await response.json()

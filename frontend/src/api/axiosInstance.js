@@ -16,10 +16,31 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-  },
+  }
+);
+// Add response interceptor to handle expired tokens (401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      // Don't auto-redirect on failed login/register attempts
+      const isAuthEndpoint =
+        error.config?.url?.includes('/auth/login') ||
+        error.config?.url?.includes('/auth/register');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        if (
+          window.location.pathname !== '/login' &&
+          !window.location.pathname.startsWith('/auth')
+        ) {
+          window.location.href = '/login';
+        }
+      }
+    }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;

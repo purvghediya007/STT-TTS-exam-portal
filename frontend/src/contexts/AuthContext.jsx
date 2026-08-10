@@ -6,6 +6,17 @@ const AuthContext = createContext(null)
 
 
 
+// Helper to check if a JWT token is expired
+const isTokenExpired = (token) => {
+    if (!token) return true
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        return payload.exp ? Date.now() >= payload.exp * 1000 : false
+    } catch {
+        return true
+    }
+}
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [token, setToken] = useState(null)
@@ -22,15 +33,23 @@ export function AuthProvider({ children }) {
         logger.log('   User data:', savedUserStr ? 'YES' : 'NO')
 
         if (savedToken && savedUserStr) {
-            try {
-                const savedUser = JSON.parse(savedUserStr)
-                logger.log('✅ AuthContext restored user:', savedUser)
-                setToken(savedToken)
-                setUser(savedUser)
-            } catch (e) {
-                logger.error('❌ Failed to restore auth:', e)
+            if (isTokenExpired(savedToken)) {
+                logger.log('⏰ Saved JWT token is expired, clearing auth data...')
                 localStorage.removeItem('auth_token')
                 localStorage.removeItem('user_data')
+                setToken(null)
+                setUser(null)
+            } else {
+                try {
+                    const savedUser = JSON.parse(savedUserStr)
+                    logger.log('✅ AuthContext restored user:', savedUser)
+                    setToken(savedToken)
+                    setUser(savedUser)
+                } catch (e) {
+                    logger.error('❌ Failed to restore auth:', e)
+                    localStorage.removeItem('auth_token')
+                    localStorage.removeItem('user_data')
+                }
             }
         } else {
             logger.log('ℹ️ No saved auth data in localStorage')
