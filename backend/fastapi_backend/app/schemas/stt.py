@@ -12,4 +12,4 @@ class STTResponse(BaseModel):
 
     text: str = ""
     language: Optional[str] = "en"
-    model: Optional[str] = "groq"
+    model: Optional[str] = "elevenlabs"

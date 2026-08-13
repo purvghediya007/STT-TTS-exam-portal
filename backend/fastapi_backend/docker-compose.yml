@@ -1,11 +1,24 @@
 services:
   examecho-ai:
     build: .
-    image: v1-examecho-ai-backend:groq
+    image: v1-examecho-ai-backend:providers
     container_name: examecho-ai
     ports:
       - "8000:8000"
     environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      STT_PROVIDER: ${STT_PROVIDER:-elevenlabs}
+      TTS_PROVIDER: ${TTS_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL_NAME: ${OPENAI_MODEL_NAME:-gpt-4.1}
+      OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE:-0.0}
+      OPENAI_TTS_MODEL_NAME: ${OPENAI_TTS_MODEL_NAME:-tts-1}
+      OPENAI_TTS_VOICE: ${OPENAI_TTS_VOICE:-alloy}
+      OPENAI_TTS_RESPONSE_FORMAT: ${OPENAI_TTS_RESPONSE_FORMAT:-wav}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_STT_MODEL_NAME: ${ELEVENLABS_STT_MODEL_NAME:-scribe_v1}
+      ENABLE_USAGE_LOGGING: ${ENABLE_USAGE_LOGGING:-true}
+      ENABLE_TTS_AUDIO_CACHE: ${ENABLE_TTS_AUDIO_CACHE:-true}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_API_BASE_URL: ${GROQ_API_BASE_URL:-https://api.groq.com}
       GROQ_MODEL_NAME: ${GROQ_MODEL_NAME:-llama-3.3-70b-versatile}

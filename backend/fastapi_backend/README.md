@@ -2,14 +2,17 @@
 
 AI microservice for the ExamEcho platform.
 
-The service now uses Groq for:
+The service supports configurable providers. The production defaults are:
+- OpenAI `gpt-4.1` for LLM tasks
+- ElevenLabs `scribe_v1` for speech-to-text
+- OpenAI `tts-1` for text-to-speech
+
+Groq remains available for local/dev fallback:
 - Speech-to-Text
 - Text-to-Speech
 - LLM-based question generation
 - Rubric generation
 - Answer evaluation
-
-It also keeps local SentenceTransformer support for MCQ evaluation.
 
 ## What’s included
 
@@ -18,14 +21,13 @@ It also keeps local SentenceTransformer support for MCQ evaluation.
 - `POST /api/v1/questions/generate`
 - `POST /api/v1/rubrics/create`
 - `POST /api/v1/evaluate/answer`
-- `POST /api/v1/mcq/evaluate`
 - `GET /health`
-- `GET /health/groq`
+- `GET /health/providers`
 
 ## Requirements
 
 - Python 3.11+
-- Groq API key
+- OpenAI and ElevenLabs API keys for the default profile (or Groq for the dev profile)
 - `ffmpeg` installed on the host or in the container
 - Optional: Docker and Docker Compose
 
@@ -34,6 +36,18 @@ It also keeps local SentenceTransformer support for MCQ evaluation.
 Create a `.env` file with at least:
 
 ```env
+LLM_PROVIDER=openai
+STT_PROVIDER=elevenlabs
+TTS_PROVIDER=openai
+OPENAI_API_KEY=...
+OPENAI_MODEL_NAME=gpt-4.1
+OPENAI_TTS_MODEL_NAME=tts-1
+OPENAI_TTS_VOICE=alloy
+OPENAI_TTS_RESPONSE_FORMAT=wav
+ELEVENLABS_API_KEY=...
+ELEVENLABS_STT_MODEL_NAME=scribe_v1
+ENABLE_USAGE_LOGGING=true
+ENABLE_TTS_AUDIO_CACHE=true
 GROQ_API_KEY=...
 GROQ_API_BASE_URL=https://api.groq.com
 GROQ_MODEL_NAME=llama-3.3-70b-versatile
@@ -45,8 +59,6 @@ GROQ_TTS_VOICE=autumn
 GROQ_TTS_RESPONSE_FORMAT=wav
 STT_DEFAULT_MODEL=groq
 TTS_AUDIO_DIR=generated_audio
-MCQ_EVAL_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
-MCQ_SIMILARITY_THRESHOLD=0.75
 CORS_ORIGINS=["*"]
 API_V1_PREFIX=/api/v1
 APP_TITLE=ExamEcho AI Service
@@ -124,7 +136,7 @@ curl -X POST http://localhost:8000/api/v1/tts/synthesize \
 
 ```bash
 curl http://localhost:8000/health
-curl http://localhost:8000/health/groq
+curl http://localhost:8000/health/providers
 ```
 
 ## Troubleshooting

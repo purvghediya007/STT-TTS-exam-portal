@@ -59,8 +59,22 @@ class RubricsGenerationError(ExamEchoAIError):
 # Model / Server Loading
 
 class ModelLoadError(ExamEchoAIError):
-    """Raised when a model (Whisper, Groq, SentenceTransformer) fails to load."""
+    """Raised when a speech or language model fails to load."""
 
 
 class GroqConnectionError(ExamEchoAIError):
     """Raised when the Groq API is unreachable or the API key is invalid."""
+
+class LLMProviderConnectionError(ExamEchoAIError):
+    """Raised when the configured LLM provider is unavailable."""
+
+class STTProviderConnectionError(AudioProcessingError):
+    """Raised when the configured STT provider is unavailable."""
+
+
+class LLMProviderConnectionError(ExamEchoAIError):
+    """Raised when the configured LLM provider is unavailable or unauthorized."""
+
+
+class STTProviderConnectionError(AudioProcessingError):
+    """Raised when the configured speech provider cannot process audio."""

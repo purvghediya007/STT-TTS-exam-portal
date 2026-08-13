@@ -8,10 +8,11 @@ import tempfile
 
 from fastapi import UploadFile
 
-from ai_ml.model_creator import GroqAudioClientLoader
+from ai_ml.provider_factory import get_stt_client
 from ai_ml.stt import STT
 from app.config import settings
 from app.core.state import app_state
+from ai_ml.usage_logger import log_usage
 
 logger = logging.getLogger(__name__)
 
@@ -51,18 +52,11 @@ async def transcribe_audio(
             lang,
         )
 
-        groq_client = app_state.groq_audio_client or GroqAudioClientLoader.get_client()
-        if chosen_model == "groq":
-            text = STT.transcribe_with_model(
-                model=groq_client,
-                audio_path=tmp_path,
-                lang=lang,
-            )
-        else:
-            stt = STT(lang=lang, model=chosen_model, audio_file_path=tmp_path)
-            text = stt.transcribe()
+        client = app_state.stt_client or get_stt_client()
+        text = STT.transcribe_with_model(client, tmp_path, lang) if chosen_model == settings.STT_PROVIDER else STT(lang=lang, model=chosen_model, audio_file_path=tmp_path).transcribe()
 
         logger.info("Transcription complete: %d chars", len(text or ""))
+        log_usage(provider=settings.STT_PROVIDER, task="stt", model=(settings.ELEVENLABS_STT_MODEL_NAME if settings.STT_PROVIDER == "elevenlabs" else settings.GROQ_STT_MODEL_NAME))
         return text or ""
 
     finally:

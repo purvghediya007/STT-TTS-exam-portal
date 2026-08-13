@@ -19,7 +19,7 @@ _engine: EvaluationEngine | None = None
 def _get_engine() -> EvaluationEngine:
     global _engine
     if _engine is None:
-        _engine = EvaluationEngine(model=app_state.groq_model)
+        _engine = EvaluationEngine(model=app_state.llm_model)
     return _engine
 
 

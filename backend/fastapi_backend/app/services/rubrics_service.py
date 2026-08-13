@@ -18,7 +18,7 @@ _engine: RubricsEngine | None = None
 def _get_engine() -> RubricsEngine:
     global _engine
     if _engine is None:
-        _engine = RubricsEngine(model=app_state.groq_model)
+        _engine = RubricsEngine(model=app_state.llm_model)
     return _engine
 
 

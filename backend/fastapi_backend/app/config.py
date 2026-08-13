@@ -8,6 +8,27 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # Provider selection
+    LLM_PROVIDER: str = "openai"
+    STT_PROVIDER: str = "elevenlabs"
+    TTS_PROVIDER: str = "openai"
+
+    # OpenAI
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL_NAME: str = "gpt-4.1"
+    OPENAI_TEMPERATURE: float = 0.0
+    OPENAI_TTS_MODEL_NAME: str = "tts-1"
+    OPENAI_TTS_VOICE: str = "alloy"
+    OPENAI_TTS_RESPONSE_FORMAT: str = "wav"
+
+    # ElevenLabs
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_STT_MODEL_NAME: str = "scribe_v1"
+
+    # Cost controls
+    ENABLE_USAGE_LOGGING: bool = True
+    ENABLE_TTS_AUDIO_CACHE: bool = True
+
     # Groq (cloud LLM + audio)
     GROQ_API_KEY: str = ""
     GROQ_API_BASE_URL: str = "https://api.groq.com"
@@ -18,12 +39,8 @@ class Settings(BaseSettings):
     GROQ_TTS_MODEL_NAME: str = "playai-tts"
     GROQ_TTS_VOICE: str = "autumn"
     GROQ_TTS_RESPONSE_FORMAT: str = "wav"
-    STT_DEFAULT_MODEL: str = "groq"
+    STT_DEFAULT_MODEL: str = "elevenlabs"
     WHISPER_MODEL_SIZE: str = "base"  # Deprecated compatibility field
-
-    # MCQ Evaluation
-    MCQ_EVAL_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
-    MCQ_SIMILARITY_THRESHOLD: float = 0.75
 
     # TTS
     TTS_AUDIO_DIR: str = "generated_audio"
@@ -38,7 +55,7 @@ class Settings(BaseSettings):
     APP_DESCRIPTION: str = (
         "AI microservice powering ExamEcho: STT, TTS, "
         "question generation, rubric creation, and answer evaluation. "
-        "Uses Groq (llama-3.3-70b-versatile) for all LLM tasks - fast cloud inference."
+        "Uses configurable OpenAI/ElevenLabs providers with Groq fallback support."
     )
 
     class Config:
@@ -52,6 +69,18 @@ class Settings(BaseSettings):
             raise ValueError(
                 "GROQ_API_KEY is not set. Add it to your .env file as GROQ_API_KEY=gsk_..."
             )
+        return api_key
+
+    def require_openai_api_key(self) -> str:
+        api_key = (self.OPENAI_API_KEY or "").strip()
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is not set. Add it to your .env file.")
+        return api_key
+
+    def require_elevenlabs_api_key(self) -> str:
+        api_key = (self.ELEVENLABS_API_KEY or "").strip()
+        if not api_key:
+            raise ValueError("ELEVENLABS_API_KEY is not set. Add it to your .env file.")
         return api_key
 
 

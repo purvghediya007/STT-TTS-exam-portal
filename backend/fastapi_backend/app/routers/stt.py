@@ -22,13 +22,13 @@ router = APIRouter(prefix="/stt", tags=["Speech-to-Text"])
     description=(
         "Upload an audio file and receive its transcription as plain text. "
         "Supported formats: WAV, MP3, MP4, WebM, OGG. "
-        "Groq transcription is used by default. Legacy model aliases are accepted."
+        "The configured STT provider is used; Groq remains available as a fallback."
     ),
 )
 async def transcribe_endpoint(
     audio: UploadFile = File(..., description="Audio file to transcribe."),
     lang: str = Query(default="en", description="BCP-47 language code (e.g. 'en', 'hi')."),
-    model: str = Query(default="groq", description="STT backend alias. Groq is used for all supported values."),
+    model: str = Query(default="elevenlabs", description="STT backend alias."),
 ) -> STTResponse:
     """Transcribe an uploaded audio file to text."""
     if audio.content_type not in ALLOWED_CONTENT_TYPES:
@@ -51,4 +51,4 @@ async def transcribe_endpoint(
         logger.exception("Unexpected STT error")
         raise HTTPException(status_code=500, detail="Transcription failed due to an internal error.") from exc
 
-    return STTResponse(text=text, language=lang, model="groq")
+    return STTResponse(text=text, language=lang, model=model)

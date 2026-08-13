@@ -11,6 +11,7 @@ from typing import Optional, Union
 
 from ai_ml.exceptions import EngineError, TextSourceError, TTSError
 from ai_ml.model_creator import GroqAudioClientLoader
+from ai_ml.provider_errors import translate_openai_error
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -213,6 +214,46 @@ class GroqTTSEngine(TTSEngine):
             message = f"Groq {operation} failed: {message}"
 
         return EngineError(message)
+
+
+class OpenAITTSEngine(TTSEngine):
+    ALLOWED_VOICES = ("alloy", "echo", "fable", "onyx", "nova", "shimmer")
+    DEFAULT_VOICE = "alloy"
+
+    def synthesize(self, text: str, config: TTSConfig) -> Union[bytes, Path]:
+        if not text:
+            raise EngineError("Cannot synthesise empty text.")
+        voice = (config.voice or settings.OPENAI_TTS_VOICE).strip().lower()
+        if voice not in self.ALLOWED_VOICES:
+            voice = self.DEFAULT_VOICE
+        response_format = config.response_format or settings.OPENAI_TTS_RESPONSE_FORMAT
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=settings.require_openai_api_key())
+            response = client.audio.speech.create(
+                model=settings.OPENAI_TTS_MODEL_NAME, voice=voice, input=text,
+                response_format=response_format,
+            )
+            if config.return_bytes:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{response_format}") as tmp:
+                    temp_path = Path(tmp.name)
+                try:
+                    self._write_response_to_path(response, temp_path)
+                    return temp_path.read_bytes()
+                finally:
+                    temp_path.unlink(missing_ok=True)
+            if not config.output_file:
+                raise EngineError("output_file must be set when return_bytes=False.")
+            output = config.output_file.resolve()
+            output.parent.mkdir(parents=True, exist_ok=True)
+            self._write_response_to_path(response, output)
+            return output
+        except EngineError:
+            raise
+        except Exception as exc:
+            raise translate_openai_error(exc, "speech synthesis", audio=True) from exc
+
+    _write_response_to_path = staticmethod(GroqTTSEngine._write_response_to_path)
 
 
 class TTSPipeline:

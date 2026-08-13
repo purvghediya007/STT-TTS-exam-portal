@@ -28,26 +28,23 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load the Groq audio client, Groq LLM wrapper, and SentenceTransformer."""
-    logger.info("Starting ExamEcho AI Service (Groq edition) ...")
-    logger.info("  Groq model: %s", settings.GROQ_MODEL_NAME)
-    logger.info("  Groq STT model: %s", settings.GROQ_STT_MODEL_NAME)
-    logger.info("  Groq TTS model: %s", settings.GROQ_TTS_MODEL_NAME)
+    """Load configured provider clients."""
+    logger.info("Starting ExamEcho AI Service (%s/%s/%s) ...", settings.LLM_PROVIDER, settings.STT_PROVIDER, settings.TTS_PROVIDER)
 
     try:
-        from ai_ml.model_creator import GroqAudioClientLoader
-
-        app_state.groq_audio_client = GroqAudioClientLoader.get_client()
-        logger.info("Groq audio client ready")
+        from ai_ml.provider_factory import get_stt_client
+        app_state.stt_client = get_stt_client()
+        app_state.groq_audio_client = app_state.stt_client
+        logger.info("STT provider ready: %s", settings.STT_PROVIDER)
     except Exception as exc:
         logger.error("Groq audio client failed to load: %s", exc)
         logger.warning("  STT/TTS endpoints will not be functional.")
 
     try:
-        from ai_ml.model_creator import GroqModelLoader
-
-        app_state.groq_model = GroqModelLoader.get_model()
-        logger.info("Groq model '%s' ready", settings.GROQ_MODEL_NAME)
+        from ai_ml.provider_factory import get_llm_model
+        app_state.llm_model = get_llm_model()
+        app_state.groq_model = app_state.llm_model
+        logger.info("LLM provider ready: %s (%s)", settings.LLM_PROVIDER, settings.OPENAI_MODEL_NAME if settings.LLM_PROVIDER == "openai" else settings.GROQ_MODEL_NAME)
     except Exception as exc:
         logger.error("Groq model failed to load: %s", exc)
         logger.warning(
@@ -56,25 +53,20 @@ async def lifespan(app: FastAPI):
         )
 
     try:
-        from sentence_transformers import SentenceTransformer
-
-        logger.info("Loading SentenceTransformer '%s' ...", settings.MCQ_EVAL_MODEL_NAME)
-        app_state.st_model = SentenceTransformer(settings.MCQ_EVAL_MODEL_NAME)
-        logger.info("SentenceTransformer ready")
+        from ai_ml.provider_factory import get_tts_engine
+        app_state.tts_engine = get_tts_engine()
+        logger.info("TTS provider ready: %s", settings.TTS_PROVIDER)
     except Exception as exc:
-        logger.error("SentenceTransformer failed to load: %s", exc)
-        logger.warning("  MCQ evaluation endpoints will not be functional.")
+        logger.error("TTS provider failed to load: %s", exc)
 
     if app_state.is_ready:
         logger.info("All models loaded - service is fully ready.")
     else:
         ready = []
         if app_state.stt_ready:
-            ready.append("STT (Groq)")
+            ready.append(f"STT ({settings.STT_PROVIDER})")
         if app_state.llm_ready:
             ready.append("LLM (question gen / eval / rubrics)")
-        if app_state.mcq_ready:
-            ready.append("MCQ evaluation")
         logger.warning(
             "Service started in DEGRADED state. Functional: [%s]. Check logs above for errors.",
             ", ".join(ready) if ready else "none",
@@ -104,7 +96,6 @@ app.add_middleware(
 
 from app.routers import (  # noqa: E402
     evaluation,
-    mcq_evaluation,
     question_generator,
     mcq_generator,
     rubrics,
@@ -117,7 +108,6 @@ for router in [
     tts.router,
     evaluation.router,
     rubrics.router,
-    mcq_evaluation.router,
     question_generator.router,
     mcq_generator.router,
 ]:
@@ -139,51 +129,33 @@ def health_check() -> dict:
         "status": "ok" if app_state.is_ready else "degraded",
         "version": settings.APP_VERSION,
         "backend": {
-            "llm": "groq",
-            "model": settings.GROQ_MODEL_NAME,
-            "api_url": settings.GROQ_API_BASE_URL,
-            "stt": "groq",
-            "tts": "groq",
+            "llm": settings.LLM_PROVIDER,
+            "model": settings.OPENAI_MODEL_NAME if settings.LLM_PROVIDER == "openai" else settings.GROQ_MODEL_NAME,
+            "stt": settings.STT_PROVIDER,
+            "stt_model": settings.ELEVENLABS_STT_MODEL_NAME if settings.STT_PROVIDER == "elevenlabs" else settings.GROQ_STT_MODEL_NAME,
+            "tts": settings.TTS_PROVIDER,
+            "tts_model": settings.OPENAI_TTS_MODEL_NAME if settings.TTS_PROVIDER == "openai" else settings.GROQ_TTS_MODEL_NAME,
         },
         "models": {
             "whisper": app_state.stt_ready,
             "stt": app_state.stt_ready,
-            "groq": app_state.llm_ready,
-            "sentence_transformer": app_state.mcq_ready,
+            "llm": app_state.llm_ready,
         },
     }
 
 
 @app.get(
-    "/health/groq",
+    "/health/providers",
     tags=["Health"],
-    summary="Groq connectivity check",
-    description="Probes the configured Groq clients and returns their readiness status.",
+    summary="Provider connectivity check",
+    description="Reports configured provider readiness.",
 )
-def health_groq() -> dict:
-    """Live probe of the Groq configuration."""
-    from ai_ml.exceptions import GroqConnectionError, ModelLoadError
-    from ai_ml.model_creator import GroqAudioClientLoader, GroqModelLoader
-
-    result: dict = {
-        "api_url": settings.GROQ_API_BASE_URL,
-        "model": settings.GROQ_MODEL_NAME,
-        "audio_model": settings.GROQ_STT_MODEL_NAME,
-        "server_reachable": False,
-        "model_available": False,
-        "audio_ready": False,
-        "error": None,
+@app.get("/health/groq", include_in_schema=False)
+def health_providers() -> dict:
+    return {
+        "providers": {"llm": settings.LLM_PROVIDER, "stt": settings.STT_PROVIDER, "tts": settings.TTS_PROVIDER},
+        "ready": {"llm": app_state.llm_ready, "stt": app_state.stt_ready, "tts": app_state.tts_engine is not None},
+        "models": {"llm": settings.OPENAI_MODEL_NAME if settings.LLM_PROVIDER == "openai" else settings.GROQ_MODEL_NAME,
+                   "stt": settings.ELEVENLABS_STT_MODEL_NAME if settings.STT_PROVIDER == "elevenlabs" else settings.GROQ_STT_MODEL_NAME,
+                   "tts": settings.OPENAI_TTS_MODEL_NAME if settings.TTS_PROVIDER == "openai" else settings.GROQ_TTS_MODEL_NAME},
     }
-
-    try:
-        GroqAudioClientLoader.get_client()
-        GroqModelLoader.get_model()
-        result["server_reachable"] = True
-        result["model_available"] = True
-        result["audio_ready"] = True
-    except GroqConnectionError as exc:
-        result["error"] = str(exc)
-    except ModelLoadError as exc:
-        result["error"] = str(exc)
-
-    return result
