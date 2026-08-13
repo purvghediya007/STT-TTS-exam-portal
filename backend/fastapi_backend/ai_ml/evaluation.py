@@ -11,11 +11,12 @@ from __future__ import annotations
 import logging
 from typing import List
 
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, field_validator
 
 from ai_ml.exceptions import EvaluationError
-from ai_ml.model_creator import GroqModelLoader
+from ai_ml.provider_factory import get_llm_model
+from ai_ml.token_budget import estimate_evaluation_tokens
 from app.utils.json_utils import extract_json
 
 logger = logging.getLogger(__name__)
@@ -53,26 +54,15 @@ class EvalResult(BaseModel):
 
 # Evaluation engine
 
-_EVAL_TEMPLATE = """\
+_EVAL_SYSTEM = """\
 You are a strict academic exam evaluator. You MUST respond with ONLY a valid JSON object. No explanation, no markdown, no text before or after the JSON.
 
 Evaluation Rules:
 - Score the student answer against the rubric criteria.
 - If the student answer is "I don't know", blank, or completely off-topic, score MUST be 0.
-- score must be an integer between 0 and {max_marks}.
+- score must be an integer between 0 and the supplied maximum marks.
 - strengths and weakness must each be a JSON array of strings (can be empty arrays).
 - justification and suggested_improvement must be plain strings.
-
-Rubric:
-{rubrics}
-
-Question:
-{question_text}
-
-Student Answer:
-{student_answer}
-
-Maximum Marks: {max_marks}
 
 Return ONLY this JSON (no markdown, no extra text):
 {{
@@ -98,15 +88,15 @@ class EvaluationEngine:
 
     def _get_model(self):
         if self._model is None:
-            self._model = GroqModelLoader.get_model()
+            self._model = get_llm_model()
         return self._model
 
     def _build_chain(self):
-        prompt = PromptTemplate(
-            template=_EVAL_TEMPLATE,
-            input_variables=["rubrics", "question_text", "student_answer", "max_marks"],
-        )
-        return prompt | self._get_model()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", _EVAL_SYSTEM),
+            ("human", "Rubric:\n{rubrics}\n\nQuestion:\n{question_text}\n\nStudent Answer:\n{student_answer}\n\nMaximum Marks: {max_marks}"),
+        ])
+        return prompt | self._get_model().bind(max_tokens=estimate_evaluation_tokens())
 
     def evaluate(
         self,
@@ -142,7 +132,7 @@ class EvaluationEngine:
                 "max_marks": int(max_marks),
             })
         except Exception as exc:
-            logger.error("Groq call failed during evaluation: %s", exc)
+            logger.error("LLM call failed during evaluation: %s", exc)
             raise EvaluationError(f"LLM call failed: {exc}") from exc
 
         content = raw.content if hasattr(raw, "content") else str(raw)

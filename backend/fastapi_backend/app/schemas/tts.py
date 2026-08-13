@@ -19,6 +19,6 @@ class TTSRequest(BaseModel):
     """
 
     question_id: str = Field(..., min_length=1, description="Question identifier (used as filename).")
-    text: str = Field(..., min_length=1, max_length=500, description="Text to synthesise.")
+    text: str = Field(..., min_length=1, max_length=1500, description="Text to synthesise.")
     language: str = Field(default="en", description="BCP-47 language code.")
     slow: bool = Field(default=False, description="Use slower speech rate.")

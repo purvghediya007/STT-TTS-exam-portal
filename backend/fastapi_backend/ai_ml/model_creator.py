@@ -1,13 +1,21 @@
-"""Singleton model loaders for Groq LLM and Groq audio clients."""
+"""Singleton model loaders for configured LLM and audio providers."""
 
 from __future__ import annotations
 
 import logging
 
-from langchain_groq import ChatGroq
+try:
+    from langchain_groq import ChatGroq
+except ImportError:  # Groq is optional when all active providers are paid providers.
+    ChatGroq = None  # type: ignore[assignment,misc]
 
 from app.config import settings
-from ai_ml.exceptions import GroqConnectionError, ModelLoadError
+from ai_ml.exceptions import (
+    GroqConnectionError,
+    LLMProviderConnectionError,
+    ModelLoadError,
+    STTProviderConnectionError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -94,10 +102,10 @@ class GroqAudioClientLoader:
 class GroqModelLoader:
     """Lazy singleton loader for Groq via LangChain."""
 
-    _instance: ChatGroq | None = None
+    _instance = None
 
     @classmethod
-    def get_model(cls) -> ChatGroq:
+    def get_model(cls):
         """Return the cached Groq model wrapper, creating it if necessary."""
         if cls._instance is None:
             try:
@@ -124,4 +132,52 @@ class GroqModelLoader:
     @classmethod
     def reset(cls) -> None:
         """Clear the cached instance."""
+        cls._instance = None
+
+
+class OpenAIModelLoader:
+    _instance = None
+
+    @classmethod
+    def get_model(cls):
+        if cls._instance is None:
+            try:
+                api_key = settings.require_openai_api_key()
+                from langchain_openai import ChatOpenAI
+                cls._instance = ChatOpenAI(
+                    api_key=api_key,
+                    model=settings.OPENAI_MODEL_NAME,
+                    temperature=settings.OPENAI_TEMPERATURE,
+                )
+            except ValueError as exc:
+                raise LLMProviderConnectionError(str(exc)) from exc
+            except Exception as exc:
+                raise ModelLoadError(
+                    f"Failed to initialise OpenAI model '{settings.OPENAI_MODEL_NAME}': {exc}"
+                ) from exc
+        return cls._instance
+
+    @classmethod
+    def reset(cls) -> None:
+        cls._instance = None
+
+
+class ElevenLabsClientLoader:
+    _instance = None
+
+    @classmethod
+    def get_client(cls):
+        if cls._instance is None:
+            try:
+                api_key = settings.require_elevenlabs_api_key()
+                from elevenlabs.client import ElevenLabs
+                cls._instance = ElevenLabs(api_key=api_key)
+            except ValueError as exc:
+                raise STTProviderConnectionError(str(exc)) from exc
+            except Exception as exc:
+                raise ModelLoadError(f"Failed to initialise ElevenLabs client: {exc}") from exc
+        return cls._instance
+
+    @classmethod
+    def reset(cls) -> None:
         cls._instance = None

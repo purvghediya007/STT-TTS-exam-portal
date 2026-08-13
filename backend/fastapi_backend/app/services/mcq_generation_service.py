@@ -23,7 +23,7 @@ _generator: MCQGenerator | None = None
 def _get_generator() -> MCQGenerator:
     global _generator
     if _generator is None:
-        _generator = MCQGenerator(model=app_state.groq_model)
+        _generator = MCQGenerator(model=app_state.llm_model)
     return _generator
 
 

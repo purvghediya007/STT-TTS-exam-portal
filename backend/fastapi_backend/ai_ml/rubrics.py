@@ -11,11 +11,12 @@ from __future__ import annotations
 import logging
 from typing import List
 
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field, field_validator
 
 from ai_ml.exceptions import RubricsGenerationError
-from ai_ml.model_creator import GroqModelLoader
+from ai_ml.provider_factory import get_llm_model
+from ai_ml.token_budget import estimate_rubrics_tokens
 from app.utils.json_utils import extract_json
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class RubricsResult(BaseModel):
 
 # Prompt
 
-_RUBRICS_TEMPLATE = """\
+_RUBRICS_SYSTEM = """\
 You are an academic exam evaluator. You MUST respond with ONLY a valid JSON object. No explanation, no markdown, no text before or after the JSON.
 
 Task:
@@ -56,14 +57,11 @@ Rules:
 
 Return ONLY this JSON (no markdown, no extra text):
 {{
-  "question_text": "{question_text}",
+  "question_text": "<question_text>",
   "rubrics": ["criterion 1", "criterion 2", "criterion 3"]
 }}
 
-Question:
-{question_text}
-
-Total Marks: {max_marks}"""
+"""
 
 
 class RubricsEngine:
@@ -79,15 +77,15 @@ class RubricsEngine:
 
     def _get_model(self):
         if self._model is None:
-            self._model = GroqModelLoader.get_model()
+            self._model = get_llm_model()
         return self._model
 
-    def _build_chain(self):
-        prompt = PromptTemplate(
-            template=_RUBRICS_TEMPLATE,
-            input_variables=["question_text", "max_marks"],
-        )
-        return prompt | self._get_model()
+    def _build_chain(self, max_marks: int = 1):
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", _RUBRICS_SYSTEM),
+            ("human", "Question:\n{question_text}\n\nTotal Marks: {max_marks}"),
+        ])
+        return prompt | self._get_model().bind(max_tokens=estimate_rubrics_tokens(max_marks))
 
     def generate(self, *, question_text: str, max_marks: int) -> RubricsResult:
         """
@@ -104,10 +102,10 @@ class RubricsEngine:
             RubricsGenerationError: If the Groq call or response parsing fails.
         """
         try:
-            chain = self._build_chain()
+            chain = self._build_chain(max_marks)
             raw = chain.invoke({"question_text": question_text, "max_marks": max_marks})
         except Exception as exc:
-            logger.error("Groq call failed during rubric generation: %s", exc)
+            logger.error("LLM call failed during rubric generation: %s", exc)
             raise RubricsGenerationError(f"LLM call failed: {exc}") from exc
 
         content = raw.content if hasattr(raw, "content") else str(raw)
