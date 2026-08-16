@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Save, Calendar, Clock, Award, Settings, FileText, AlertCircle } from 'lucide-react'
 import { createExam, updateExam } from '../services/api'
+import { formatDateTimeLocal } from '../utils/format'
 import logger from '../utils/logger'
 
 /**
@@ -28,8 +29,8 @@ export default function ExamForm({ exam, onClose, onSuccess }) {
   useEffect(() => {
     if (exam) {
       // Convert exam data to form format
-      const startDate = exam.startsAt ? new Date(exam.startsAt).toISOString().slice(0, 16) : ''
-      const endDate = exam.endsAt ? new Date(exam.endsAt).toISOString().slice(0, 16) : ''
+      const startDate = formatDateTimeLocal(exam.startsAt)
+      const endDate = formatDateTimeLocal(exam.endsAt)
 
       setFormData({
         title: exam.title || '',

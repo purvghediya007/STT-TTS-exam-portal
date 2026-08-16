@@ -26,15 +26,19 @@ function transformExamForFrontend(examObj) {
     startsAt: examObj.startTime,
     endsAt: examObj.endTime,
     durationMin: examObj.durationMinutes,
+    slotDurationMin: examObj.slotDurationMinutes,
     timePerQuestionSec: examObj.timePerQuestion,
     pointsTotal: examObj.pointsTotal,
     attemptsLeft: examObj.attemptsAllowed,
     allowedReRecords: examObj.allowedReRecords,
     strictMode: examObj.strictMode,
-    shortDescription: examObj.shortDescription,
+    shortDescription: examObj.shortDescription || examObj.description,
     instructions: examObj.instructions,
     marks: examObj.marks,
-    teacherName: examObj.teacherId?.username || "Unknown Teacher",
+    branches: examObj.branches || [],
+    semesters: examObj.semesters || [],
+    questions: examObj.questions || [],
+    teacherName: examObj.teacherId?.username || examObj.teacherId?.name || "Unknown Teacher",
   };
 }
 
@@ -291,9 +295,29 @@ router.get(
         status: "draft",
       }).sort({ createdAt: -1 });
 
-      // Transform for frontend compatibility
-      const transformedDrafts = drafts.map((draft) =>
-        transformExamForFrontend(draft.toObject()),
+      // Transform for frontend compatibility and ensure questions are populated
+      const transformedDrafts = await Promise.all(
+        drafts.map(async (draft) => {
+          const draftObj = draft.toObject();
+          if (!draftObj.questions || draftObj.questions.length === 0) {
+            const dbQuestions = await Question.find({ examId: draft._id }).sort({ order: 1 });
+            if (dbQuestions && dbQuestions.length > 0) {
+              draftObj.questions = dbQuestions.map((q) => ({
+                id: q._id,
+                text: q.text,
+                question: q.text,
+                type: q.type,
+                marks: q.marks,
+                options: q.options,
+                expectedAnswer: q.expectedAnswer,
+                instruction: q.instruction,
+                media: q.media,
+                perQuestionSettings: q.perQuestionSettings,
+              }));
+            }
+          }
+          return transformExamForFrontend(draftObj);
+        })
       );
 
       return res.status(200).json(transformedDrafts);
@@ -320,6 +344,15 @@ router.post(
         branches,
         semesters,
         questions = [],
+        startsAt,
+        endsAt,
+        durationMin,
+        slotDurationMin,
+        pointsTotal,
+        timePerQuestionSec,
+        attemptsLeft,
+        allowedReRecords,
+        strictMode,
       } = req.body;
       const teacherId = req.user.sub;
 
@@ -337,9 +370,18 @@ router.post(
         examCode,
         teacherId,
         status: "draft",
-        questions,
+        questions: Array.isArray(questions) ? questions : [],
         branches: Array.isArray(branches) ? branches : [],
         semesters: Array.isArray(semesters) ? semesters : [],
+        startTime: startsAt ? new Date(startsAt) : undefined,
+        endTime: endsAt ? new Date(endsAt) : undefined,
+        durationMinutes: durationMin,
+        slotDurationMinutes: slotDurationMin,
+        pointsTotal: pointsTotal ?? 100,
+        timePerQuestion: timePerQuestionSec,
+        attemptsAllowed: attemptsLeft ?? 1,
+        allowedReRecords: allowedReRecords ?? 1,
+        strictMode: strictMode ?? false,
         settings: {
           thinkTimeSeconds: 10,
           answerTimeSeconds: 60,
@@ -385,8 +427,27 @@ router.get(
         return res.status(400).json({ message: "Exam is not in draft status" });
       }
 
+      const draftObj = draft.toObject();
+      if (!draftObj.questions || draftObj.questions.length === 0) {
+        const dbQuestions = await Question.find({ examId: draft._id }).sort({ order: 1 });
+        if (dbQuestions && dbQuestions.length > 0) {
+          draftObj.questions = dbQuestions.map((q) => ({
+            id: q._id,
+            text: q.text,
+            question: q.text,
+            type: q.type,
+            marks: q.marks,
+            options: q.options,
+            expectedAnswer: q.expectedAnswer,
+            instruction: q.instruction,
+            media: q.media,
+            perQuestionSettings: q.perQuestionSettings,
+          }));
+        }
+      }
+
       // Transform for frontend compatibility
-      const transformedDraft = transformExamForFrontend(draft.toObject());
+      const transformedDraft = transformExamForFrontend(draftObj);
 
       return res.status(200).json(transformedDraft);
     } catch (error) {
@@ -432,16 +493,34 @@ router.put(
         instructions,
         branches,
         semesters,
+        startsAt,
+        endsAt,
+        durationMin,
+        slotDurationMin,
+        pointsTotal,
+        timePerQuestionSec,
+        attemptsLeft,
+        allowedReRecords,
+        strictMode,
       } = req.body;
-      if (title) draft.title = title;
-      if (shortDescription) draft.shortDescription = shortDescription;
-      if (description) draft.description = description;
-      if (shortDescription) draft.description = shortDescription;
-      if (instructions) draft.instructions = instructions;
-      if (questions) draft.questions = questions;
+      if (title !== undefined) draft.title = title;
+      if (shortDescription !== undefined) draft.shortDescription = shortDescription;
+      if (description !== undefined) draft.description = description;
+      if (shortDescription !== undefined && !description) draft.description = shortDescription;
+      if (instructions !== undefined) draft.instructions = instructions;
+      if (questions !== undefined && Array.isArray(questions)) draft.questions = questions;
       if (settings) draft.settings = { ...draft.settings, ...settings };
       if (Array.isArray(branches)) draft.branches = branches;
       if (Array.isArray(semesters)) draft.semesters = semesters;
+      if (startsAt) draft.startTime = new Date(startsAt);
+      if (endsAt) draft.endTime = new Date(endsAt);
+      if (durationMin !== undefined) draft.durationMinutes = durationMin;
+      if (slotDurationMin !== undefined) draft.slotDurationMinutes = slotDurationMin;
+      if (pointsTotal !== undefined) draft.pointsTotal = pointsTotal;
+      if (timePerQuestionSec !== undefined) draft.timePerQuestion = timePerQuestionSec;
+      if (attemptsLeft !== undefined) draft.attemptsAllowed = attemptsLeft;
+      if (allowedReRecords !== undefined) draft.allowedReRecords = allowedReRecords;
+      if (strictMode !== undefined) draft.strictMode = strictMode;
 
       await draft.save();
 
@@ -574,6 +653,9 @@ router.post(
         draft.semesters = semesters;
       }
 
+      if (Array.isArray(questions)) {
+        draft.questions = questions;
+      }
       await draft.save();
 
       // Save questions if provided
@@ -1045,6 +1127,11 @@ router.post(
       }
       if (exam.teacherId.toString() !== teacherId) {
         return res.status(403).json({ message: "Forbidden: Not your exam" });
+      }
+
+      // Check if the exam has ended
+      if (exam.endTime && new Date() < new Date(exam.endTime)) {
+        return res.status(400).json({ message: "Cannot publish results before the exam has ended" });
       }
 
       // Set resultsPublished flag to true

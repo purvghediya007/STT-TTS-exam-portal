@@ -599,6 +599,8 @@ export default function ExamSubmissionsView() {
     )
 
     const isPublished = exam?.resultsPublished === true
+    const examEndTime = exam?.endTime || exam?.endsAt
+    const hasExamEnded = examEndTime ? new Date() >= new Date(examEndTime) : true
 
     return (
         <div className="min-h-screen bg-slate-50 relative overflow-hidden">
@@ -681,12 +683,21 @@ export default function ExamSubmissionsView() {
                             {/* Publish / Republish Button */}
                             <button
                                 onClick={handlePublishResults}
-                                disabled={publishingResults}
-                                className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50 ${isPublished
-                                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
+                                disabled={publishingResults || !hasExamEnded}
+                                className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50 ${
+                                    !hasExamEnded
+                                        ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                                        : isPublished
+                                            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
                                     }`}
-                                title={isPublished ? 'Republish to sync any recent mark adjustments' : 'Publish results so students can view them'}
+                                title={
+                                    !hasExamEnded
+                                        ? 'Cannot publish results before the exam has ended'
+                                        : isPublished
+                                            ? 'Republish to sync any recent mark adjustments'
+                                            : 'Publish results so students can view them'
+                                }
                             >
                                 {publishingResults ? (
                                     <Loader className="w-4 h-4 animate-spin" />
