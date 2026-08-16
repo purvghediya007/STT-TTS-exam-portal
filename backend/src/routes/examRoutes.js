@@ -37,10 +37,13 @@ function transformExamForFrontend(examObj) {
     attemptsLeft: examObj.attemptsAllowed,
     allowedReRecords: examObj.allowedReRecords,
     strictMode: examObj.strictMode,
-    shortDescription: examObj.shortDescription,
+    shortDescription: examObj.shortDescription || examObj.description,
     instructions: examObj.instructions,
     marks: examObj.marks,
-    teacherName: examObj.teacherId?.username || "Unknown Teacher",
+    branches: examObj.branches || [],
+    semesters: examObj.semesters || [],
+    questions: examObj.questions || [],
+    teacherName: examObj.teacherId?.username || examObj.teacherId?.name || "Unknown Teacher",
   };
 }
 

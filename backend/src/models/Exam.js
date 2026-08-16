@@ -39,6 +39,12 @@ const examSchema = new mongoose.Schema(
     },
     // scheduling: set LATER when launching exam
 
+    // Questions stored for drafts / embedded format
+    questions: {
+      type: Array,
+      default: [],
+    },
+
     // 🟢 NEW FIELDS (SAFE ADDITION)
     branches: {
       type: [String],

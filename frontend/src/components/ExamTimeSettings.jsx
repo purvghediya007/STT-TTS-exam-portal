@@ -5,7 +5,7 @@ import { Calendar, Clock, Award, Settings, AlertCircle } from 'lucide-react'
  * ExamTimeSettings - Component for setting exam time, dates, and other settings
  */
 export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, questions = [] }) {
-  // Auto-calculate duration when start/end dates change
+  // Auto-calculate duration when start/end dates change and adjust slot duration if it exceeds window
   useEffect(() => {
     if (timeSettings.startsAt && timeSettings.endsAt) {
       const start = new Date(timeSettings.startsAt)
@@ -13,8 +13,22 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
       
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
         const diffMinutes = Math.ceil((end - start) / (1000 * 60))
+        let shouldUpdate = false
+        const updated = { ...timeSettings }
+
         if (diffMinutes !== timeSettings.durationMin) {
-          onChange({ ...timeSettings, durationMin: diffMinutes })
+          updated.durationMin = diffMinutes
+          shouldUpdate = true
+        }
+
+        // If slot duration is not set or exceeds the exam window duration, cap it to exam window duration
+        if (!timeSettings.slotDurationMin || timeSettings.slotDurationMin > diffMinutes) {
+          updated.slotDurationMin = diffMinutes
+          shouldUpdate = true
+        }
+
+        if (shouldUpdate) {
+          onChange(updated)
         }
       }
     }
@@ -44,7 +58,13 @@ export default function ExamTimeSettings({ timeSettings, onChange, errors = {}, 
       const end = new Date(updated.endsAt)
       
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-        updated.durationMin = Math.ceil((end - start) / (1000 * 60))
+        const diffMinutes = Math.ceil((end - start) / (1000 * 60))
+        updated.durationMin = diffMinutes
+
+        // If slot duration is not set or exceeds the new exam window, set it to the exam window duration
+        if (!updated.slotDurationMin || updated.slotDurationMin > diffMinutes) {
+          updated.slotDurationMin = diffMinutes
+        }
       }
     }
     

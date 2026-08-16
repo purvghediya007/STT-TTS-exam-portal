@@ -147,6 +147,13 @@ export default function FacultyExamsList() {
   }
 
   const handlePublishResults = async (examId) => {
+    const examObj = exams.find(e => e.id === examId)
+    const examEndTime = examObj?.endsAt || examObj?.endTime
+    if (examEndTime && new Date() < new Date(examEndTime)) {
+      alert('Cannot publish results before the exam has ended.')
+      return
+    }
+
     if (!confirm('Are you sure you want to publish the results? This will make scores visible to all students.')) return
 
     try {
@@ -524,8 +531,9 @@ export default function FacultyExamsList() {
                           ) : evaluationStatus[exam.id]?.allEvaluated ? (
                             <button
                               onClick={() => handlePublishResults(exam.id)}
-                              disabled={publishingId === exam.id}
+                              disabled={publishingId === exam.id || ((exam.endsAt || exam.endTime) && new Date() < new Date(exam.endsAt || exam.endTime))}
                               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                              title={((exam.endsAt || exam.endTime) && new Date() < new Date(exam.endsAt || exam.endTime)) ? 'Cannot publish results before the exam has ended' : ''}
                             >
                               {publishingId === exam.id ? (
                                 <>
@@ -601,6 +609,7 @@ export default function FacultyExamsList() {
             setEditingDraft(null)
           }}
           onSuccess={handleWizardSuccess}
+          onDraftSaved={loadDrafts}
           draft={editingDraft}
           exam={editingExam}
         />
