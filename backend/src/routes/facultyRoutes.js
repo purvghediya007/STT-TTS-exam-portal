@@ -1129,6 +1129,11 @@ router.post(
         return res.status(403).json({ message: "Forbidden: Not your exam" });
       }
 
+      // Check if the exam has ended
+      if (exam.endTime && new Date() < new Date(exam.endTime)) {
+        return res.status(400).json({ message: "Cannot publish results before the exam has ended" });
+      }
+
       // Set resultsPublished flag to true
       exam.resultsPublished = true;
       exam.resultPublishedAt = new Date();
