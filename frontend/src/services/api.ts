@@ -422,6 +422,17 @@ export interface DraftExam {
   instructions?: string | null
   status: 'draft'
   questions: Question[]
+  branches?: string[]
+  semesters?: number[]
+  startsAt?: string
+  endsAt?: string
+  durationMin?: number
+  slotDurationMin?: number
+  timePerQuestionSec?: number | null
+  pointsTotal?: number
+  attemptsLeft?: number
+  allowedReRecords?: number
+  strictMode?: boolean
   createdAt: string
   teacherName: string
 }
@@ -735,6 +746,15 @@ export async function createDraftExam(draftData: {
   branches?: string[]
   semesters?: number[]
   questions?: Question[]
+  startsAt?: string
+  endsAt?: string
+  durationMin?: number
+  slotDurationMin?: number
+  pointsTotal?: number
+  timePerQuestionSec?: number | null
+  attemptsLeft?: number
+  allowedReRecords?: number
+  strictMode?: boolean
 }): Promise<DraftExam> {
   try {
     const response = await fetchAPI('/faculty/exams/drafts', {
@@ -750,8 +770,19 @@ export async function createDraftExam(draftData: {
       title: draftData.title,
       shortDescription: draftData.shortDescription,
       instructions: draftData.instructions || null,
+      branches: draftData.branches || [],
+      semesters: draftData.semesters || [],
       status: 'draft',
       questions: draftData.questions || [],
+      startsAt: draftData.startsAt,
+      endsAt: draftData.endsAt,
+      durationMin: draftData.durationMin,
+      slotDurationMin: draftData.slotDurationMin,
+      pointsTotal: draftData.pointsTotal,
+      timePerQuestionSec: draftData.timePerQuestionSec,
+      attemptsLeft: draftData.attemptsLeft,
+      allowedReRecords: draftData.allowedReRecords,
+      strictMode: draftData.strictMode,
       createdAt: new Date().toISOString(),
       teacherName: draftData.teacherName
     }

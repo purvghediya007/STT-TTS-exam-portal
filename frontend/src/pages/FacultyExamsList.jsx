@@ -601,6 +601,7 @@ export default function FacultyExamsList() {
             setEditingDraft(null)
           }}
           onSuccess={handleWizardSuccess}
+          onDraftSaved={loadDrafts}
           draft={editingDraft}
           exam={editingExam}
         />
