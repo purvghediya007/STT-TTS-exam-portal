@@ -18,7 +18,7 @@ try {
 }
 
 // TTS API endpoint (same HuggingFace Space used by ExamEcho)
-const TTS_API_URL = "https://aryanshah2109-examecho.hf.space/tts/synthesize";
+const TTS_API_URL = "http://127.0.0.1:8000/api/v1/tts/synthesize";
 
 /**
  * Generate S3 key for practice question TTS audio
@@ -56,7 +56,7 @@ async function generateTTSForQuestion(question) {
       {
         timeout: 30000,
         responseType: "arraybuffer", // binary MP3
-      }
+      },
     );
 
     const audioBuffer = Buffer.from(ttsRes.data);
@@ -100,7 +100,9 @@ async function generateTTSForAllSpokenQuestions(PracticeQuestion) {
     ],
   });
 
-  console.log(`\n🎧 Generating TTS for ${questions.length} spoken questions...`);
+  console.log(
+    `\n🎧 Generating TTS for ${questions.length} spoken questions...`,
+  );
 
   let successCount = 0;
   let failCount = 0;
@@ -122,7 +124,9 @@ async function generateTTSForAllSpokenQuestions(PracticeQuestion) {
     await new Promise((r) => setTimeout(r, 3000));
   }
 
-  console.log(`✅ TTS generation complete: ${successCount} success, ${failCount} failed\n`);
+  console.log(
+    `✅ TTS generation complete: ${successCount} success, ${failCount} failed\n`,
+  );
   return { successCount, failCount };
 }
 
@@ -135,7 +139,10 @@ async function regenerateTTSForQuestion(question) {
     try {
       const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
       await s3Client.send(
-        new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: question.ttsS3Key })
+        new DeleteObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: question.ttsS3Key,
+        }),
       );
       console.log(`🗑️ Deleted old TTS: ${question.ttsS3Key}`);
     } catch (e) {
