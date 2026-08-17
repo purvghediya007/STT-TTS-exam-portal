@@ -254,11 +254,49 @@ router.get(
           .json({ message: "You do not have access to this exam" });
       }
 
-      const questionCount = await Question.countDocuments({ examId });
+      // Compute question counts and marks by type so frontend can display distribution
+      const agg = await Question.aggregate([
+        { $match: { examId: exam._id } },
+        {
+          $group: {
+            _id: "$type",
+            count: { $sum: 1 },
+            marks: { $sum: { $ifNull: ["$marks", 0] } },
+          },
+        },
+      ]);
+
+      const counts = { mcq: 0, viva: 0, interview: 0 };
+      const marks = { mcq: 0, viva: 0, interview: 0, total: 0 };
+      let totalQuestions = 0;
+      let totalMarksSum = 0;
+
+      for (const row of agg) {
+        const type = row._id || "unknown";
+        const c = row.count || 0;
+        const m = row.marks || 0;
+        totalQuestions += c;
+        totalMarksSum += m;
+        if (type === "mcq" || type === "viva" || type === "interview") {
+          counts[type] = c;
+          marks[type] = m;
+        }
+      }
+
+      marks.total = totalMarksSum;
+
+      // If exam.pointsTotal is not set (0) prefer computed sum
+      const pointsTotal =
+        exam.pointsTotal && exam.pointsTotal > 0
+          ? exam.pointsTotal
+          : totalMarksSum;
 
       return res.status(200).json({
         ...transformExamForFrontend(exam.toObject()),
-        questionCount,
+        questionCount: totalQuestions,
+        questionCounts: counts,
+        marks,
+        pointsTotal,
       });
     } catch (error) {
       next(error);
@@ -866,7 +904,7 @@ router.post(
         studentId,
         status: "in_progress",
       });
-      
+
       // Commented out the duplicate block (lines 870-904) that returned old expired deadlines
       /*
       // 🔥 NEW: handle reallowed attempt (reuse existing)
@@ -930,8 +968,13 @@ router.post(
 
           // Recalculate deadline based on current exam slot duration
           const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
-          const recalculatedDeadline = new Date(reallowedAttempt.startedAt.getTime() + slotMinutes * 60 * 1000);
-          const expiresAt = recalculatedDeadline < exam.endTime ? recalculatedDeadline : exam.endTime;
+          const recalculatedDeadline = new Date(
+            reallowedAttempt.startedAt.getTime() + slotMinutes * 60 * 1000,
+          );
+          const expiresAt =
+            recalculatedDeadline < exam.endTime
+              ? recalculatedDeadline
+              : exam.endTime;
 
           // Persist the new deadline so questions/submit endpoints use the correct value
           reallowedAttempt.deadlineAt = expiresAt;
@@ -960,11 +1003,19 @@ router.post(
         // Recalculate deadline based on current exam slot duration (in case it was changed after attempt started)
         // Use attempt's startedAt time as the reference point
         const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
-        const recalculatedDeadline = new Date(attempt.startedAt.getTime() + slotMinutes * 60 * 1000);
-        const currentExpiresAt = recalculatedDeadline < exam.endTime ? recalculatedDeadline : exam.endTime;
+        const recalculatedDeadline = new Date(
+          attempt.startedAt.getTime() + slotMinutes * 60 * 1000,
+        );
+        const currentExpiresAt =
+          recalculatedDeadline < exam.endTime
+            ? recalculatedDeadline
+            : exam.endTime;
 
         // Persist the recalculated deadline if it has changed
-        if (!attempt.deadlineAt || attempt.deadlineAt.getTime() !== currentExpiresAt.getTime()) {
+        if (
+          !attempt.deadlineAt ||
+          attempt.deadlineAt.getTime() !== currentExpiresAt.getTime()
+        ) {
           attempt.deadlineAt = currentExpiresAt;
           await attempt.save();
         }
@@ -991,9 +1042,7 @@ router.post(
       // slot duration can be set per exam for flexible student timing
       // if not set, falls back to durationMinutes for backward compatibility
       const slotMinutes = exam.slotDurationMinutes || exam.durationMinutes;
-      const deadlineBySlot = new Date(
-        now.getTime() + slotMinutes * 60 * 1000,
-      );
+      const deadlineBySlot = new Date(now.getTime() + slotMinutes * 60 * 1000);
       const deadlineAt =
         deadlineBySlot < exam.endTime ? deadlineBySlot : exam.endTime;
 
@@ -1045,11 +1094,17 @@ router.post(
       });
 
       if (!attempt) {
-        return res.status(404).json({ message: "Active exam attempt not found" });
+        return res
+          .status(404)
+          .json({ message: "Active exam attempt not found" });
       }
 
       if (attempt.status !== "in_progress") {
-        return res.status(400).json({ message: `Cannot save progress. Attempt status is ${attempt.status}` });
+        return res
+          .status(400)
+          .json({
+            message: `Cannot save progress. Attempt status is ${attempt.status}`,
+          });
       }
 
       // Check if attempt deadline has passed
@@ -1083,18 +1138,18 @@ router.post(
           await StudentAnswer.findOneAndUpdate(
             { attemptId: attempt._id, questionId: answer.questionId },
             answerUpdate,
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         }
       }
 
       return res.status(200).json({
-        message: "Progress saved successfully"
+        message: "Progress saved successfully",
       });
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1122,33 +1177,36 @@ router.get(
 
       const savedAnswers = await StudentAnswer.find({ attemptId });
 
-      const formattedAnswers = savedAnswers.map(ans => ({
+      const formattedAnswers = savedAnswers.map((ans) => ({
         questionId: ans.questionId.toString(),
         selectedOptionIndex: ans.selectedOptionIndex,
         answerText: ans.answerText,
         recordingUrls: ans.recordingUrls,
         sttStatus: ans.sttStatus,
-        evaluationStatus: ans.evaluationStatus
+        evaluationStatus: ans.evaluationStatus,
       }));
 
       // ANTIGRAVITY NEW: Disable browser caching to ensure latest saved answers are always returned on re-entry
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-      
+      res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate",
+      );
+
       /* Old response without Cache-Control headers:
       return res.status(200).json({
         attemptId,
         answers: formattedAnswers
       });
       */
-      
+
       return res.status(200).json({
         attemptId,
-        answers: formattedAnswers
+        answers: formattedAnswers,
       });
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //
@@ -1600,7 +1658,6 @@ router.post(
               studentAnswer: ans.answerText,
               maxMarks,
             });
-
 
           score = aiScore;
           feedback = aiFeedback;

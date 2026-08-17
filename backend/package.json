@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "create-admin": "node scripts/createAdmin.js"
+    "create-admin": "node scripts/createAdmin.js",
+    "add-faculty": "node scripts/addFaculty.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.500.0",

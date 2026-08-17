@@ -11,7 +11,7 @@ const ffmpeg = require("fluent-ffmpeg");
 const ffmpegInstaller = require("@ffmpeg-installer/ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
-const STT_API_URL = "https://aryanshah2109-examecho.hf.space/stt/transcribe";
+const STT_API_URL = "http://127.0.0.1:8000/api/v1/stt/transcribe";
 
 /**
  * Convert audio buffer (webm/wav/etc) to MP3 format
